@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PSS</title>
+</head>
+<body>
+    <h1>Welcome to system PSS</h1>
+    <div>
+        <label>Kumpulan ID</label>
+        <input type="text" id="idkum" placeholder="kumpulanA" required>
+    </div>
+    <div>
+        <label>Report</label>
+        <textarea id="komen" rows="4" placeholder="sila tulis komen anda" required></textarea>
+    </div>
+    <button type="button" id="submitBtn" class="btn">Hantar</button>
+
+    <!-- 注意：必須加上 type="module" -->
+    <script type="module">
+      // 引入 firebase.js 匯出的 db 實例，以及 Firestore 的新增資料函式
+      import { db } from './firebase.js';
+      import { collection, addDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+      const submitBtn = document.getElementById('submitBtn');
+
+      submitBtn.addEventListener('click', async () => {
+        const idkum = document.getElementById('idkum').value;
+        const komen = document.getElementById('komen').value;
+
+        if (!idkum || !komen) {
+          alert("Sila isi semua maklumat!");
+          return;
+        }
+
+        try {
+          // 將資料寫入名為 'reports' 的集合（Collection）中
+          const docRef = await addDoc(collection(db, "reports"), {
+            kumpulanId: idkum,
+            report: komen,
+            createdAt: new Date()
+          });
+
+          alert("Maklumat berjaya dihantar!");
+          document.getElementById('idkum').value = '';
+          document.getElementById('komen').value = '';
+        } catch (error) {
+          console.error("Error adding document: ", error);
+          alert("Ralat semasa menghantar!");
+        }
+      });
+    </script>
+</body>
+</html>
