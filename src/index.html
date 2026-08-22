@@ -128,7 +128,7 @@
 
         <form id="loginForm">
             <div class="input-group">
-                <label for="id_pengguna">ID Pengguna</label>
+                <label for="id_pengguna">ID Pengguna/ID ADMIN</label>
                 <input type="text" id="id_pengguna" placeholder="Masukkan ID Pengguna" required>
             </div>
 
@@ -170,7 +170,7 @@
 
                 // 1. 先检索 'admin' Collection
                 const adminRef = collection(db, "admin");
-                const adminQuery = query(adminRef, where("id_pengguna", "==", idPengguna));
+                const adminQuery = query(adminRef, where("id_admin", "==", idPengguna));
                 const adminSnapshot = await getDocs(adminQuery);
 
                 adminSnapshot.forEach((doc) => {
