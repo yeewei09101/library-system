@@ -165,40 +165,55 @@
             loginBtn.textContent = "Sedang diproses...";
 
             try {
-                // 1. 查询 Firestore 中名为 'users' 的 Collection
-                const usersRef = collection(db, "users");
-                const q = query(usersRef, where("id_pengguna", "==", idPengguna));
-                const querySnapshot = await getDocs(q);
-
-                // 2. 检查用户是否存在
-                if (querySnapshot.empty) {
-                    alert("ID Pengguna tidak dijumpai!");
-                    resetButton();
-                    return;
-                }
-
-                // 3. 验证密码 (假设每个 ID 是唯一的)
-                let isAuthenticated = false;
+                let userRole = null;
                 let userData = null;
 
-                querySnapshot.forEach((doc) => {
+                // 1. 先检索 'admin' Collection
+                const adminRef = collection(db, "admin");
+                const adminQuery = query(adminRef, where("id_pengguna", "==", idPengguna));
+                const adminSnapshot = await getDocs(adminQuery);
+
+                adminSnapshot.forEach((doc) => {
                     const data = doc.data();
                     if (data.kata_laluan === kataLaluan) {
-                        isAuthenticated = true;
+                        userRole = "admin";
                         userData = data;
                     }
                 });
 
-                if (isAuthenticated) {
-                    alert("Log masuk berjaya!");
+                // 2. 如果在 admin 找不到或密码不匹配，再检索 'users' Collection
+                if (!userData) {
+                    const usersRef = collection(db, "users");
+                    const userQuery = query(usersRef, where("id_pengguna", "==", idPengguna));
+                    const userSnapshot = await getDocs(userQuery);
+
+                    userSnapshot.forEach((doc) => {
+                        const data = doc.data();
+                        if (data.kata_laluan === kataLaluan) {
+                            userRole = "user";
+                            userData = data;
+                        }
+                    });
+                }
+
+                // 3. 执行验证结果与 Switchboard 页面跳转
+                if (userData) {
+                    alert(`Log masuk berjaya! (${userRole === 'admin' ? 'Admin' : 'Pengguna'})`);
                     
-                    // 将登录用户资料暂存到 SessionStorage (供主页使用)
+                    // 给 userData 附加上角色类型字段
+                    userData.role = userRole;
+
+                    // 存入 SessionStorage 供后续页面进行安全防护与数据提取
                     sessionStorage.setItem("user", JSON.stringify(userData));
 
-                    // 跳转至系统主页 (根据需要修改为你的文件名，例如 index.html)
-                    window.location.href = "utama.html";
+                    // 跳转至对应的 Switchboard / 主页
+                    if (userRole === "admin") {
+                        window.location.href = "admin_dashboard.html"; // 修改为你的 Admin 主页文件名
+                    } else {
+                        window.location.href = "utama.html"; // 普通用户主页
+                    }
                 } else {
-                    alert("Kata laluan salah!");
+                    alert("ID Pengguna atau Kata Laluan salah!");
                     resetButton();
                 }
 
