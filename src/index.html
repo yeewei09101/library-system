@@ -13,22 +13,19 @@
         }
 
         body {
-                min-height: 100vh;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                background: url('../img/background.jpg') no-repeat center center/cover;
-                position: relative;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            /* 替换为你的背景图 */
+            background: url('../img/background.jpg') no-repeat center center/cover;
+            position: relative;
         }
 
-        /* Overlay untuk menjadikan borang lebih jelas di atas latar belakang */
         body::before {
             content: '';
             position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
+            top: 0; left: 0; right: 0; bottom: 0;
             background: rgba(0, 0, 0, 0.4);
             backdrop-filter: blur(5px);
         }
@@ -45,7 +42,6 @@
             text-align: center;
         }
 
-        /* Tempat Gambar Hiasan / Logo (.jpg) */
         .image-container {
             width: 90px;
             height: 90px;
@@ -114,12 +110,16 @@
         .btn-submit:hover {
             background: #357ABD;
         }
+
+        .btn-submit:disabled {
+            background: #a0c4e2;
+            cursor: not-allowed;
+        }
     </style>
 </head>
 <body>
 
     <div class="login-card">
-        <!-- Gambar Hiasan / Logo (.jpg) -->
         <div class="image-container">
             <img src="../img/logo.jpg" alt="Logo PSS">
         </div>
@@ -137,9 +137,82 @@
                 <input type="password" id="kata_laluan" placeholder="Masukkan Kata Laluan" required>
             </div>
 
-            <button type="submit" class="btn-submit">Log Masuk</button>
+            <button type="submit" id="loginBtn" class="btn-submit">Log Masuk</button>
         </form>
     </div>
 
+    <!-- Proses Login JS -->
+    <script type="module">
+        import { db } from './firebase.js';
+        import { collection, query, where, getDocs } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+        const loginForm = document.getElementById('loginForm');
+        const loginBtn = document.getElementById('loginBtn');
+
+        loginForm.addEventListener('submit', async (e) => {
+            e.preventDefault(); // 阻止表单默认提交刷新
+
+            const idPengguna = document.getElementById('id_pengguna').value.trim();
+            const kataLaluan = document.getElementById('kata_laluan').value.trim();
+
+            if (!idPengguna || !kataLaluan) {
+                alert("Sila isi ID Pengguna dan Kata Laluan!");
+                return;
+            }
+
+            // 改变按钮状态为加载中
+            loginBtn.disabled = true;
+            loginBtn.textContent = "Sedang diproses...";
+
+            try {
+                // 1. 查询 Firestore 中名为 'users' 的 Collection
+                const usersRef = collection(db, "users");
+                const q = query(usersRef, where("id_pengguna", "==", idPengguna));
+                const querySnapshot = await getDocs(q);
+
+                // 2. 检查用户是否存在
+                if (querySnapshot.empty) {
+                    alert("ID Pengguna tidak dijumpai!");
+                    resetButton();
+                    return;
+                }
+
+                // 3. 验证密码 (假设每个 ID 是唯一的)
+                let isAuthenticated = false;
+                let userData = null;
+
+                querySnapshot.forEach((doc) => {
+                    const data = doc.data();
+                    if (data.kata_laluan === kataLaluan) {
+                        isAuthenticated = true;
+                        userData = data;
+                    }
+                });
+
+                if (isAuthenticated) {
+                    alert("Log masuk berjaya!");
+                    
+                    // 将登录用户资料暂存到 SessionStorage (供主页使用)
+                    sessionStorage.setItem("user", JSON.stringify(userData));
+
+                    // 跳转至系统主页 (根据需要修改为你的文件名，例如 index.html)
+                    window.location.href = "utama.html";
+                } else {
+                    alert("Kata laluan salah!");
+                    resetButton();
+                }
+
+            } catch (error) {
+                console.error("Ralat log masuk: ", error);
+                alert("Ralat semasa log masuk! Sila cuba lagi.");
+                resetButton();
+            }
+        });
+
+        function resetButton() {
+            loginBtn.disabled = false;
+            loginBtn.textContent = "Log Masuk";
+        }
+    </script>
 </body>
 </html>
