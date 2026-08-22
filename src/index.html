@@ -18,11 +18,13 @@
 
         <form id="loginForm">
             <div class="input-group">
-                <label for="id_pengguna">ID Pengguna/ID ADMIN</label>
+                <!-- get data id_penggundi & id_admin-->
+                <label for="id_pengguna">ID Pengguna/ID Admin</label>
                 <input type="text" id="id_pengguna" placeholder="Masukkan ID Pengguna" required>
             </div>
 
             <div class="input-group">
+                <!-- get password -->
                 <label for="kata_laluan">Kata Laluan</label>
                 <input type="password" id="kata_laluan" placeholder="Masukkan Kata Laluan" required>
             </div>
@@ -50,7 +52,7 @@
                 return;
             }
 
-            // 改变按钮状态为加载中
+            // change button to proses
             loginBtn.disabled = true;
             loginBtn.textContent = "Sedang diproses...";
 
@@ -58,7 +60,7 @@
                 let userRole = null;
                 let userData = null;
 
-                // 1. 先检索 'admin' Collection
+                // first search admin in firebase database
                 const adminRef = collection(db, "admin");
                 const adminQuery = query(adminRef, where("id_admin", "==", idPengguna));
                 const adminSnapshot = await getDocs(adminQuery);
@@ -71,7 +73,7 @@
                     }
                 });
 
-                // 2. 如果在 admin 找不到或密码不匹配，再检索 'users' Collection
+                // second if not have admin it will auto check users in firebase database
                 if (!userData) {
                     const usersRef = collection(db, "users");
                     const userQuery = query(usersRef, where("id_pengguna", "==", idPengguna));
@@ -86,21 +88,21 @@
                     });
                 }
 
-                // 3. 执行验证结果与 Switchboard 页面跳转
+                // checking the password & id correct or not and jump to utama.html and admin.html
                 if (userData) {
                     alert(`Log masuk berjaya! (${userRole === 'admin' ? 'Admin' : 'Pengguna'})`);
                     
-                    // 给 userData 附加上角色类型字段
+                    // give a role and jump to the correct html
                     userData.role = userRole;
 
-                    // 存入 SessionStorage 供后续页面进行安全防护与数据提取
+                    // save to database and do safety protect and get data
                     sessionStorage.setItem("user", JSON.stringify(userData));
 
-                    // 跳转至对应的 Switchboard / 主页
+                    // jump to the correct html
                     if (userRole === "admin") {
-                        window.location.href = "admin.html"; // 修改为你的 Admin 主页文件名
+                        window.location.href = "admin.html";
                     } else {
-                        window.location.href = "utama.html"; // 普通用户主页
+                        window.location.href = "utama.html";
                     }
                 } else {
                     alert("ID Pengguna atau Kata Laluan salah!");
