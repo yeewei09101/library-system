@@ -204,6 +204,53 @@
       transition: 0.2s;
     }
     .btn-submit-laporan:hover { background: #7dd3fc; }
+
+    /* Pengumuman 弹窗 Modal 样式 */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(0, 0, 0, 0.7);
+      backdrop-filter: blur(5px);
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+    }
+    .modal-content {
+      background: #1e293b;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: 16px;
+      width: 90%;
+      max-width: 600px;
+      padding: 24px;
+      color: #fff;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    }
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 15px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      padding-bottom: 10px;
+    }
+    .close-btn {
+      background: none;
+      border: none;
+      color: #94a3b8;
+      font-size: 1.5rem;
+      cursor: pointer;
+    }
+    .close-btn:hover { color: #fff; }
+    .notis-item {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      padding: 12px 16px;
+      border-radius: 10px;
+      margin-bottom: 10px;
+    }
+    .notis-title { font-weight: bold; color: #38bdf8; margin-bottom: 4px; }
+    .notis-date { font-size: 0.75rem; color: #94a3b8; margin-bottom: 6px; }
   </style>
 </head>
 <body>
@@ -211,7 +258,6 @@
   <!-- 防越权与权限检测脚本 (必须放在最上方) -->
   <script>
     const currentUser = JSON.parse(sessionStorage.getItem("user"));
-    // 如果没有登录，或者身份不是 user (Pengguna)，退回登录页
     if (!currentUser || currentUser.role !== "user") {
       alert("Akses dilarang! Halaman ini khas untuk Pengguna PSS sahaja.");
       window.location.href = "login.html";
@@ -258,8 +304,8 @@
         <div class="card-desc">Semak jadual bertugas harian dan giliran pengawas PSS.</div>
       </div>
 
-      <!-- 2. Pengumuman (Notis) -->
-      <div class="glass-card" onclick="alert('Membuka Pengumuman (Notis)...')">
+      <!-- 2. Pengumuman (Notis) - 点击打开只读弹窗 -->
+      <div class="glass-card" onclick="openNotisModal()">
         <div class="card-icon">📢</div>
         <div class="card-title">Pengumuman (Notis)</div>
         <div class="card-desc">Lihat notis terkini, aktiviti perpustakaan dan makluman penting.</div>
@@ -300,12 +346,34 @@
     </div>
   </div>
 
+  <!-- Pengumuman 只读弹窗 -->
+  <div id="notisModal" class="modal-overlay">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>📢 Senarai Pengumuman & Notis</h3>
+        <button class="close-btn" onclick="closeNotisModal()">&times;</button>
+      </div>
+      <div id="notisList">
+        <!-- 示例数据（只读展示） -->
+        <div class="notis-item">
+          <div class="notis-title">Mesyuarat Agung PSS 2026</div>
+          <div class="notis-date">Tarikh: 2026-05-10 | Oleh: Admin</div>
+          <p style="font-size: 0.88rem; color: #cbd5e1;">Semua pengawas PSS diwajibkan hadir ke bilik tayangan pada pukul 2.00 petang.</p>
+        </div>
+
+        <div class="notis-item">
+          <div class="notis-title">Semakan Stok Buku Hujung Bulan</div>
+          <div class="notis-date">Tarikh: 2026-05-01 | Oleh: Admin</div>
+          <p style="font-size: 0.88rem; color: #cbd5e1;">Sila pastikan semua kaunter dipantau mengikut jadual tugas yang ditetapkan.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <script>
-    // 1. 初始化渲染用户资料与 Sesi 判定
+    // 1. 初始化用户与 Sesi 自动判定
     document.getElementById('username').textContent = currentUser.id_pengguna || currentUser.nama || "Pengawas";
     
-    // 判定 Sesi Pagi 或 Sesi Petang
-    // 可以优先读取 Firestore 存储的 sesi 字段，否则根据当前系统时间（13:00前为 Pagi）自动判断
     const sesiBadge = document.getElementById('sesiBadge');
     let userSesi = currentUser.sesi; 
 
@@ -322,28 +390,26 @@
       sesiBadge.classList.add("sesi-petang");
     }
 
-    // 2. 实时秒表时钟 (Date : Hour : Min : Second)
+    // 2. 实时时钟 (Date:Hour:Min:Second)
     function updateClock() {
       const now = new Date();
-      
       const year = now.getFullYear();
       const month = String(now.getMonth() + 1).padStart(2, '0');
       const day = String(now.getDate()).padStart(2, '0');
-      
       const hours = String(now.getHours()).padStart(2, '0');
       const minutes = String(now.getMinutes()).padStart(2, '0');
       const seconds = String(now.getSeconds()).padStart(2, '0');
 
-      const formatted = `Tarikh: ${year}-${month}-${day} | Masa: ${hours}:${minutes}:${seconds}`;
-      document.getElementById('clockDisplay').textContent = formatted;
+      document.getElementById('clockDisplay').textContent = 
+        `Tarikh: ${year}-${month}-${day} | Masa: ${hours}:${minutes}:${seconds}`;
     }
     setInterval(updateClock, 1000);
-    updateClock(); // 立即执行一次
+    updateClock();
 
-    // 3. Zoom In / Out Function
-    let currentFontSize = 100; // 百分比
+    // 3. Zoom Function
+    let currentFontSize = 100;
     function adjustZoom(delta) {
-      currentFontSize += delta * 5; // 每次增减 5%
+      currentFontSize += delta * 5;
       if (currentFontSize < 85) currentFontSize = 85;
       if (currentFontSize > 130) currentFontSize = 130;
       document.body.style.fontSize = currentFontSize + "%";
@@ -353,7 +419,7 @@
       document.body.style.fontSize = "100%";
     }
 
-    // 4. Laporan 字符计数 (VARCHAR 500)
+    // 4. Laporan (Varchar 500)
     function updateCharCount() {
       const input = document.getElementById('laporanInput');
       document.getElementById('charCount').textContent = input.value.length;
@@ -370,7 +436,15 @@
       updateCharCount();
     }
 
-    // 5. 退出登录
+    // 5. Pengumuman Modal Controls (仅查看)
+    function openNotisModal() {
+      document.getElementById('notisModal').style.display = 'flex';
+    }
+    function closeNotisModal() {
+      document.getElementById('notisModal').style.display = 'none';
+    }
+
+    // 6. Logout
     function logout() {
       sessionStorage.removeItem("user");
       window.location.href = "login.html";
