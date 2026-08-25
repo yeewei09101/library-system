@@ -95,7 +95,7 @@
         <span id="charCount">0</span> / 500 Aksara (Varchar 500)
       </div>
 
-      <button class="btn-submit-laporan" onclick="submitLaporan()">Hantar Laporan</button>
+      <button class="btn-submit-laporan" id="btnSubmitLaporan">Hantar Laporan</button>
     </div>
   </div>
 
@@ -107,11 +107,12 @@
         <button class="close-btn" onclick="closeNotisModal()">&times;</button>
       </div>
       <div id="notisList">
-        <!-- Kandungan dimasukkan secara dinamik menerusi JavaScript -->
+        <!-- Kandungan dimasukkan secara dinamik menerusi Firebase -->
       </div>
     </div>
   </div>
 
+  <!-- 全局基礎腳本 (UI/Accessibility/Clock/Logout) -->
   <script>
     // 1. Inisialisasi Pengguna & Penentuan Sesi
     document.getElementById('username').textContent = currentUser.id_pengguna || currentUser.nama || "Pengawas";
@@ -132,7 +133,7 @@
       sesiBadge.classList.add("sesi-petang");
     }
 
-    // 2. Jam Masa Nyata (Date:Hour:Min:Second)
+    // 2. Jam Masa Nyata
     function updateClock() {
       const now = new Date();
       const year = now.getFullYear();
@@ -148,7 +149,7 @@
     setInterval(updateClock, 1000);
     updateClock();
 
-    // 3. Pelarasan Saiz Tulisan (Zoom In/Out)
+    // 3. Pelarasan Saiz Tulisan
     let currentFontSize = 100;
     function adjustZoom(delta) {
       currentFontSize += delta * 5;
@@ -161,47 +162,14 @@
       document.body.style.fontSize = "100%";
     }
 
-    // 4. Pengurusan Laporan
+    // 4. Pengurusan Laporan Counter
     function updateCharCount() {
       const input = document.getElementById('laporanInput');
       document.getElementById('charCount').textContent = input.value.length;
     }
 
-    function submitLaporan() {
-      const content = document.getElementById('laporanInput').value.trim();
-      if (!content) {
-        alert("Sila tulis laporan sebelum menghantar!");
-        return;
-      }
-      alert("Laporan berjaya dihantar!\n\nKandungan:\n" + content);
-      document.getElementById('laporanInput').value = "";
-      updateCharCount();
-    }
-
-    // 5. Pengurusan Modal Pengumuman (Tarik Data Dinamik dari localStorage)
-    function loadPengumumanList() {
-      const notisListContainer = document.getElementById('notisList');
-      const pengumumanData = JSON.parse(localStorage.getItem("pengumuman")) || [];
-
-      if (pengumumanData.length === 0) {
-        notisListContainer.innerHTML = `
-          <div style="color: #94a3b8; text-align: center; padding: 20px;">
-            Tiada pengumuman atau notis terkini buat masa ini.
-          </div>`;
-        return;
-      }
-
-      notisListContainer.innerHTML = pengumumanData.map(item => `
-        <div class="notis-item">
-          <div class="notis-title">${escapeHTML(item.tajuk)}</div>
-          <div class="notis-date">Tarikh: ${escapeHTML(item.tarikh)} | Oleh: ${escapeHTML(item.oleh || 'Admin')}</div>
-          <p style="font-size: 0.88rem; color: #cbd5e1; white-space: pre-line;">${escapeHTML(item.kandungan)}</p>
-        </div>
-      `).join('');
-    }
-
+    // Modal Control
     function openNotisModal() {
-      loadPengumumanList();
       document.getElementById('notisModal').style.display = 'flex';
     }
 
@@ -209,7 +177,6 @@
       document.getElementById('notisModal').style.display = 'none';
     }
 
-    // Sanitasi HTML bagi mencegah serangan XSS
     function escapeHTML(str) {
       return String(str || '')
         .replace(/&/g, '&amp;')
@@ -217,12 +184,94 @@
         .replace(/>/g, '&gt;')
         .replace(/"/g, '&quot;');
     }
-// 6. Log Keluar
-function logout() {
-  sessionStorage.removeItem("user");
-  sessionStorage.clear();
-  window.location.href = "index.html"; // 直接跳转回 index.html
-}
+
+    // 5. Log Keluar
+    function logout() {
+      sessionStorage.removeItem("user");
+      sessionStorage.clear();
+      window.location.href = "index.html";
+    }
+  </script>
+
+  <!-- Firebase 整合腳本 -->
+  <script type="module">
+    import { db } from './firebase.js';
+    import { 
+      collection, 
+      addDoc, 
+      onSnapshot, 
+      query, 
+      orderBy 
+    } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+    const notisListContainer = document.getElementById('notisList');
+    const btnSubmitLaporan = document.getElementById('btnSubmitLaporan');
+
+    // 1. 即時讀取 Firebase 中的 'pengumuman' Collection
+    const pengumumanRef = collection(db, "pengumuman");
+    const q = query(pengumumanRef, orderBy("createdAt", "desc"));
+
+    onSnapshot(q, (snapshot) => {
+      if (snapshot.empty) {
+        notisListContainer.innerHTML = `
+          <div style="color: #94a3b8; text-align: center; padding: 20px;">
+            Tiada pengumuman atau notis terkini buat masa ini.
+          </div>`;
+        return;
+      }
+
+      notisListContainer.innerHTML = snapshot.docs.map(docSnap => {
+        const item = docSnap.data();
+        return `
+          <div class="notis-item">
+            <div class="notis-title">${escapeHTML(item.tajuk)}</div>
+            <div class="notis-date">Tarikh: ${escapeHTML(item.tarikh)} | Oleh: ${escapeHTML(item.oleh || 'Admin')}</div>
+            <p style="font-size: 0.88rem; color: #cbd5e1; white-space: pre-line;">${escapeHTML(item.kandungan)}</p>
+          </div>
+        `;
+      }).join('');
+    }, (error) => {
+      console.error("Ralat mengambil pengumuman:", error);
+      notisListContainer.innerHTML = `<div style="color: #ef4444; text-align: center;">Gagal memuatkan pengumuman.</div>`;
+    });
+
+    // 2. 提交 Laporan 至 Firebase 'laporan' Collection
+    btnSubmitLaporan.addEventListener('click', async () => {
+      const laporanInput = document.getElementById('laporanInput');
+      const content = laporanInput.value.trim();
+
+      if (!content) {
+        alert("Sila tulis laporan sebelum menghantar!");
+        return;
+      }
+
+      btnSubmitLaporan.disabled = true;
+      btnSubmitLaporan.textContent = "Hantar...";
+
+      try {
+        const now = new Date();
+        const tarikhStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+        const masaStr = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+
+        await addDoc(collection(db, "laporan"), {
+          id_pengguna: currentUser.id_pengguna || currentUser.nama || "Pengawas",
+          kandungan: content,
+          tarikh: tarikhStr,
+          masa: masaStr,
+          createdAt: new Date()
+        });
+
+        alert("Laporan berjaya dihantar ke Firebase!");
+        laporanInput.value = "";
+        updateCharCount();
+      } catch (err) {
+        console.error("Ralat menghantar laporan:", err);
+        alert("Gagal menghantar laporan. Sila cuba lagi.");
+      } finally {
+        btnSubmitLaporan.disabled = false;
+        btnSubmitLaporan.textContent = "Hantar Laporan";
+      }
+    });
   </script>
 </body>
 </html>
