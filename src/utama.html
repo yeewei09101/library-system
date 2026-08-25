@@ -20,7 +20,7 @@
       transition: font-size 0.2s ease;
     }
 
-    /* 顶部导航栏 (Glassmorphism Header) */
+    /* Glassmorphism Header */
     header {
       display: flex;
       justify-content: space-between;
@@ -68,7 +68,7 @@
     .sesi-pagi { background: #eab308; color: #000; }
     .sesi-petang { background: #3b82f6; color: #fff; }
 
-    /* Zoom in/out 工具按钮 */
+    /* Zoom in/out Tools */
     .accessibility-tools {
       display: flex;
       gap: 6px;
@@ -98,13 +98,13 @@
     }
     .btn-logout:hover { background: #dc2626; }
 
-    /* 主容器 */
+    /* Main Container */
     .container {
       max-width: 1200px;
       margin: 0 auto;
     }
 
-    /* 实时时间显示模块 (Date:Hour:Min:Second) */
+    /* Rekod Masa Banner */
     .time-banner {
       background: rgba(255, 255, 255, 0.05);
       backdrop-filter: blur(16px);
@@ -127,7 +127,7 @@
       color: #94a3b8;
     }
 
-    /* Switchboard 控制面板网格 */
+    /* Switchboard Grid */
     .switchboard-grid {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
@@ -135,7 +135,7 @@
       margin-bottom: 30px;
     }
 
-    /* 雾面玻璃卡片 */
+    /* Glass Cards */
     .glass-card {
       background: rgba(255, 255, 255, 0.05);
       backdrop-filter: blur(16px);
@@ -159,7 +159,7 @@
     .card-title { font-size: 1.2rem; font-weight: 600; margin-bottom: 8px; }
     .card-desc { font-size: 0.88rem; color: #cbd5e1; line-height: 1.4; }
 
-    /* Laporan 表单区域 (VARCHAR 500) */
+    /* Laporan Section */
     .laporan-section {
       background: rgba(255, 255, 255, 0.05);
       backdrop-filter: blur(16px);
@@ -205,7 +205,7 @@
     }
     .btn-submit-laporan:hover { background: #7dd3fc; }
 
-    /* Pengumuman 弹窗 Modal 样式 */
+    /* Pengumuman Modal */
     .modal-overlay {
       display: none;
       position: fixed;
@@ -216,16 +216,21 @@
       align-items: center;
       z-index: 1000;
     }
+
     .modal-content {
       background: #1e293b;
       border: 1px solid rgba(255, 255, 255, 0.2);
       border-radius: 16px;
       width: 90%;
       max-width: 600px;
+      max-height: 80vh;
+      display: flex;
+      flex-direction: column;
       padding: 24px;
       color: #fff;
       box-shadow: 0 10px 30px rgba(0,0,0,0.5);
     }
+
     .modal-header {
       display: flex;
       justify-content: space-between;
@@ -234,6 +239,7 @@
       border-bottom: 1px solid rgba(255, 255, 255, 0.1);
       padding-bottom: 10px;
     }
+
     .close-btn {
       background: none;
       border: none;
@@ -242,6 +248,12 @@
       cursor: pointer;
     }
     .close-btn:hover { color: #fff; }
+
+    #notisList {
+      overflow-y: auto;
+      padding-right: 5px;
+    }
+
     .notis-item {
       background: rgba(255, 255, 255, 0.05);
       border: 1px solid rgba(255, 255, 255, 0.1);
@@ -249,13 +261,14 @@
       border-radius: 10px;
       margin-bottom: 10px;
     }
+
     .notis-title { font-weight: bold; color: #38bdf8; margin-bottom: 4px; }
     .notis-date { font-size: 0.75rem; color: #94a3b8; margin-bottom: 6px; }
   </style>
 </head>
 <body>
 
-  <!-- 防越权与权限检测脚本 (必须放在最上方) -->
+  <!-- Kawalan Keselamatan Akses -->
   <script>
     const currentUser = JSON.parse(sessionStorage.getItem("user"));
     if (!currentUser || currentUser.role !== "user") {
@@ -265,19 +278,19 @@
   </script>
 
   <div class="container">
-    <!-- 顶部导航栏 -->
+    <!-- Navigation Header -->
     <header>
       <div class="logo">📚 Sistem PSS</div>
       
       <div class="header-right">
-        <!-- Zoom In / Zoom Out 功能 -->
+        <!-- Accessibility Zoom -->
         <div class="accessibility-tools">
           <button class="tool-btn" onclick="adjustZoom(-1)" title="Tulisan Kecil">A-</button>
           <button class="tool-btn" onclick="resetZoom()" title="Saiz Normal">A</button>
           <button class="tool-btn" onclick="adjustZoom(1)" title="Tulisan Besar">A+</button>
         </div>
 
-        <!-- 动态 Welcome 提示及早晚班 Badge -->
+        <!-- Dynamic User Greeting -->
         <div class="user-greeting">
           Hi, <span id="username">Nama Pengguna</span>
           <span id="sesiBadge" class="badge-sesi"></span>
@@ -287,13 +300,13 @@
       </div>
     </header>
 
-    <!-- 实时日期与时间面板 (Rekod Masa) -->
+    <!-- Masa Rasmi -->
     <div class="time-banner">
       <div class="time-title">⏱️ Rekod Masa Rasmi Sistem</div>
       <div class="time-display" id="clockDisplay">Tarikh: -- | Masa: --:--:--</div>
     </div>
 
-    <!-- Switchboard 控制面板区域 -->
+    <!-- Panel Kawalan -->
     <h2 class="section-title">Panel Kawalan (Switchboard)</h2>
     
     <div class="switchboard-grid">
@@ -304,21 +317,21 @@
         <div class="card-desc">Semak jadual bertugas harian dan giliran pengawas PSS.</div>
       </div>
 
-      <!-- 2. Pengumuman (Notis) - 点击打开只读弹窗 -->
+      <!-- 2. Pengumuman (Notis) -->
       <div class="glass-card" onclick="openNotisModal()">
         <div class="card-icon">📢</div>
         <div class="card-title">Pengumuman (Notis)</div>
         <div class="card-desc">Lihat notis terkini, aktiviti perpustakaan dan makluman penting.</div>
       </div>
 
-      <!-- 3. Semakan Buku -->
+      <!-- 3. Carian Buku -->
       <div class="glass-card" onclick="alert('Membuka Carian Buku...')">
         <div class="card-icon">🔍</div>
         <div class="card-title">Carian Buku</div>
         <div class="card-desc">Cari koleksi buku, bahan rujukan dan status pinjaman.</div>
       </div>
 
-      <!-- 4. Kehadiran Pengawas -->
+      <!-- 4. Rekod Kehadiran -->
       <div class="glass-card" onclick="alert('Membuka Rekod Kehadiran...')">
         <div class="card-icon">📝</div>
         <div class="card-title">Rekod Kehadiran</div>
@@ -326,7 +339,7 @@
       </div>
     </div>
 
-    <!-- Laporan Section (VARCHAR 500 Limit) -->
+    <!-- Hantar Laporan -->
     <div class="laporan-section">
       <h3 style="font-size: 1.1rem; margin-bottom: 6px;">📝 Hantar Laporan / Mesej Harian</h3>
       <p style="font-size: 0.85rem; color: #94a3b8;">Tulis laporan bertugas atau sebarang maklum balas (Maksimum 500 aksara).</p>
@@ -346,7 +359,7 @@
     </div>
   </div>
 
-  <!-- Pengumuman 只读弹窗 -->
+  <!-- Pengumuman Modal (Dinamik) -->
   <div id="notisModal" class="modal-overlay">
     <div class="modal-content">
       <div class="modal-header">
@@ -354,24 +367,13 @@
         <button class="close-btn" onclick="closeNotisModal()">&times;</button>
       </div>
       <div id="notisList">
-        <!-- 示例数据（只读展示） -->
-        <div class="notis-item">
-          <div class="notis-title">Mesyuarat Agung PSS 2026</div>
-          <div class="notis-date">Tarikh: 2026-05-10 | Oleh: Admin</div>
-          <p style="font-size: 0.88rem; color: #cbd5e1;">Semua pengawas PSS diwajibkan hadir ke bilik tayangan pada pukul 2.00 petang.</p>
-        </div>
-
-        <div class="notis-item">
-          <div class="notis-title">Semakan Stok Buku Hujung Bulan</div>
-          <div class="notis-date">Tarikh: 2026-05-01 | Oleh: Admin</div>
-          <p style="font-size: 0.88rem; color: #cbd5e1;">Sila pastikan semua kaunter dipantau mengikut jadual tugas yang ditetapkan.</p>
-        </div>
+        <!-- Kandungan dimasukkan secara dinamik menerusi JavaScript -->
       </div>
     </div>
   </div>
 
   <script>
-    // 1. 初始化用户与 Sesi 自动判定
+    // 1. Inisialisasi Pengguna & Penentuan Sesi
     document.getElementById('username').textContent = currentUser.id_pengguna || currentUser.nama || "Pengawas";
     
     const sesiBadge = document.getElementById('sesiBadge');
@@ -390,7 +392,7 @@
       sesiBadge.classList.add("sesi-petang");
     }
 
-    // 2. 实时时钟 (Date:Hour:Min:Second)
+    // 2. Jam Masa Nyata (Date:Hour:Min:Second)
     function updateClock() {
       const now = new Date();
       const year = now.getFullYear();
@@ -406,7 +408,7 @@
     setInterval(updateClock, 1000);
     updateClock();
 
-    // 3. Zoom Function
+    // 3. Pelarasan Saiz Tulisan (Zoom In/Out)
     let currentFontSize = 100;
     function adjustZoom(delta) {
       currentFontSize += delta * 5;
@@ -419,7 +421,7 @@
       document.body.style.fontSize = "100%";
     }
 
-    // 4. Laporan (Varchar 500)
+    // 4. Pengurusan Laporan
     function updateCharCount() {
       const input = document.getElementById('laporanInput');
       document.getElementById('charCount').textContent = input.value.length;
@@ -436,15 +438,47 @@
       updateCharCount();
     }
 
-    // 5. Pengumuman Modal Controls (仅查看)
+    // 5. Pengurusan Modal Pengumuman (Tarik Data Dinamik dari localStorage)
+    function loadPengumumanList() {
+      const notisListContainer = document.getElementById('notisList');
+      const pengumumanData = JSON.parse(localStorage.getItem("pengumuman")) || [];
+
+      if (pengumumanData.length === 0) {
+        notisListContainer.innerHTML = `
+          <div style="color: #94a3b8; text-align: center; padding: 20px;">
+            Tiada pengumuman atau notis terkini buat masa ini.
+          </div>`;
+        return;
+      }
+
+      notisListContainer.innerHTML = pengumumanData.map(item => `
+        <div class="notis-item">
+          <div class="notis-title">${escapeHTML(item.tajuk)}</div>
+          <div class="notis-date">Tarikh: ${escapeHTML(item.tarikh)} | Oleh: ${escapeHTML(item.oleh || 'Admin')}</div>
+          <p style="font-size: 0.88rem; color: #cbd5e1; white-space: pre-line;">${escapeHTML(item.kandungan)}</p>
+        </div>
+      `).join('');
+    }
+
     function openNotisModal() {
+      loadPengumumanList();
       document.getElementById('notisModal').style.display = 'flex';
     }
+
     function closeNotisModal() {
       document.getElementById('notisModal').style.display = 'none';
     }
 
-    // 6. Logout
+    // Sanitasi HTML bagi mencegah serangan XSS
+    function escapeHTML(str) {
+      return String(str || '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+    }
+
+    // 6. Log Keluar
     function logout() {
       sessionStorage.removeItem("user");
       window.location.href = "login.html";
