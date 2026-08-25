@@ -477,12 +477,12 @@
         .replace(/>/g, '&gt;')
         .replace(/"/g, '&quot;');
     }
-
-    // 6. Log Keluar
-    function logout() {
-      sessionStorage.removeItem("user");
-      window.location.href = "logout.html";
-    }
+// 6. Log Keluar
+function logout() {
+  sessionStorage.removeItem("user");
+  sessionStorage.clear();
+  window.location.href = "index.html"; // 直接跳转回 index.html
+}
   </script>
 </body>
 </html>
