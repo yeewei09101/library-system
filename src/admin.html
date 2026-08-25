@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Sistem PSS - Panel Pentadbir (Admin)</title>
+  <title>Sistem PSS - Halaman Utama Pengguna</title>
   <style>
     * {
       box-sizing: border-box;
@@ -20,7 +20,7 @@
       transition: font-size 0.2s ease;
     }
 
-    /* 顶部导航栏 */
+    /* 顶部导航栏 (Glassmorphism Header) */
     header {
       display: flex;
       justify-content: space-between;
@@ -41,7 +41,6 @@
       font-size: 1.4rem;
       font-weight: bold;
       letter-spacing: 1px;
-      color: #f43f5e; /* Admin 专属红粉色调 */
     }
 
     .header-right {
@@ -53,15 +52,28 @@
 
     .user-greeting {
       font-size: 0.95rem;
-      background: rgba(244, 63, 94, 0.15);
+      background: rgba(255, 255, 255, 0.12);
       padding: 8px 16px;
       border-radius: 20px;
-      border: 1px solid rgba(244, 63, 94, 0.3);
-      color: #fda4af;
+      border: 1px solid rgba(255, 255, 255, 0.2);
     }
 
-    /* Accessibility Zoom 按钮 */
-    .accessibility-tools { display: flex; gap: 6px; }
+    .badge-sesi {
+      padding: 3px 8px;
+      border-radius: 6px;
+      font-size: 0.8rem;
+      font-weight: bold;
+      margin-left: 6px;
+    }
+    .sesi-pagi { background: #eab308; color: #000; }
+    .sesi-petang { background: #3b82f6; color: #fff; }
+
+    /* Zoom in/out 工具按钮 */
+    .accessibility-tools {
+      display: flex;
+      gap: 6px;
+    }
+
     .tool-btn {
       background: rgba(255, 255, 255, 0.15);
       border: 1px solid rgba(255, 255, 255, 0.25);
@@ -86,9 +98,13 @@
     }
     .btn-logout:hover { background: #dc2626; }
 
-    .container { max-width: 1200px; margin: 0 auto; }
+    /* 主容器 */
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
 
-    /* 时间 Banner */
+    /* 实时时间显示模块 (Date:Hour:Min:Second) */
     .time-banner {
       background: rgba(255, 255, 255, 0.05);
       backdrop-filter: blur(16px);
@@ -101,12 +117,17 @@
       align-items: center;
       flex-wrap: wrap;
     }
+
     .time-title { font-size: 1rem; color: #94a3b8; }
-    .time-display { font-size: 1.2rem; font-weight: bold; color: #f43f5e; font-family: monospace; }
+    .time-display { font-size: 1.2rem; font-weight: bold; color: #38bdf8; font-family: monospace; }
 
-    .section-title { margin-bottom: 16px; font-size: 1.2rem; color: #94a3b8; }
+    .section-title {
+      margin-bottom: 16px;
+      font-size: 1.2rem;
+      color: #94a3b8;
+    }
 
-    /* 功能网格 */
+    /* Switchboard 控制面板网格 */
     .switchboard-grid {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
@@ -114,9 +135,11 @@
       margin-bottom: 30px;
     }
 
+    /* 雾面玻璃卡片 */
     .glass-card {
       background: rgba(255, 255, 255, 0.05);
       backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
       border: 1px solid rgba(255, 255, 255, 0.1);
       border-radius: 20px;
       padding: 24px;
@@ -124,10 +147,11 @@
       cursor: pointer;
       box-shadow: 0 4px 24px 0 rgba(0, 0, 0, 0.2);
     }
+
     .glass-card:hover {
       transform: translateY(-5px);
       background: rgba(255, 255, 255, 0.1);
-      border-color: rgba(244, 63, 94, 0.4);
+      border-color: rgba(255, 255, 255, 0.3);
       box-shadow: 0 12px 40px 0 rgba(0, 0, 0, 0.4);
     }
 
@@ -135,8 +159,8 @@
     .card-title { font-size: 1.2rem; font-weight: 600; margin-bottom: 8px; }
     .card-desc { font-size: 0.88rem; color: #cbd5e1; line-height: 1.4; }
 
-    /* Admin 专属：Pengumuman 发布管理区 */
-    .admin-section {
+    /* Laporan 表单区域 (VARCHAR 500) */
+    .laporan-section {
       background: rgba(255, 255, 255, 0.05);
       backdrop-filter: blur(16px);
       border: 1px solid rgba(255, 255, 255, 0.1);
@@ -145,23 +169,33 @@
       margin-top: 25px;
     }
 
-    .form-group { margin-bottom: 15px; }
-    .form-group label { display: block; font-size: 0.9rem; margin-bottom: 6px; color: #cbd5e1; }
-    .form-input, .form-textarea, .form-select {
+    .laporan-textarea {
       width: 100%;
+      height: 110px;
       background: rgba(0, 0, 0, 0.2);
       border: 1px solid rgba(255, 255, 255, 0.2);
-      border-radius: 10px;
+      border-radius: 12px;
       color: #fff;
-      padding: 10px 14px;
+      padding: 12px;
       font-size: 0.95rem;
       outline: none;
+      resize: vertical;
+      margin-top: 10px;
     }
-    .form-input:focus, .form-textarea:focus, .form-select:focus { border-color: #f43f5e; }
 
-    .btn-primary {
-      background: #f43f5e;
-      color: white;
+    .laporan-textarea:focus { border-color: #38bdf8; }
+
+    .char-counter {
+      text-align: right;
+      font-size: 0.8rem;
+      color: #94a3b8;
+      margin-top: 4px;
+    }
+
+    .btn-submit-laporan {
+      margin-top: 10px;
+      background: #38bdf8;
+      color: #0f172a;
       border: none;
       padding: 10px 20px;
       border-radius: 8px;
@@ -169,35 +203,14 @@
       cursor: pointer;
       transition: 0.2s;
     }
-    .btn-primary:hover { background: #e11d48; }
+    .btn-submit-laporan:hover { background: #7dd3fc; }
 
-    /* 实时 Notice 列表 (Admin 视角含删除功能) */
-    .notis-item-admin {
-      background: rgba(0, 0, 0, 0.2);
-      border: 1px solid rgba(255, 255, 255, 0.1);
-      padding: 14px;
-      border-radius: 10px;
-      margin-top: 10px;
-      display: flex;
-      justify-content: space-between;
-      align-items: flex-start;
-    }
-    .btn-delete {
-      background: #ef4444;
-      border: none;
-      color: white;
-      padding: 4px 10px;
-      border-radius: 6px;
-      cursor: pointer;
-      font-size: 0.8rem;
-    }
-
-    /* Modal 弹窗 */
+    /* Pengumuman 弹窗 Modal 样式 */
     .modal-overlay {
       display: none;
       position: fixed;
       top: 0; left: 0; width: 100%; height: 100%;
-      background: rgba(0, 0, 0, 0.75);
+      background: rgba(0, 0, 0, 0.7);
       backdrop-filter: blur(5px);
       justify-content: center;
       align-items: center;
@@ -208,144 +221,175 @@
       border: 1px solid rgba(255, 255, 255, 0.2);
       border-radius: 16px;
       width: 90%;
-      max-width: 500px;
+      max-width: 600px;
+      max-height: 80vh;
+      display: flex;
+      flex-direction: column;
       padding: 24px;
       color: #fff;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.5);
     }
     .modal-header {
-      display: flex; justify-content: space-between; align-items: center;
-      margin-bottom: 20px; border-bottom: 1px solid rgba(255, 255, 255, 0.1); padding-bottom: 10px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 15px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      padding-bottom: 10px;
     }
-    .close-btn { background: none; border: none; color: #94a3b8; font-size: 1.5rem; cursor: pointer; }
+    .close-btn {
+      background: none;
+      border: none;
+      color: #94a3b8;
+      font-size: 1.5rem;
+      cursor: pointer;
+    }
+    .close-btn:hover { color: #fff; }
+    
+    #notisList {
+      overflow-y: auto;
+      padding-right: 5px;
+    }
+    
+    .notis-item {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      padding: 12px 16px;
+      border-radius: 10px;
+      margin-bottom: 10px;
+    }
+    .notis-title { font-weight: bold; color: #38bdf8; margin-bottom: 4px; }
+    .notis-date { font-size: 0.75rem; color: #94a3b8; margin-bottom: 6px; }
+    .notis-empty { text-align: center; color: #94a3b8; padding: 20px; }
   </style>
 </head>
 <body>
 
-  <!-- 防越权检测 (仅允许 Admin 访问) -->
+  <!-- 防越权与权限检测脚本 (必须放在最上方) -->
   <script>
     const currentUser = JSON.parse(sessionStorage.getItem("user"));
-    if (!currentUser || currentUser.role !== "admin") {
-      alert("Akses dilarang! Halaman ini khas untuk Pentadbir (Admin) sahaja.");
+    if (!currentUser || currentUser.role !== "user") {
+      alert("Akses dilarang! Halaman ini khas untuk Pengguna PSS sahaja.");
       window.location.href = "login.html";
     }
   </script>
 
   <div class="container">
+    <!-- 顶部导航栏 -->
     <header>
-      <div class="logo">⚙️ Sistem PSS - Panel Admin</div>
+      <div class="logo">📚 Sistem PSS</div>
+      
       <div class="header-right">
+        <!-- Zoom In / Zoom Out 功能 -->
         <div class="accessibility-tools">
-          <button class="tool-btn" onclick="adjustZoom(-1)">A-</button>
-          <button class="tool-btn" onclick="resetZoom()">A</button>
-          <button class="tool-btn" onclick="adjustZoom(1)">A+</button>
+          <button class="tool-btn" onclick="adjustZoom(-1)" title="Tulisan Kecil">A-</button>
+          <button class="tool-btn" onclick="resetZoom()" title="Saiz Normal">A</button>
+          <button class="tool-btn" onclick="adjustZoom(1)" title="Tulisan Besar">A+</button>
         </div>
+
+        <!-- 动态 Welcome 提示及早晚班 Badge -->
         <div class="user-greeting">
-          Pentadbir: <span id="adminName">Admin</span>
+          Hi, <span id="username">Nama Pengguna</span>
+          <span id="sesiBadge" class="badge-sesi"></span>
         </div>
+
         <button class="btn-logout" onclick="logout()">Log Keluar</button>
       </div>
     </header>
 
+    <!-- 实时日期与时间面板 (Rekod Masa) -->
     <div class="time-banner">
-      <div class="time-title">⏱️ Panel Pengurusan Masa Admin</div>
+      <div class="time-title">⏱️ Rekod Masa Rasmi Sistem</div>
       <div class="time-display" id="clockDisplay">Tarikh: -- | Masa: --:--:--</div>
     </div>
 
-    <h2 class="section-title">Menu Pengurusan Utama</h2>
+    <!-- Switchboard 控制面板区域 -->
+    <h2 class="section-title">Panel Kawalan (Switchboard)</h2>
+    
     <div class="switchboard-grid">
-      <!-- 1. Tambah Pengguna 按钮卡片 -->
-      <div class="glass-card" onclick="openTambahUserModal()">
-        <div class="card-icon">👤➕</div>
-        <div class="card-title">Tambah Pengguna</div>
-        <div class="card-desc">Cipta akaun baharu untuk Pengawas / Pengguna PSS baharu.</div>
+      <!-- 1. Schedule Duty -->
+      <div class="glass-card" onclick="alert('Membuka Jadual Tugas (Schedule Duty)...')">
+        <div class="card-icon">📅</div>
+        <div class="card-title">Schedule Duty</div>
+        <div class="card-desc">Semak jadual bertugas harian dan giliran pengawas PSS.</div>
       </div>
 
-      <!-- 2. Pengurusan Notis -->
-      <div class="glass-card" onclick="document.getElementById('pengumumanSection').scrollIntoView({behavior: 'smooth'})">
+      <!-- 2. Pengumuman (Notis) - 点击打开只读弹窗 -->
+      <div class="glass-card" onclick="openNotisModal()">
         <div class="card-icon">📢</div>
-        <div class="card-title">Pengurusan Pengumuman</div>
-        <div class="card-desc">Tambah atau padam pengumuman untuk dikemaskini secara langsung (Real-time).</div>
+        <div class="card-title">Pengumuman (Notis)</div>
+        <div class="card-desc">Lihat notis terkini, aktiviti perpustakaan dan makluman penting.</div>
       </div>
 
-      <!-- 3. Senarai Pengguna -->
-      <div class="glass-card" onclick="openSenaraiUserModal()">
-        <div class="card-icon">👥</div>
-        <div class="card-title">Senarai Pengguna</div>
-        <div class="card-desc">Semak dan urus semua akaun pengguna yang telah didaftarkan.</div>
+      <!-- 3. Semakan Buku -->
+      <div class="glass-card" onclick="alert('Membuka Carian Buku...')">
+        <div class="card-icon">🔍</div>
+        <div class="card-title">Carian Buku</div>
+        <div class="card-desc">Cari koleksi buku, bahan rujukan dan status pinjaman.</div>
+      </div>
+
+      <!-- 4. Kehadiran Pengawas -->
+      <div class="glass-card" onclick="alert('Membuka Rekod Kehadiran...')">
+        <div class="card-icon">📝</div>
+        <div class="card-title">Rekod Kehadiran</div>
+        <div class="card-desc">Daftar masuk dan keluar waktu bertugas pengawas PSS.</div>
       </div>
     </div>
 
-    <!-- Admin 发布 / 管理 Pengumuman 区域 -->
-    <div class="admin-section" id="pengumumanSection">
-      <h3>📢 Cipta Pengumuman Baharu (Kemas Kini Real-Time)</h3>
-      <p style="font-size: 0.85rem; color: #94a3b8; margin-bottom: 15px;">
-        Sebarang pengumuman yang ditambah di sini akan dipaparkan serta-merta pada halaman pengguna.
-      </p>
+    <!-- Laporan Section (VARCHAR 500 Limit) -->
+    <div class="laporan-section">
+      <h3 style="font-size: 1.1rem; margin-bottom: 6px;">📝 Hantar Laporan / Mesej Harian</h3>
+      <p style="font-size: 0.85rem; color: #94a3b8;">Tulis laporan bertugas atau sebarang maklum balas (Maksimum 500 aksara).</p>
+      
+      <textarea 
+        id="laporanInput" 
+        class="laporan-textarea" 
+        maxlength="500" 
+        placeholder="Tulis laporan anda di sini..."
+        oninput="updateCharCount()"></textarea>
+      
+      <div class="char-counter">
+        <span id="charCount">0</span> / 500 Aksara (Varchar 500)
+      </div>
 
-      <div class="form-group">
-        <label>Tajuk Pengumuman</label>
-        <input type="text" id="notisTitle" class="form-input" placeholder="Masukkan tajuk...">
-      </div>
-      <div class="form-group">
-        <label>Kandungan Pengumuman</label>
-        <textarea id="notisContent" class="form-textarea" rows="3" placeholder="Tulis pengumuman di sini..."></textarea>
-      </div>
-      <button class="btn-primary" onclick="publishNotis()">Siarkan Pengumuman</button>
-
-      <h4 style="margin-top: 25px; margin-bottom: 10px;">Senarai Pengumuman Semasa</h4>
-      <div id="adminNotisContainer">
-        <!-- 动态加载 Notice 项 -->
-      </div>
-    </div>
-  </div>
-
-  <!-- 模态框 1: Tambah Pengguna (新增用户卡片) -->
-  <div id="tambahUserModal" class="modal-overlay">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h3>👤 Tambah Akaun Pengguna Baharu</h3>
-        <button class="close-btn" onclick="closeTambahUserModal()">&times;</button>
-      </div>
-      <div class="form-group">
-        <label>ID Pengguna / Username</label>
-        <input type="text" id="newUserId" class="form-input" placeholder="Contoh: PSS202601">
-      </div>
-      <div class="form-group">
-        <label>Kata Laluan (Password)</label>
-        <input type="password" id="newUserPass" class="form-input" placeholder="Masukkan katalaluan">
-      </div>
-      <div class="form-group">
-        <label>Nama Penuh</label>
-        <input type="text" id="newUserName" class="form-input" placeholder="Nama pengawas">
-      </div>
-      <div class="form-group">
-        <label>Sesi Bertugas</label>
-        <select id="newUserSesi" class="form-select">
-          <option value="Sesi Pagi">Sesi Pagi</option>
-          <option value="Sesi Petang">Sesi Petang</option>
-        </select>
-      </div>
-      <button class="btn-primary" style="width: 100%;" onclick="saveNewUser()">Simpan Akaun Pengguna</button>
+      <button class="btn-submit-laporan" onclick="submitLaporan()">Hantar Laporan</button>
     </div>
   </div>
 
-  <!-- 模态框 2: Senarai Pengguna (查看用户列表) -->
-  <div id="senaraiUserModal" class="modal-overlay">
+  <!-- Pengumuman 只读弹窗 -->
+  <div id="notisModal" class="modal-overlay">
     <div class="modal-content">
       <div class="modal-header">
-        <h3>👥 Senarai Pengguna Didaftarkan</h3>
-        <button class="close-btn" onclick="closeSenaraiUserModal()">&times;</button>
+        <h3>📢 Senarai Pengumuman & Notis</h3>
+        <button class="close-btn" onclick="closeNotisModal()">&times;</button>
       </div>
-      <div id="userListContainer" style="max-height: 300px; overflow-y: auto;">
-        <!-- 动态渲染列表 -->
+      <div id="notisList">
+        <!-- 动态渲染公告内容 -->
       </div>
     </div>
   </div>
 
   <script>
-    document.getElementById('adminName').textContent = currentUser.id_pengguna || "Admin";
+    // 1. 初始化用户与 Sesi 自动判定
+    document.getElementById('username').textContent = currentUser.id_pengguna || currentUser.nama || "Pengawas";
+    
+    const sesiBadge = document.getElementById('sesiBadge');
+    let userSesi = currentUser.sesi; 
 
-    // 1. 实时时钟
+    if (!userSesi) {
+      const currentHour = new Date().getHours();
+      userSesi = (currentHour < 13) ? "Pagi" : "Petang";
+    }
+
+    if (userSesi.toLowerCase().includes("pagi")) {
+      sesiBadge.textContent = "Sesi Pagi";
+      sesiBadge.classList.add("sesi-pagi");
+    } else {
+      sesiBadge.textContent = "Sesi Petang";
+      sesiBadge.classList.add("sesi-petang");
+    }
+
+    // 2. 实时时钟 (Date:Hour:Min:Second)
     function updateClock() {
       const now = new Date();
       const year = now.getFullYear();
@@ -354,13 +398,14 @@
       const hours = String(now.getHours()).padStart(2, '0');
       const minutes = String(now.getMinutes()).padStart(2, '0');
       const seconds = String(now.getSeconds()).padStart(2, '0');
+
       document.getElementById('clockDisplay').textContent = 
         `Tarikh: ${year}-${month}-${day} | Masa: ${hours}:${minutes}:${seconds}`;
     }
     setInterval(updateClock, 1000);
     updateClock();
 
-    // 2. 缩放控制
+    // 3. Zoom Function
     let currentFontSize = 100;
     function adjustZoom(delta) {
       currentFontSize += delta * 5;
@@ -373,142 +418,103 @@
       document.body.style.fontSize = "100%";
     }
 
-    // 3. Real-Time Pengumuman 核心逻辑 (存储于 localStorage)
-    function getNotisData() {
-      return JSON.parse(localStorage.getItem('sys_pengumuman')) || [
-        { id: 1, title: 'Mesyuarat Agung PSS 2026', content: 'Semua pengawas diwajibkan hadir ke bilik tayangan pada pukul 2.00 petang.', date: '2026-05-10', by: 'Admin' }
-      ];
+    // 4. Laporan (Varchar 500)
+    function updateCharCount() {
+      const input = document.getElementById('laporanInput');
+      document.getElementById('charCount').textContent = input.value.length;
     }
 
-    function renderAdminNotis() {
-      const notisList = getNotisData();
-      const container = document.getElementById('adminNotisContainer');
-      container.innerHTML = '';
+    function submitLaporan() {
+      const content = document.getElementById('laporanInput').value.trim();
+      if (!content) {
+        alert("Sila tulis laporan sebelum menghantar!");
+        return;
+      }
+      alert("Laporan berjaya dihantar!\n\nKandungan:\n" + content);
+      document.getElementById('laporanInput').value = "";
+      updateCharCount();
+    }
 
-      if (notisList.length === 0) {
-        container.innerHTML = '<p style="font-size: 0.85rem; color: #94a3b8;">Tiada pengumuman aktif.</p>';
+    // ==========================================
+    // 5. 实时公告更新逻辑 (Real-time Pengumuman)
+    // ==========================================
+    
+    // 初始化默认公告（如果 localStorage 中尚无数据）
+    function initDefaultNotis() {
+      const existing = localStorage.getItem("pengumuman");
+      if (!existing) {
+        const defaultNotis = [
+          {
+            tajuk: "Mesyuarat Agung PSS 2026",
+            tarikh: "2026-05-10",
+            oleh: "Admin",
+            kandungan: "Semua pengawas PSS diwajibkan hadir ke bilik tayangan pada pukul 2.00 petang."
+          },
+          {
+            tajuk: "Semakan Stok Buku Hujung Bulan",
+            tarikh: "2026-05-01",
+            oleh: "Admin",
+            kandungan: "Sila pastikan semua kaunter dipantau mengikut jadual tugas yang ditetapkan."
+          }
+        ];
+        localStorage.setItem("pengumuman", JSON.stringify(defaultNotis));
+      }
+    }
+
+    // 从 localStorage 读取数据并渲染公告列表
+    function renderPengumuman() {
+      const notisList = document.getElementById('notisList');
+      const pengumumanData = JSON.parse(localStorage.getItem("pengumuman")) || [];
+
+      if (pengumumanData.length === 0) {
+        notisList.innerHTML = `<div class="notis-empty">Tiada pengumuman terkini.</div>`;
         return;
       }
 
-      notisList.forEach(item => {
-        const div = document.createElement('div');
-        div.className = 'notis-item-admin';
-        div.innerHTML = `
-          <div>
-            <div style="font-weight: bold; color: #f43f5e;">${item.title}</div>
-            <div style="font-size: 0.75rem; color: #94a3b8; margin-bottom: 4px;">${item.date} | Oleh: ${item.by}</div>
-            <div style="font-size: 0.88rem; color: #cbd5e1;">${item.content}</div>
-          </div>
-          <button class="btn-delete" onclick="deleteNotis(${item.id})">Padam</button>
-        `;
-        container.appendChild(div);
-      });
+      notisList.innerHTML = pengumumanData.map(item => `
+        <div class="notis-item">
+          <div class="notis-title">${escapeHTML(item.tajuk)}</div>
+          <div class="notis-date">Tarikh: ${escapeHTML(item.tarikh || '')} | Oleh: ${escapeHTML(item.oleh || 'Admin')}</div>
+          <p style="font-size: 0.88rem; color: #cbd5e1;">${escapeHTML(item.kandungan)}</p>
+        </div>
+      `).join('');
     }
 
-    function publishNotis() {
-      const title = document.getElementById('notisTitle').value.trim();
-      const content = document.getElementById('notisContent').value.trim();
+    // 防止 XSS 攻击的安全转义函数
+    function escapeHTML(str) {
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+    }
 
-      if (!title || !content) {
-        alert("Sila isi tajuk dan kandungan pengumuman!");
-        return;
+    // 监听 Storage 变化事件（同浏览器其他窗口/标签页修改 localStorage 时触发）
+    window.addEventListener('storage', (event) => {
+      if (event.key === 'pengumuman') {
+        renderPengumuman();
       }
+    });
 
-      const notisList = getNotisData();
-      const now = new Date();
-      const dateStr = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
-      
-      const newNotis = {
-        id: Date.now(),
-        title: title,
-        content: content,
-        date: dateStr,
-        by: currentUser.id_pengguna || 'Admin'
-      };
-
-      notisList.unshift(newNotis);
-      localStorage.setItem('sys_pengumuman', JSON.stringify(notisList));
-
-      document.getElementById('notisTitle').value = '';
-      document.getElementById('notisContent').value = '';
-      
-      renderAdminNotis();
-      alert("Pengumuman berjaya disiarkan secara langsung!");
+    // 弹窗控制
+    function openNotisModal() {
+      renderPengumuman(); // 打开时确保渲染最新
+      document.getElementById('notisModal').style.display = 'flex';
+    }
+    
+    function closeNotisModal() {
+      document.getElementById('notisModal').style.display = 'none';
     }
 
-    function deleteNotis(id) {
-      if (!confirm("Adakah anda yakin ingin memadam pengumuman ini?")) return;
-      let notisList = getNotisData();
-      notisList = notisList.filter(item => item.id !== id);
-      localStorage.setItem('sys_pengumuman', JSON.stringify(notisList));
-      renderAdminNotis();
-    }
+    // 页面加载时自动初始化公告
+    initDefaultNotis();
+    renderPengumuman();
 
-    // 4. Tambah Pengguna 逻辑
-    function openTambahUserModal() { document.getElementById('tambahUserModal').style.display = 'flex'; }
-    function closeTambahUserModal() { document.getElementById('tambahUserModal').style.display = 'none'; }
-
-    function saveNewUser() {
-      const userId = document.getElementById('newUserId').value.trim();
-      const userPass = document.getElementById('newUserPass').value.trim();
-      const userName = document.getElementById('newUserName').value.trim();
-      const userSesi = document.getElementById('newUserSesi').value;
-
-      if (!userId || !userPass || !userName) {
-        alert("Sila lengkapkan semua maklumat pengguna!");
-        return;
-      }
-
-      const users = JSON.parse(localStorage.getItem('sys_users')) || [];
-      if (users.some(u => u.id_pengguna === userId)) {
-        alert("ID Pengguna ini telah wujud! Sila guna ID lain.");
-        return;
-      }
-
-      users.push({
-        id_pengguna: userId,
-        password: userPass,
-        nama: userName,
-        role: 'user',
-        sesi: userSesi
-      });
-
-      localStorage.setItem('sys_users', JSON.stringify(users));
-      alert(`Pengguna ${userName} (${userId}) berjaya didaftarkan!`);
-      
-      document.getElementById('newUserId').value = '';
-      document.getElementById('newUserPass').value = '';
-      document.getElementById('newUserName').value = '';
-      closeTambahUserModal();
-    }
-
-    // 5. 查看 Senarai Pengguna
-    function openSenaraiUserModal() {
-      const users = JSON.parse(localStorage.getItem('sys_users')) || [];
-      const container = document.getElementById('userListContainer');
-      container.innerHTML = '';
-
-      if (users.length === 0) {
-        container.innerHTML = '<p style="font-size:0.85rem; color:#94a3b8;">Tiada pengguna didaftarkan lagi.</p>';
-      } else {
-        users.forEach((u, index) => {
-          const item = document.createElement('div');
-          item.style.cssText = "background:rgba(0,0,0,0.2); padding:10px; border-radius:8px; margin-bottom:8px; font-size:0.88rem;";
-          item.innerHTML = `<strong>${index + 1}. ${u.nama}</strong> (${u.id_pengguna})<br><span style="color:#94a3b8;">Role: ${u.role} | Sesi: ${u.sesi}</span>`;
-          container.appendChild(item);
-        });
-      }
-      document.getElementById('senaraiUserModal').style.display = 'flex';
-    }
-    function closeSenaraiUserModal() { document.getElementById('senaraiUserModal').style.display = 'none'; }
-
+    // 6. Logout
     function logout() {
       sessionStorage.removeItem("user");
       window.location.href = "login.html";
     }
-
-    // 初始化渲染
-    renderAdminNotis();
   </script>
 </body>
 </html>
