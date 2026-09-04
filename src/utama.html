@@ -195,83 +195,40 @@
 
   <!-- Firebase 整合腳本 -->
   <script type="module">
-    import { db } from './firebase.js';
-    import { 
-      collection, 
-      addDoc, 
-      onSnapshot, 
-      query, 
-      orderBy 
-    } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+    // 1. 从 loadpengundi.js 导入你的函数
+  import { localCollectionNm } from './loadpengundi.js';
 
-    const notisListContainer = document.getElementById('notisList');
-    const btnSubmitLaporan = document.getElementById('btnSubmitLaporan');
+// 原有的其他逻辑...
+const notisListContainer = document.getElementById('notisList');
 
-    // 1. 即時讀取 Firebase 中的 'pengumuman' Collection
-    const pengumumanRef = collection(db, "pengumuman");
-    const q = query(pengumumanRef, orderBy("createdAt", "desc"));
+// 2. 示例：如何调用并获取 Firebase 数据
+async function loadData() {
+  try {
+    // 传入 Collection 名称（如 "pengumuman"）和排序字段（如 "createdAt"）
+    const list = await localCollectionNm("pengumuman", "createdAt");
+    console.log("获取到的数据：", list);
 
-    onSnapshot(q, (snapshot) => {
-      if (snapshot.empty) {
-        notisListContainer.innerHTML = `
-          <div style="color: #94a3b8; text-align: center; padding: 20px;">
-            Tiada pengumuman atau notis terkini buat masa ini.
-          </div>`;
-        return;
-      }
+    // 将数据渲染到页面上
+    if (list.length === 0) {
+      notisListContainer.innerHTML = `<div style="color: #94a3b8; text-align: center; padding: 20px;">Tiada pengumuman.</div>`;
+      return;
+    }
 
-      notisListContainer.innerHTML = snapshot.docs.map(docSnap => {
-        const item = docSnap.data();
-        return `
-          <div class="notis-item">
-            <div class="notis-title">${escapeHTML(item.tajuk)}</div>
-            <div class="notis-date">Tarikh: ${escapeHTML(item.tarikh)} | Oleh: ${escapeHTML(item.oleh || 'Admin')}</div>
-            <p style="font-size: 0.88rem; color: #cbd5e1; white-space: pre-line;">${escapeHTML(item.kandungan)}</p>
-          </div>
-        `;
-      }).join('');
-    }, (error) => {
-      console.error("Ralat mengambil pengumuman:", error);
-      notisListContainer.innerHTML = `<div style="color: #ef4444; text-align: center;">Gagal memuatkan pengumuman.</div>`;
-    });
+    notisListContainer.innerHTML = list.map(item => `
+      <div class="notis-item">
+        <div class="notis-title">${escapeHTML(item.tajuk)}</div>
+        <div class="notis-date">Tarikh: ${escapeHTML(item.tarikh)} | Oleh: ${escapeHTML(item.oleh || 'Admin')}</div>
+        <p style="font-size: 0.88rem; color: #cbd5e1; white-space: pre-line;">${escapeHTML(item.kandungan)}</p>
+      </div>
+    `).join('');
 
-    // 2. 提交 Laporan 至 Firebase 'laporan' Collection
-    btnSubmitLaporan.addEventListener('click', async () => {
-      const laporanInput = document.getElementById('laporanInput');
-      const content = laporanInput.value.trim();
+  } catch (err) {
+    console.error("加载数据出错：", err);
+  }
+}
 
-      if (!content) {
-        alert("Sila tulis laporan sebelum menghantar!");
-        return;
-      }
-
-      btnSubmitLaporan.disabled = true;
-      btnSubmitLaporan.textContent = "Hantar...";
-
-      try {
-        const now = new Date();
-        const tarikhStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
-        const masaStr = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
-
-        await addDoc(collection(db, "laporan"), {
-          id_pengguna: currentUser.id_pengguna || currentUser.nama || "Pengawas",
-          kandungan: content,
-          tarikh: tarikhStr,
-          masa: masaStr,
-          createdAt: new Date()
-        });
-
-        alert("Laporan berjaya dihantar ke Firebase!");
-        laporanInput.value = "";
-        updateCharCount();
-      } catch (err) {
-        console.error("Ralat menghantar laporan:", err);
-        alert("Gagal menghantar laporan. Sila cuba lagi.");
-      } finally {
-        btnSubmitLaporan.disabled = false;
-        btnSubmitLaporan.textContent = "Hantar Laporan";
-      }
-    });
+// 页面加载完成后调用
+loadData();
   </script>
 </body>
 </html>

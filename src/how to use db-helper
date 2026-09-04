@@ -1,0 +1,48 @@
+/*if need to insert data
+---sample---
+import { insertData } from './db-helper.js';
+
+async function handleAddReport() {
+  const newReport = {
+    id_pengguna: "User123",
+    kandungan: "test。",
+    status: "pending"
+  };
+
+  try {
+    const docId = await insertData("laporan", newReport);
+    alert("complete，new collectionID is: " + docId);
+  } catch (err) {
+    alert("can't insert");
+  }
+}
+*/
+
+/*if need to read data
+---sample---
+import { readAllData } from './db-helper.js';
+
+// read all notis and list out
+async function loadNotisList() {
+  try {
+    // read "pengumuman" collection，press "createdAt" back to front
+    const list = await readAllData("pengumuman", "createdAt", "desc");
+    
+    console.log("taken data list：", list);
+    // 渲染你的 HTML...
+  } catch (err) {
+    console.error("can't read", err);
+  }
+}
+*/
+
+/*if need to query
+---sample---
+import { queryData } from './db-helper.js';
+
+// just check role was "user"
+async function loadUsers() {
+  const users = await queryData("users", "role", "==", "user");
+  console.log("sample users list：", users);
+}
+*/

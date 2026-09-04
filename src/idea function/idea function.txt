@@ -6,3 +6,6 @@ rekod masa:date:hour:min:second
 zoom in/out function
 columm laporan varchar 500
 switchboard function:
+
+
+clear all coding about pengumuman at utama and admin
