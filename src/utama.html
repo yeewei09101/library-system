@@ -57,21 +57,14 @@
         <div class="card-desc">Semak jadual bertugas harian dan giliran pengawas PSS.</div>
       </div>
 
-      <!-- 2. Pengumuman (Notis) -->
-      <div class="glass-card" onclick="openNotisModal()">
-        <div class="card-icon">📢</div>
-        <div class="card-title">Pengumuman (Notis)</div>
-        <div class="card-desc">Lihat notis terkini, aktiviti perpustakaan dan makluman penting.</div>
-      </div>
-
-      <!-- 3. Carian Buku -->
+      <!-- 2. Carian Buku -->
       <div class="glass-card" onclick="alert('Membuka Carian Buku...')">
         <div class="card-icon">🔍</div>
         <div class="card-title">Carian Buku</div>
         <div class="card-desc">Cari koleksi buku, bahan rujukan dan status pinjaman.</div>
       </div>
 
-      <!-- 4. Rekod Kehadiran -->
+      <!-- 3. Rekod Kehadiran -->
       <div class="glass-card" onclick="alert('Membuka Rekod Kehadiran...')">
         <div class="card-icon">📝</div>
         <div class="card-title">Rekod Kehadiran</div>
@@ -96,19 +89,6 @@
       </div>
 
       <button class="btn-submit-laporan" id="btnSubmitLaporan">Hantar Laporan</button>
-    </div>
-  </div>
-
-  <!-- Pengumuman Modal (Dinamik) -->
-  <div id="notisModal" class="modal-overlay">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h3>📢 Senarai Pengumuman & Notis</h3>
-        <button class="close-btn" onclick="closeNotisModal()">&times;</button>
-      </div>
-      <div id="notisList">
-        <!-- Kandungan dimasukkan secara dinamik menerusi Firebase -->
-      </div>
     </div>
   </div>
 
@@ -168,15 +148,6 @@
       document.getElementById('charCount').textContent = input.value.length;
     }
 
-    // Modal Control
-    function openNotisModal() {
-      document.getElementById('notisModal').style.display = 'flex';
-    }
-
-    function closeNotisModal() {
-      document.getElementById('notisModal').style.display = 'none';
-    }
-
     function escapeHTML(str) {
       return String(str || '')
         .replace(/&/g, '&amp;')
@@ -191,44 +162,6 @@
       sessionStorage.clear();
       window.location.href = "index.html";
     }
-  </script>
-
-  <!-- Firebase 整合腳本 -->
-  <script type="module">
-    // 1. 从 loadpengundi.js 导入你的函数
-  import { localCollectionNm } from './loadpengundi.js';
-
-// 原有的其他逻辑...
-const notisListContainer = document.getElementById('notisList');
-
-// 2. 示例：如何调用并获取 Firebase 数据
-async function loadData() {
-  try {
-    // 传入 Collection 名称（如 "pengumuman"）和排序字段（如 "createdAt"）
-    const list = await localCollectionNm("pengumuman", "createdAt");
-    console.log("获取到的数据：", list);
-
-    // 将数据渲染到页面上
-    if (list.length === 0) {
-      notisListContainer.innerHTML = `<div style="color: #94a3b8; text-align: center; padding: 20px;">Tiada pengumuman.</div>`;
-      return;
-    }
-
-    notisListContainer.innerHTML = list.map(item => `
-      <div class="notis-item">
-        <div class="notis-title">${escapeHTML(item.tajuk)}</div>
-        <div class="notis-date">Tarikh: ${escapeHTML(item.tarikh)} | Oleh: ${escapeHTML(item.oleh || 'Admin')}</div>
-        <p style="font-size: 0.88rem; color: #cbd5e1; white-space: pre-line;">${escapeHTML(item.kandungan)}</p>
-      </div>
-    `).join('');
-
-  } catch (err) {
-    console.error("加载数据出错：", err);
-  }
-}
-
-// 页面加载完成后调用
-loadData();
   </script>
 </body>
 </html>
