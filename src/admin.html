@@ -5,6 +5,67 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Sistem PSS - Halaman Utama Admin</title>
   <link rel="stylesheet" href="../style/admin.css">
+  <style>
+    /* 附加弹窗样式，与整体 Glassmorphism 风格保持完全一致 */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(0, 0, 0, 0.7);
+      backdrop-filter: blur(5px);
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+    }
+    .modal-content {
+      background: #1e293b;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: 16px;
+      width: 90%;
+      max-width: 700px;
+      max-height: 80vh;
+      display: flex;
+      flex-direction: column;
+      padding: 24px;
+      color: #fff;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    }
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 15px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      padding-bottom: 10px;
+    }
+    .close-btn {
+      background: none;
+      border: none;
+      color: #94a3b8;
+      font-size: 1.5rem;
+      cursor: pointer;
+    }
+    .close-btn:hover { color: #fff; }
+    #laporanListContainer {
+      overflow-y: auto;
+      padding-right: 5px;
+    }
+    .laporan-card-item {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      padding: 14px 16px;
+      border-radius: 10px;
+      margin-bottom: 12px;
+    }
+    .laporan-meta {
+      font-size: 0.8rem;
+      color: #38bdf8;
+      margin-bottom: 6px;
+      display: flex;
+      justify-content: space-between;
+      flex-wrap: wrap;
+    }
+  </style>
 </head>
 <body>
 
@@ -53,16 +114,30 @@
         <div class="card-desc">Kemaskini dan tetapkan giliran bertugas pengawas PSS.</div>
       </div>
 
-      <div class="glass-card" onclick="alert('Membuka Rekod Kehadiran Semua Pengawas...')">
+      <!-- Laporan Kehadiran 链接到查看报告功能 -->
+      <div class="glass-card" onclick="openLaporanModal()">
         <div class="card-icon">📊</div>
         <div class="card-title">Laporan Kehadiran</div>
-        <div class="card-desc">Semak log kehadiran pengawas PSS Sesi Pagi & Petang.</div>
+        <div class="card-desc">Semak log kehadiran dan laporan harian pengawas PSS.</div>
       </div>
 
       <div class="glass-card" onclick="alert('Membuka Pengurusan Buku...')">
         <div class="card-icon">📚</div>
         <div class="card-title">Inventori Buku</div>
         <div class="card-desc">Tambah, kemaskini dan semak rekod pinjaman buku.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 动态查看 Laporan Kehadiran 的弹窗 (Modal) -->
+  <div id="laporanModal" class="modal-overlay">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>📊 Senarai Laporan & Kehadiran Pengawas</h3>
+        <button class="close-btn" onclick="closeLaporanModal()">&times;</button>
+      </div>
+      <div id="laporanListContainer">
+        <!-- JS 会动态填入数据 -->
       </div>
     </div>
   </div>
@@ -101,14 +176,43 @@
       document.body.style.fontSize = "100%";
     }
 
-    // 4. Logout
+    // 4. Laporan Kehadiran Modal 逻辑
+    function openLaporanModal() {
+      const container = document.getElementById('laporanListContainer');
+      const dataLaporan = JSON.parse(localStorage.getItem("laporanList")) || [];
+
+      if (dataLaporan.length === 0) {
+        container.innerHTML = `
+          <div style="color: #94a3b8; text-align: center; padding: 30px;">
+            Tiada laporan atau rekod kehadiran dihantar buat masa ini.
+          </div>`;
+      } else {
+        container.innerHTML = dataLaporan.map(item => `
+          <div class="laporan-card-item">
+            <div class="laporan-meta">
+              <span>👤 <strong>${escapeHTML(item.nama)}</strong> (${escapeHTML(item.sesi)})</span>
+              <span>🕒 ${escapeHTML(item.tarikh)} ${escapeHTML(item.masa)}</span>
+            </div>
+            <p style="font-size: 0.9rem; color: #cbd5e1; white-space: pre-line;">${escapeHTML(item.kandungan)}</p>
+          </div>
+        `).join('');
+      }
+
+      document.getElementById('laporanModal').style.display = 'flex';
+    }
+
+    function closeLaporanModal() {
+      document.getElementById('laporanModal').style.display = 'none';
+    }
+
+    // 5. Logout
     function logout() {
       sessionStorage.removeItem("user");
       window.location.href = "logout.html";
     }
 
     function escapeHTML(str) {
-      return String(str)
+      return String(str || '')
         .replace(/&/g, '&amp;')
         .replace(/</g, '&lt;')
         .replace(/>/g, '&gt;')
