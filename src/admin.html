@@ -65,31 +65,6 @@
         <div class="card-desc">Tambah, kemaskini dan semak rekod pinjaman buku.</div>
       </div>
     </div>
-
-    <!-- Section Tambah Notis / Pengumuman -->
-    <div class="admin-section">
-      <h3 style="font-size: 1.1rem; margin-bottom: 15px;">📢 Buat Pengumuman Baru</h3>
-      
-      <div class="form-group">
-        <label>Tajuk Pengumuman</label>
-        <input type="text" id="notisTajuk" class="admin-input" placeholder="Contoh: Mesyuarat PSS...">
-      </div>
-
-      <div class="form-group">
-        <label>Kandungan Pengumuman</label>
-        <textarea id="notisKandungan" class="admin-textarea" placeholder="Tulis butiran pengumuman..."></textarea>
-      </div>
-
-      <button class="btn-admin" id="btnPublish">Siarkan Pengumuman</button>
-    </div>
-
-    <!-- Section Senarai Notis & Padam -->
-    <div class="admin-section">
-      <h3 style="font-size: 1.1rem; margin-bottom: 15px;">📋 Senarai Pengumuman Semasa</h3>
-      <div id="adminNotisList">
-        <!-- Render melalui JavaScript Firebase -->
-      </div>
-    </div>
   </div>
 
   <!-- 全局基礎腳本 (UI/Accessibility/Clock/Logout) -->
@@ -139,103 +114,6 @@
         .replace(/>/g, '&gt;')
         .replace(/"/g, '&quot;');
     }
-  </script>
-
-  <!-- Firebase 整合腳本 -->
-  <script type="module">
-    import { db } from './firebase.js';
-    import { 
-      collection, 
-      addDoc, 
-      deleteDoc, 
-      doc, 
-      onSnapshot, 
-      query, 
-      orderBy 
-    } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
-
-    const adminNotisList = document.getElementById('adminNotisList');
-    const btnPublish = document.getElementById('btnPublish');
-
-    // 1. 即時監聽 Firestore 中的 'pengumuman' Collection (Realtime Sync)
-    const pengumumanRef = collection(db, "pengumuman");
-    const q = query(pengumumanRef, orderBy("createdAt", "desc"));
-
-    onSnapshot(q, (snapshot) => {
-      if (snapshot.empty) {
-        adminNotisList.innerHTML = `<div style="color: #94a3b8; text-align: center;">Tiada pengumuman aktif.</div>`;
-        return;
-      }
-
-      adminNotisList.innerHTML = snapshot.docs.map(docSnap => {
-        const item = docSnap.data();
-        const docId = docSnap.id;
-
-        return `
-          <div class="notis-manage-item">
-            <div>
-              <div style="font-weight: bold; color: #38bdf8;">${escapeHTML(item.tajuk)}</div>
-              <div style="font-size: 0.75rem; color: #94a3b8; margin-top: 2px;">Tarikh: ${escapeHTML(item.tarikh)} | Oleh: ${escapeHTML(item.oleh || 'Admin')}</div>
-              <p style="font-size: 0.88rem; color: #cbd5e1; margin-top: 6px;">${escapeHTML(item.kandungan)}</p>
-            </div>
-            <button class="btn-delete" data-id="${docId}">Padam</button>
-          </div>
-        `;
-      }).join('');
-
-      // 綁定刪除按鈕事件
-      document.querySelectorAll('.btn-delete').forEach(button => {
-        button.addEventListener('click', async (e) => {
-          const id = e.target.getAttribute('data-id');
-          if (confirm("Adakah anda pasti ingin memadam pengumuman ini?")) {
-            try {
-              await deleteDoc(doc(db, "pengumuman", id));
-              alert("Pengumuman berjaya dipadam!");
-            } catch (err) {
-              console.error("Ralat memadam:", err);
-              alert("Gagal memadam pengumuman.");
-            }
-          }
-        });
-      });
-    }, (error) => {
-      console.error("Ralat mengambil pengumuman:", error);
-    });
-
-    // 2. 新增公告至 Firestore
-    btnPublish.addEventListener('click', async () => {
-      const tajuk = document.getElementById('notisTajuk').value.trim();
-      const kandungan = document.getElementById('notisKandungan').value.trim();
-
-      if (!tajuk || !kandungan) {
-        alert("Sila isi tajuk dan kandungan pengumuman!");
-        return;
-      }
-
-      const now = new Date();
-      const tarikhStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
-
-      btnPublish.disabled = true;
-
-      try {
-        await addDoc(collection(db, "pengumuman"), {
-          tajuk: tajuk,
-          kandungan: kandungan,
-          tarikh: tarikhStr,
-          oleh: currentUser.id_pengguna || currentUser.nama || "Admin",
-          createdAt: new Date()
-        });
-
-        document.getElementById('notisTajuk').value = "";
-        document.getElementById('notisKandungan').value = "";
-        alert("Pengumuman berjaya");
-      } catch (err) {
-        console.error("Ralat menyiar pengumuman:", err);
-        alert("Gagal menyiar pengumuman! Sila cuba lagi.");
-      } finally {
-        btnPublish.disabled = false;
-      }
-    });
   </script>
 </body>
 </html>
