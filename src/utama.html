@@ -88,14 +88,15 @@
         <span id="charCount">0</span> / 500 Aksara (Varchar 500)
       </div>
 
-      <button class="btn-submit-laporan" id="btnSubmitLaporan">Hantar Laporan</button>
+      <button class="btn-submit-laporan" id="btnSubmitLaporan" onclick="submitLaporan()">Hantar Laporan</button>
     </div>
   </div>
 
   <!-- 全局基礎腳本 (UI/Accessibility/Clock/Logout) -->
   <script>
     // 1. Inisialisasi Pengguna & Penentuan Sesi
-    document.getElementById('username').textContent = currentUser.id_pengguna || currentUser.nama || "Pengawas";
+    const userNameDisplay = currentUser.id_pengguna || currentUser.nama || "Pengawas";
+    document.getElementById('username').textContent = userNameDisplay;
     
     const sesiBadge = document.getElementById('sesiBadge');
     let userSesi = currentUser.sesi; 
@@ -142,10 +143,45 @@
       document.body.style.fontSize = "100%";
     }
 
-    // 4. Pengurusan Laporan Counter
+    // 4. Pengurusan Laporan Counter & Simpan ke localStorage
     function updateCharCount() {
       const input = document.getElementById('laporanInput');
       document.getElementById('charCount').textContent = input.value.length;
+    }
+
+    function submitLaporan() {
+      const input = document.getElementById('laporanInput');
+      const content = input.value.trim();
+
+      if (!content) {
+        alert("Sila tulis laporan sebelum menghantar!");
+        return;
+      }
+
+      // 获取当前时间戳和日期
+      const now = new Date();
+      const tarikhStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+      const masaStr = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}:${String(now.getSeconds()).padStart(2, '0')}`;
+
+      // 封装报告对象
+      const laporanBaru = {
+        nama: userNameDisplay,
+        sesi: sesiBadge.textContent,
+        tarikh: tarikhStr,
+        masa: masaStr,
+        kandungan: content
+      };
+
+      // 读取旧数据并追加
+      let senaraiLaporan = JSON.parse(localStorage.getItem("laporanList")) || [];
+      senaraiLaporan.unshift(laporanBaru); // 最新提交的排在最前面
+      localStorage.setItem("laporanList", JSON.stringify(senaraiLaporan));
+
+      alert("Laporan berjaya dihantar ke Panel Admin (Laporan Kehadiran)!\n\nKandungan:\n" + content);
+      
+      // 清空输入框与计数
+      input.value = "";
+      updateCharCount();
     }
 
     function escapeHTML(str) {
