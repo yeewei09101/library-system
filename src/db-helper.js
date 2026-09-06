@@ -13,34 +13,34 @@ import {
 } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
 /**
- * 1. 写入/插入数据 (Insert Data)
- * @param {string} collectionName - 集合名称 (如 'pengumuman', 'laporan')
- * @param {Object} data - 要插入的数据对象
- * @returns {Promise<string>} - 返回新创建文档的 ID
+ * 1. Insert Data
+ * @param {string} collectionName - Target collection name
+ * @param {Object} data - Object containing data to insert
+ * @returns {Promise<string>} - Returns the created document ID
  */
 export async function insertData(collectionName, data) {
   try {
     const colRef = collection(db, collectionName);
-    // 自动附加创建时间戳
+    // Automatically attach creation timestamp
     const dataToSave = {
       ...data,
       createdAt: new Date()
     };
     const docRef = await addDoc(colRef, dataToSave);
-    console.log(`成功写入 [${collectionName}]，文档 ID:`, docRef.id);
+    console.log(`Successfully inserted into [${collectionName}], Document ID:`, docRef.id);
     return docRef.id;
   } catch (error) {
-    console.error(`写入 [${collectionName}] 失败:`, error);
+    console.error(`Failed to insert into [${collectionName}]:`, error);
     throw error;
   }
 }
 
 /**
- * 2. 读取整个集合的数据 (Read All Data)
- * @param {string} collectionName - 集合名称
- * @param {string|null} orderByField - (可选) 排序字段，如 'createdAt'
- * @param {string} orderDirection - (可选) 排序方向 'desc' 或 'asc'，默认 'desc'
- * @returns {Promise<Array>} - 返回包含文档 ID 和数据的数组
+ * 2. Read All Data from Collection
+ * @param {string} collectionName - Collection name
+ * @param {string|null} orderByField - (Optional) Field to order by, e.g., 'createdAt'
+ * @param {string} orderDirection - (Optional) Order direction 'desc' or 'asc', defaults to 'desc'
+ * @returns {Promise<Array>} - Array containing document IDs and data
  */
 export async function readAllData(collectionName, orderByField = null, orderDirection = 'desc') {
   try {
@@ -63,17 +63,17 @@ export async function readAllData(collectionName, orderByField = null, orderDire
 
     return dataList;
   } catch (error) {
-    console.error(`读取 [${collectionName}] 列表失败:`, error);
+    console.error(`Failed to read collection [${collectionName}]:`, error);
     throw error;
   }
 }
 
 /**
- * 3. 条件查询数据 (Query Data by Condition)
- * @param {string} collectionName - 集合名称
- * @param {string} field - 字段名 (如 'role', 'status')
- * @param {string} operator - 比较符 ('==', '>=', '<=', 'array-contains' 等)
- * @param {any} value - 匹配的值
+ * 3. Query Data by Condition
+ * @param {string} collectionName - Collection name
+ * @param {string} field - Field name (e.g., 'role', 'status')
+ * @param {string} operator - Comparison operator ('==', '>=', '<=', 'array-contains', etc.)
+ * @param {any} value - Matching value
  * @returns {Promise<Array>}
  */
 export async function queryData(collectionName, field, operator, value) {
@@ -92,15 +92,15 @@ export async function queryData(collectionName, field, operator, value) {
 
     return dataList;
   } catch (error) {
-    console.error(`查询 [${collectionName}] 失败:`, error);
+    console.error(`Failed to query [${collectionName}]:`, error);
     throw error;
   }
 }
 
 /**
- * 4. 根据 ID 读取单个文档 (Read Single Document)
- * @param {string} collectionName - 集合名称
- * @param {string} docId - 文档 ID
+ * 4. Read Single Document by ID
+ * @param {string} collectionName - Collection name
+ * @param {string} docId - Document ID
  * @returns {Promise<Object|null>}
  */
 export async function readDataById(collectionName, docId) {
@@ -111,20 +111,20 @@ export async function readDataById(collectionName, docId) {
     if (docSnap.exists()) {
       return { id: docSnap.id, ...docSnap.data() };
     } else {
-      console.warn(`未找到 [${collectionName}] ID 为 ${docId} 的文档`);
+      console.warn(`No document found in [${collectionName}] with ID: ${docId}`);
       return null;
     }
   } catch (error) {
-    console.error(`读取单个文档失败:`, error);
+    console.error(`Failed to read document:`, error);
     throw error;
   }
 }
 
 /**
- * 5. 更新已有数据 (Update Data)
- * @param {string} collectionName - 集合名称
- * @param {string} docId - 文档 ID
- * @param {Object} updateData - 需要更新的字段
+ * 5. Update Existing Data
+ * @param {string} collectionName - Collection name
+ * @param {string} docId - Document ID
+ * @param {Object} updateData - Object containing fields to update
  */
 export async function updateData(collectionName, docId, updateData) {
   try {
@@ -133,25 +133,25 @@ export async function updateData(collectionName, docId, updateData) {
       ...updateData,
       updatedAt: new Date()
     });
-    console.log(`成功更新 [${collectionName}] ID: ${docId}`);
+    console.log(`Successfully updated [${collectionName}] ID: ${docId}`);
   } catch (error) {
-    console.error(`更新数据失败:`, error);
+    console.error(`Failed to update data:`, error);
     throw error;
   }
 }
 
 /**
- * 6. 删除数据 (Delete Data)
- * @param {string} collectionName - 集合名称
- * @param {string} docId - 文档 ID
+ * 6. Delete Data
+ * @param {string} collectionName - Collection name
+ * @param {string} docId - Document ID
  */
 export async function deleteData(collectionName, docId) {
   try {
     const docRef = doc(db, collectionName, docId);
     await deleteDoc(docRef);
-    console.log(`成功删除 [${collectionName}] ID: ${docId}`);
+    console.log(`Successfully deleted [${collectionName}] ID: ${docId}`);
   } catch (error) {
-    console.error(`删除数据失败:`, error);
+    console.error(`Failed to delete data:`, error);
     throw error;
   }
 }
