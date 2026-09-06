@@ -6,7 +6,7 @@
   <title>Sistem PSS - Halaman Utama Admin</title>
   <link rel="stylesheet" href="../style/admin.css">
   <style>
-    /* 附加弹窗样式，与整体 Glassmorphism 风格保持完全一致 */
+    /* Modal Glassmorphism Style */
     .modal-overlay {
       display: none;
       position: fixed;
@@ -65,7 +65,7 @@
       justify-content: space-between;
       flex-wrap: wrap;
     }
-    /* 表单控件附加美化样式 */
+    /* Form Styles */
     .form-group {
       margin-bottom: 15px;
     }
@@ -164,7 +164,7 @@
         <div class="card-desc">Tambah, kemaskini dan semak rekod pinjaman buku.</div>
       </div>
 
-      <!-- 【新增】添加用户卡片 -->
+      <!-- Tambah Pengguna Card -->
       <div class="glass-card" onclick="openAddUserModal()">
         <div class="card-icon">➕👤</div>
         <div class="card-title">Tambah Pengguna</div>
@@ -173,7 +173,7 @@
     </div>
   </div>
 
-  <!-- 动态查看 Laporan Kehadiran 的弹窗 (Modal) -->
+  <!-- Modal Laporan Kehadiran -->
   <div id="laporanModal" class="modal-overlay">
     <div class="modal-content">
       <div class="modal-header">
@@ -181,12 +181,12 @@
         <button class="close-btn" onclick="closeLaporanModal()">&times;</button>
       </div>
       <div id="laporanListContainer">
-        <!-- JS 会动态填入数据 -->
+        <!-- Dynamic Data -->
       </div>
     </div>
   </div>
 
-  <!-- 【新增】添加用户的弹窗 (Modal) -->
+  <!-- Modal Tambah Pengguna -->
   <div id="addUserModal" class="modal-overlay">
     <div class="modal-content">
       <div class="modal-header">
@@ -217,12 +217,13 @@
             <option value="admin">Admin (Pentadbir)</option>
           </select>
         </div>
+
         <div class="form-group">
-          <label>sesi:</label>
-        <select id="newUserSession" class="form-control" style="background: #1e293b;">
-          <option value="sesi pagi">Sesi pagi</option>
-          <option value="sesi petang">Sesi petang</option>
-        </select>
+          <label>Sesi:</label>
+          <select id="newUserSession" class="form-control" style="background: #1e293b;">
+            <option value="sesi pagi">Sesi pagi</option>
+            <option value="sesi petang">Sesi petang</option>
+          </select>
         </div>
 
         <button type="submit" class="btn-submit">Simpan Pengguna</button>
@@ -230,15 +231,14 @@
     </div>
   </div>
 
-  <!-- 全局逻辑脚本（包含原本的 UI 功能 + 数据库写入功能） -->
+  <!-- Script Modules -->
   <script type="module">
-    // 引入你的 db-helper 写入函数
     import { insertData } from './db-helper.js';
 
-    // 1. Papar Nama Admin
+    // 1. Display Admin Name
     document.getElementById('username').textContent = currentUser.id_pengguna || currentUser.nama || "Admin";
 
-    // 2. Jam Masa Nyata
+    // 2. Realtime Clock
     function updateClock() {
       const now = new Date();
       const year = now.getFullYear();
@@ -267,7 +267,7 @@
       document.body.style.fontSize = "100%";
     }
 
-    // 4. Laporan Kehadiran Modal 逻辑
+    // 4. Laporan Modal Controls
     window.openLaporanModal = function() {
       const container = document.getElementById('laporanListContainer');
       const dataLaporan = JSON.parse(localStorage.getItem("laporanList")) || [];
@@ -296,7 +296,7 @@
       document.getElementById('laporanModal').style.display = 'none';
     }
 
-    // --- 【新增】5. 添加用户 Modal 与 数据库交互逻辑 ---
+    // 5. Add User Modal Controls & Firestore Handling
     window.openAddUserModal = function() {
       document.getElementById('addUserModal').style.display = 'flex';
     }
@@ -306,38 +306,39 @@
       document.getElementById('addUserForm').reset();
     }
 
-    // 监听添加用户表单提交
+    // Handle form submit with conditional target collection based on role
     document.getElementById('addUserForm').addEventListener('submit', async function(event) {
-      event.preventDefault(); // 阻止页面默认刷新
+      event.preventDefault();
 
       const id_pengguna = document.getElementById('newUserId').value.trim();
       const nama = document.getElementById('newUserFullName').value.trim();
-      const email = document.getElementById('newUserEmail').value.trim();
       const password = document.getElementById('newUserPassword').value.trim();
       const role = document.getElementById('newUserRole').value;
+      const sesi = document.getElementById('newUserSession').value;
 
       try {
-        // 构造要存入 Firestore "users" 集合的数据对象
         const newUserData = {
           id_pengguna: id_pengguna,
           nama: nama,
-          email: email,
           password: password,
-          role: role
+          role: role,
+          sesi: sesi
         };
 
-        // 调用 db-helper 的 insertData 写入云端数据库
-        await insertData("users", newUserData);
+        // If role is admin -> store in 'admin' collection; otherwise store in 'users' collection
+        const targetCollection = (role === "admin") ? "admin" : "users";
 
-        alert(`Berjaya! Pengguna "${id_pengguna}" (${nama}) telah ditambah ke dalam sistem.`);
+        await insertData(targetCollection, newUserData);
+
+        alert(`Berjaya! Pengguna "${id_pengguna}" (${nama}) telah ditambah ke dalam koleksi [${targetCollection}].`);
         closeAddUserModal();
       } catch (error) {
-        console.error("Gagal menambah pengguna:", error);
+        console.error("Failed to add user:", error);
         alert("Gagal menambah pengguna ke pangkalan data. Sila cuba lagi.");
       }
     });
 
-    // 6. Logout
+    // 6. Logout Function
     window.logout = function() {
       sessionStorage.removeItem("user");
       window.location.href = "logout.html";
