@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Log Masuk - PSS System</title>
     <!-- link Style CSS -->
-     <link rel="stylesheet" href="../style/style.css">
+    <link rel="stylesheet" href="../style/style.css">
 </head>
 <body>
 
@@ -18,14 +18,14 @@
 
         <form id="loginForm">
             <div class="input-group">
-                <!-- get data id_penggundi & id_admin-->
                 <label for="id_pengguna">ID Pengguna/ID Admin</label>
                 <input type="text" id="id_pengguna" placeholder="Masukkan ID Pengguna" required>
             </div>
 
             <div class="input-group">
-                <!-- get password -->
                 <label for="kata_laluan">Kata Laluan</label>
+
+                <!-- HTML 输入框 ID 保留为 kata_laluan -->
                 <input type="password" id="kata_laluan" placeholder="Masukkan Kata Laluan" required>
             </div>
 
@@ -35,24 +35,23 @@
 
     <!-- Proses Login JS -->
     <script type="module">
-        import { db } from './firebase.js';
-        import { collection, query, where, getDocs } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        import { queryData } from './db-helper.js';
 
         const loginForm = document.getElementById('loginForm');
         const loginBtn = document.getElementById('loginBtn');
 
         loginForm.addEventListener('submit', async (e) => {
-            e.preventDefault(); // 阻止表单默认提交刷新
+            e.preventDefault(); 
 
             const idPengguna = document.getElementById('id_pengguna').value.trim();
-            const kataLaluan = document.getElementById('password').value.trim();
+            // 读取输入框输入的内容
+            const kataLaluanInput = document.getElementById('kata_laluan').value.trim();
 
-            if (!idPengguna || !kataLaluan) {
+            if (!idPengguna || !kataLaluanInput) {
                 alert("Sila isi ID Pengguna dan Kata Laluan!");
                 return;
             }
 
-            // change button to proses
             loginBtn.disabled = true;
             loginBtn.textContent = "Sedang diproses...";
 
@@ -60,45 +59,31 @@
                 let userRole = null;
                 let userData = null;
 
-                // first search admin in firebase database
-                const adminRef = collection(db, "admin");
-                const adminQuery = query(adminRef, where("id_admin", "==", idPengguna));
-                const adminSnapshot = await getDocs(adminQuery);
+                // 1. 匹配 admin 数据库里的 password 字段
+                const adminList = await queryData("admin", "id_admin", "==", idPengguna);
+                const matchedAdmin = adminList.find(admin => admin.password === kataLaluanInput);
 
-                adminSnapshot.forEach((doc) => {
-                    const data = doc.data();
-                    if (data.kata_laluan === kataLaluan) {
-                        userRole = "admin";
-                        userData = data;
+                if (matchedAdmin) {
+                    userRole = "admin";
+                    userData = matchedAdmin;
+                } else {
+                    // 2. 匹配 users 数据库里的 password 字段
+                    const userList = await queryData("users", "id_pengguna", "==", idPengguna);
+                    const matchedUser = userList.find(user => user.password === kataLaluanInput);
+
+                    if (matchedUser) {
+                        userRole = "user";
+                        userData = matchedUser;
                     }
-                });
-
-                // second if not have admin it will auto check users in firebase database
-                if (!userData) {
-                    const usersRef = collection(db, "users");
-                    const userQuery = query(usersRef, where("id_pengguna", "==", idPengguna));
-                    const userSnapshot = await getDocs(userQuery);
-
-                    userSnapshot.forEach((doc) => {
-                        const data = doc.data();
-                        if (data.kata_laluan === kataLaluan) {
-                            userRole = "user";
-                            userData = data;
-                        }
-                    });
                 }
 
-                // checking the password & id correct or not and jump to utama.html and admin.html
+                // 3. 验证通过
                 if (userData) {
                     alert(`Log masuk berjaya! (${userRole === 'admin' ? 'Admin' : 'Pengguna'})`);
                     
-                    // give a role and jump to the correct html
                     userData.role = userRole;
-
-                    // save to database and do safety protect and get data
                     sessionStorage.setItem("user", JSON.stringify(userData));
 
-                    // jump to the correct html
                     if (userRole === "admin") {
                         window.location.href = "admin.html";
                     } else {
