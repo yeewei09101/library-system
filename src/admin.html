@@ -315,8 +315,9 @@
       const password = document.getElementById('newUserPassword').value.trim();
       const role = document.getElementById('newUserRole').value;
       const sesi = document.getElementById('newUserSession').value;
-
+      
       try {
+        const targetCollection = (role === "admin") ? "admin" : "users";
         const newUserData = {
           id_pengguna: id_pengguna,
           nama: nama,
@@ -324,11 +325,19 @@
           role: role,
           sesi: sesi
         };
+        const newAdminData = {
+          id_admin: id_pengguna,
+          nama: nama,
+          password: password,
+          role: role,
+          sesi: sesi
+        };
 
-        // If role is admin -> store in 'admin' collection; otherwise store in 'users' collection
-        const targetCollection = (role === "admin") ? "admin" : "users";
-
-        await insertData(targetCollection, newUserData);
+        if (role === "admin") {
+          await insertData(targetCollection, newAdminData);
+        } else {
+          await insertData(targetCollection, newUserData);
+        }
 
         alert(`Berjaya! Pengguna "${id_pengguna}" (${nama}) telah ditambah ke dalam koleksi [${targetCollection}].`);
         closeAddUserModal();
