@@ -13,16 +13,27 @@
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     }
 
-    /* Latar Belakang Putih dengan Elemen Hiasan Lembut */
     body {
-      background-color: #f8fafc;
-      background-image: 
-        radial-gradient(at 0% 0%, rgba(99, 102, 241, 0.08) 0px, transparent 50%),
-        radial-gradient(at 100% 100%, rgba(14, 165, 233, 0.08) 0px, transparent 50%);
-      background-attachment: fixed;
-      color: #1e293b;
+      position: relative;
+      color: #0f172a;
       min-height: 100vh;
       padding: 20px;
+      overflow-x: hidden;
+    }
+
+    /* Imej Latar Belakang .jpg dengan Kesan Kabur (Frosted Background) */
+    body::before {
+      content: "";
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      /* Tukar 'bg-library.jpg' mengikut nama fail imej .jpg anda */
+      background: url('bg-library.jpg') no-repeat center center / cover;
+      filter: blur(8px) brightness(0.85); /* Kesan kabur & sedikit malap untuk kontras */
+      transform: scale(1.05); /* Elak garisan putih di tepi akibat filter blur */
+      z-index: -1;
     }
 
     .container {
@@ -30,13 +41,13 @@
       margin: 0 auto;
     }
 
-    /* Concept Frosted Glass (Kaca Terhalus) */
+    /* Concept Frosted Glass (Kaca Terhalus Utama) */
     .frosted-glass {
-      background: rgba(255, 255, 255, 0.65);
+      background: rgba(255, 255, 255, 0.45);
       backdrop-filter: blur(16px) saturate(180%);
       -webkit-backdrop-filter: blur(16px) saturate(180%);
-      border: 1px solid rgba(255, 255, 255, 0.8);
-      box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.07);
+      border: 1px solid rgba(255, 255, 255, 0.6);
+      box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.15);
       border-radius: 16px;
     }
 
@@ -65,7 +76,7 @@
     .accessibility-tools {
       display: flex;
       gap: 4px;
-      background: rgba(241, 245, 249, 0.8);
+      background: rgba(255, 255, 255, 0.5);
       padding: 4px;
       border-radius: 8px;
     }
@@ -76,19 +87,19 @@
       padding: 4px 8px;
       cursor: pointer;
       font-weight: 600;
-      color: #475569;
+      color: #1e293b;
       border-radius: 4px;
     }
 
     .tool-btn:hover {
-      background: #ffffff;
-      color: #0f172a;
+      background: rgba(255, 255, 255, 0.8);
+      color: #000;
     }
 
     /* Dynamic User Greeting & Badge */
     .user-greeting {
       font-size: 0.95rem;
-      font-weight: 500;
+      font-weight: 600;
       display: flex;
       align-items: center;
       gap: 8px;
@@ -137,21 +148,22 @@
 
     .time-title {
       font-weight: 600;
-      color: #334155;
+      color: #0f172a;
     }
 
     .time-display {
       font-family: monospace;
       font-size: 1rem;
       font-weight: 700;
-      color: #2563eb;
+      color: #1d4ed8;
     }
 
     /* Section Title */
     .section-title {
       font-size: 1.2rem;
       margin-bottom: 15px;
-      color: #1e293b;
+      color: #0f172a;
+      text-shadow: 0 1px 2px rgba(255, 255, 255, 0.6);
     }
 
     /* Switchboard Grid */
@@ -170,9 +182,9 @@
 
     .glass-card:hover {
       transform: translateY(-4px);
-      background: rgba(255, 255, 255, 0.85);
-      box-shadow: 0 12px 40px 0 rgba(31, 38, 135, 0.12);
-      border-color: rgba(99, 102, 241, 0.3);
+      background: rgba(255, 255, 255, 0.65);
+      box-shadow: 0 12px 40px 0 rgba(0, 0, 0, 0.2);
+      border-color: rgba(255, 255, 255, 0.9);
     }
 
     .card-icon {
@@ -189,7 +201,7 @@
 
     .card-desc {
       font-size: 0.875rem;
-      color: #64748b;
+      color: #334155;
       line-height: 1.4;
     }
 
@@ -204,30 +216,30 @@
       margin-top: 12px;
       padding: 12px;
       border-radius: 10px;
-      border: 1px solid rgba(203, 213, 225, 0.8);
-      background: rgba(255, 255, 255, 0.7);
+      border: 1px solid rgba(255, 255, 255, 0.6);
+      background: rgba(255, 255, 255, 0.5);
       backdrop-filter: blur(4px);
       resize: vertical;
       font-size: 0.95rem;
       outline: none;
-      transition: border-color 0.2s;
+      transition: border-color 0.2s, background 0.2s;
     }
 
     .laporan-textarea:focus {
-      border-color: #6366f1;
-      background: rgba(255, 255, 255, 0.95);
+      border-color: #4f46e5;
+      background: rgba(255, 255, 255, 0.85);
     }
 
     .char-counter {
       text-align: right;
       font-size: 0.8rem;
-      color: #64748b;
+      color: #334155;
       margin-top: 6px;
       margin-bottom: 12px;
     }
 
     .btn-submit-laporan {
-      background: #4f46e5;
+      background: #2563eb;
       color: white;
       border: none;
       padding: 10px 20px;
@@ -238,7 +250,7 @@
     }
 
     .btn-submit-laporan:hover {
-      background: #4338ca;
+      background: #1d4ed8;
     }
   </style>
 </head>
@@ -311,7 +323,7 @@
     <!-- Hantar Laporan -->
     <div class="laporan-section frosted-glass">
       <h3 style="font-size: 1.1rem; margin-bottom: 6px;">📝 Hantar Laporan / Mesej Harian</h3>
-      <p style="font-size: 0.85rem; color: #64748b;">Tulis laporan bertugas atau sebarang maklum balas (Maksimum 500 aksara).</p>
+      <p style="font-size: 0.85rem; color: #334155;">Tulis laporan bertugas atau sebarang maklum balas (Maksimum 500 aksara).</p>
       
       <textarea 
         id="laporanInput" 
