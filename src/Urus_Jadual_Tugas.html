@@ -30,6 +30,13 @@
             border-color: rgba(255, 255, 255, 0.4);
             transform: translateY(-1px);
         }
+        
+        /* 专属的删除按钮悬停效果（红色毛玻璃） */
+        .glass-btn-delete:hover {
+            background: rgba(239, 68, 68, 0.2); /* bg-red-500/20 */
+            border-color: rgba(239, 68, 68, 0.5);
+            color: #fca5a5; /* text-red-300 */
+        }
 
         .glass-card:hover {
             background: rgba(255, 255, 255, 0.08);
@@ -53,7 +60,7 @@
         <div class="glass-panel rounded-2xl p-6 flex-grow lg:w-2/3">
             <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
                 
-                <!-- 🌟 修改部分：加入返回 Admin 按钮与标题组合 🌟 -->
+                <!-- 返回 Admin 按钮与标题组合 -->
                 <div class="flex items-center gap-4">
                     <button onclick="window.location.href='admin.html'" class="glass-card glass-btn px-4 py-2 rounded-lg text-sm font-semibold cursor-pointer flex items-center gap-2">
                         <span>⬅</span> Kembali
@@ -136,6 +143,7 @@
             <div class="mb-6">
                 <h3 class="text-xs text-gray-400 font-semibold mb-3 tracking-wider">SENARAI UTAMA</h3>
                 <div class="space-y-3">
+                    
                     <!-- 被替代的正选人员 (Ali) -->
                     <div class="glass-card rounded-lg p-3 flex justify-between items-center border-red-500/30 bg-red-900/20">
                         <div class="flex items-center gap-3">
@@ -145,7 +153,11 @@
                                 <p class="text-[10px] text-red-400">Tidak Hadir</p>
                             </div>
                         </div>
-                        <button onclick="alert('Fungsi tukar status Ali')" class="glass-card glass-btn px-3 py-1 text-xs rounded cursor-pointer">Tukar</button>
+                        <!-- 🌟 新增的按钮组 (Tukar + Padam) 🌟 -->
+                        <div class="flex items-center gap-1">
+                            <button onclick="alert('Fungsi tukar status Ali')" class="glass-card glass-btn px-3 py-1 text-[11px] rounded cursor-pointer">Tukar</button>
+                            <button onclick="if(confirm('Adakah anda pasti mahu memadam Ali dari senarai tugas?')) alert('Ali dipadam!')" class="glass-card glass-btn-delete px-3 py-1 text-[11px] rounded cursor-pointer text-red-400 border-red-500/30">Padam</button>
+                        </div>
                     </div>
 
                     <!-- 正常的正选人员 (Abu) -->
@@ -156,7 +168,11 @@
                                 <p class="text-sm">Abu</p>
                             </div>
                         </div>
-                        <button onclick="alert('Fungsi tukar status Abu')" class="glass-card glass-btn px-3 py-1 text-xs rounded cursor-pointer">Tukar</button>
+                        <!-- 🌟 新增的按钮组 (Tukar + Padam) 🌟 -->
+                        <div class="flex items-center gap-1">
+                            <button onclick="alert('Fungsi tukar status Abu')" class="glass-card glass-btn px-3 py-1 text-[11px] rounded cursor-pointer">Tukar</button>
+                            <button onclick="if(confirm('Adakah anda pasti mahu memadam Abu dari senarai tugas?')) alert('Abu dipadam!')" class="glass-card glass-btn-delete px-3 py-1 text-[11px] rounded cursor-pointer text-red-400 border-red-500/30">Padam</button>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -165,16 +181,20 @@
             <div class="mb-6">
                 <h3 class="text-xs text-gray-400 font-semibold mb-3 tracking-wider">SENARAI STANDBY</h3>
                 <div class="space-y-3">
+                    
                     <!-- 已激活的候补人员 (David) -->
-                    <div class="glass-card rounded-lg p-3 flex justify-between items-center border-blue-500/50 bg-blue-900/20 shadow-[0_0_10px_rgba(59,130,246,0.2)] cursor-pointer" onclick="alert('Urus Standby David')">
-                        <div class="flex items-center gap-3">
+                    <div class="glass-card rounded-lg p-3 flex justify-between items-center border-blue-500/50 bg-blue-900/20 shadow-[0_0_10px_rgba(59,130,246,0.2)]">
+                        <div class="flex items-center gap-3 cursor-pointer" onclick="alert('Urus Standby David')">
                             <div class="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center">D</div>
                             <div>
                                 <p class="text-sm text-blue-100">David</p>
                                 <p class="text-[10px] text-blue-400">Aktif (Ganti Ali)</p>
                             </div>
                         </div>
+                        <!-- 🌟 候补名单专属删除按钮 🌟 -->
+                        <button onclick="if(confirm('Keluarkan David dari senarai standby?')) alert('David dipadam!')" class="glass-card glass-btn-delete px-3 py-1 text-[11px] rounded cursor-pointer text-red-400 border-red-500/30">Padam</button>
                     </div>
+                    
                 </div>
             </div>
 
