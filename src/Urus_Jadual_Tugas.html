@@ -24,6 +24,13 @@
             transition: all 0.3s ease;
         }
 
+        /* 增加按钮的悬停亮起效果 */
+        .glass-btn:hover {
+            background: rgba(255, 255, 255, 0.15);
+            border-color: rgba(255, 255, 255, 0.4);
+            transform: translateY(-1px);
+        }
+
         .glass-card:hover {
             background: rgba(255, 255, 255, 0.08);
             border-color: rgba(255, 255, 255, 0.3);
@@ -44,11 +51,19 @@
         
         <!-- 左侧：主日历区域 (70%) -->
         <div class="glass-panel rounded-2xl p-6 flex-grow lg:w-2/3">
-            <div class="flex justify-between items-center mb-6">
-                <h1 class="text-3xl font-bold tracking-wider">Jadual Bertugas</h1>
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
+                
+                <!-- 🌟 修改部分：加入返回 Admin 按钮与标题组合 🌟 -->
+                <div class="flex items-center gap-4">
+                    <button onclick="window.location.href='admin.html'" class="glass-card glass-btn px-4 py-2 rounded-lg text-sm font-semibold cursor-pointer flex items-center gap-2">
+                        <span>⬅</span> Kembali
+                    </button>
+                    <h1 class="text-3xl font-bold tracking-wider">Jadual Bertugas</h1>
+                </div>
+
                 <div class="space-x-3">
-                    <button class="glass-card px-4 py-2 rounded-lg text-sm">Hari Ini</button>
-                    <button class="glass-card px-4 py-2 rounded-lg text-sm">Filter</button>
+                    <button onclick="alert('Kembali ke Hari Ini')" class="glass-card glass-btn px-4 py-2 rounded-lg text-sm cursor-pointer">Hari Ini</button>
+                    <button onclick="alert('Buka panel Filter')" class="glass-card glass-btn px-4 py-2 rounded-lg text-sm cursor-pointer">Filter</button>
                 </div>
             </div>
             <h2 class="text-xl mb-4 text-gray-300">Oktober 2026</h2>
@@ -69,7 +84,7 @@
                 <div class="h-28 rounded-xl"></div>
                 
                 <!-- 模拟日期卡片 - 正常情况 -->
-                <div class="glass-card rounded-xl p-2 h-28 flex flex-col justify-between cursor-pointer">
+                <div class="glass-card rounded-xl p-2 h-28 flex flex-col justify-between cursor-pointer" onclick="alert('Papar butiran 1 Okt')">
                     <div class="text-sm font-semibold">1</div>
                     <div class="flex items-center space-x-2">
                         <div class="w-5 h-5 rounded-full bg-gray-500 text-[10px] flex items-center justify-center">A</div>
@@ -81,7 +96,7 @@
                 </div>
 
                 <!-- 模拟日期卡片 - 发生替代 (高亮选中) -->
-                <div class="glass-card glass-card-active rounded-xl p-2 h-28 flex flex-col justify-between cursor-pointer relative overflow-hidden">
+                <div class="glass-card glass-card-active rounded-xl p-2 h-28 flex flex-col justify-between cursor-pointer relative overflow-hidden" onclick="alert('Papar butiran 12 Okt')">
                     <div class="text-sm font-semibold">12</div>
                     <div class="flex items-center space-x-2 relative z-10">
                         <div class="w-5 h-5 rounded-full bg-red-500/50 text-[10px] flex items-center justify-center">A</div>
@@ -93,8 +108,7 @@
                     </div>
                 </div>
                 
-                <!-- 更多日期可以由后端循环生成 (例如 PHP foreach) -->
-                <div class="glass-card rounded-xl p-2 h-28 flex flex-col justify-between cursor-pointer">
+                <div class="glass-card rounded-xl p-2 h-28 flex flex-col justify-between cursor-pointer" onclick="alert('Papar butiran 13 Okt')">
                     <div class="text-sm font-semibold">13</div>
                     <div class="flex items-center space-x-2">
                         <div class="w-5 h-5 rounded-full bg-gray-500 text-[10px] flex items-center justify-center">S</div>
@@ -131,7 +145,7 @@
                                 <p class="text-[10px] text-red-400">Tidak Hadir</p>
                             </div>
                         </div>
-                        <button class="glass-card px-3 py-1 text-xs rounded hover:bg-white/10">Tukar</button>
+                        <button onclick="alert('Fungsi tukar status Ali')" class="glass-card glass-btn px-3 py-1 text-xs rounded cursor-pointer">Tukar</button>
                     </div>
 
                     <!-- 正常的正选人员 (Abu) -->
@@ -142,7 +156,7 @@
                                 <p class="text-sm">Abu</p>
                             </div>
                         </div>
-                        <button class="glass-card px-3 py-1 text-xs rounded hover:bg-white/10">Tukar</button>
+                        <button onclick="alert('Fungsi tukar status Abu')" class="glass-card glass-btn px-3 py-1 text-xs rounded cursor-pointer">Tukar</button>
                     </div>
                 </div>
             </div>
@@ -152,7 +166,7 @@
                 <h3 class="text-xs text-gray-400 font-semibold mb-3 tracking-wider">SENARAI STANDBY</h3>
                 <div class="space-y-3">
                     <!-- 已激活的候补人员 (David) -->
-                    <div class="glass-card rounded-lg p-3 flex justify-between items-center border-blue-500/50 bg-blue-900/20 shadow-[0_0_10px_rgba(59,130,246,0.2)]">
+                    <div class="glass-card rounded-lg p-3 flex justify-between items-center border-blue-500/50 bg-blue-900/20 shadow-[0_0_10px_rgba(59,130,246,0.2)] cursor-pointer" onclick="alert('Urus Standby David')">
                         <div class="flex items-center gap-3">
                             <div class="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center">D</div>
                             <div>
@@ -166,10 +180,10 @@
 
             <!-- 底部添加按钮 -->
             <div class="mt-auto space-y-3">
-                <button class="w-full glass-card py-3 rounded-lg text-sm hover:bg-white/10 transition flex justify-center items-center gap-2">
+                <button onclick="alert('Buka Modal Tambah Petugas')" class="w-full glass-card glass-btn py-3 rounded-lg text-sm transition flex justify-center items-center gap-2 cursor-pointer">
                     <span>+</span> Tambah Petugas
                 </button>
-                <button class="w-full glass-card py-3 rounded-lg text-sm hover:bg-white/10 transition flex justify-center items-center gap-2">
+                <button onclick="alert('Buka Modal Tambah Standby')" class="w-full glass-card glass-btn py-3 rounded-lg text-sm transition flex justify-center items-center gap-2 cursor-pointer">
                     <span>+</span> Tambah Standby
                 </button>
             </div>
