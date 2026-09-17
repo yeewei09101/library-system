@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jadual Bertugas - Pengguna</title>
+    <!-- 引入 Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+        }
+        .glass-card {
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: all 0.3s ease;
+        }
+        .glass-btn:hover {
+            background: rgba(255, 255, 255, 0.15);
+            border-color: rgba(255, 255, 255, 0.4);
+            transform: translateY(-1px);
+        }
+        .glass-card:hover {
+            background: rgba(255, 255, 255, 0.08);
+            border-color: rgba(255, 255, 255, 0.3);
+        }
+        /* 选中的日期卡片高亮 */
+        .glass-card-active {
+            background: rgba(59, 130, 246, 0.15) !important;
+            border: 1px solid rgba(59, 130, 246, 0.5) !important;
+            box-shadow: 0 0 15px rgba(59, 130, 246, 0.3) !important;
+        }
+    </style>
+</head>
+<body class="bg-gray-900 min-h-screen text-white font-sans p-6 bg-gradient-to-br from-gray-900 via-blue-900/40 to-indigo-900/30">
+
+    <!-- 权限验证：确保用户已登录 -->
+    <script>
+        const currentUser = JSON.parse(sessionStorage.getItem("user"));
+        if (!currentUser) {
+            alert("Sila log masuk terlebih dahulu.");
+            window.location.href = "login.html";
+        }
+    </script>
+
+    <div class="max-w-7xl mx-auto flex flex-col lg:flex-row gap-6">
+        
+        <!-- 左侧：日历区域 (70%) -->
+        <div class="glass-panel rounded-2xl p-6 flex-grow lg:w-2/3">
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
+                <div class="flex items-center gap-4">
+                    <!-- 返回按钮修改为跳转到 utama.html -->
+                    <button onclick="window.location.href='utama.html'" class="glass-card glass-btn px-4 py-2 rounded-lg text-sm font-semibold cursor-pointer flex items-center gap-2">
+                        <span>⬅</span> Kembali
+                    </button>
+                    <h1 class="text-3xl font-bold tracking-wider">Jadual Bertugas</h1>
+                </div>
+                <div class="space-x-3">
+                    <button onclick="muatTurunJadualHariIni()" class="glass-card glass-btn px-4 py-2 rounded-lg text-sm cursor-pointer">Hari Ini</button>
+                </div>
+            </div>
+            
+            <h2 class="text-xl mb-4 text-gray-300" id="bulanSemasa">Memuatkan Kalendar...</h2>
+
+            <!-- 动态生成的滚动日历网格 -->
+            <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3" id="kalendarGrid">
+                <!-- Javascript 将在这里自动生成卡片 -->
+            </div>
+        </div>
+
+        <!-- 右侧：详情面板 (30%) -->
+        <div class="glass-panel rounded-2xl p-6 lg:w-1/3 flex flex-col">
+            <div class="flex justify-between items-center mb-6 border-b border-white/10 pb-4">
+                <span class="text-sm text-gray-300 font-bold" id="tarikhPilihanLabel">Pilih Tarikh...</span>
+                <!-- 标签修改为 Pengguna，颜色改为蓝色 -->
+                <span class="bg-blue-500/20 border border-blue-500/50 text-blue-400 text-xs px-2 py-1 rounded flex items-center gap-2">
+                    <span class="w-2 h-2 rounded-full bg-blue-500"></span> Pengguna (Paparan)
+                </span>
+            </div>
+
+            <div class="mb-6">
+                <h3 class="text-xs text-gray-400 font-semibold mb-3 tracking-wider">SENARAI UTAMA</h3>
+                <div class="space-y-3" id="senaraiUtamaContainer">
+                    <p class="text-xs text-gray-500 italic">Sila klik tarikh pada kalendar terlebih dahulu.</p>
+                </div>
+            </div>
+
+            <div class="mb-6">
+                <h3 class="text-xs text-gray-400 font-semibold mb-3 tracking-wider">SENARAI STANDBY</h3>
+                <div class="space-y-3" id="senaraiStandbyContainer">
+                    <p class="text-xs text-gray-500 italic">-</p>
+                </div>
+            </div>
+
+            <!-- 删除了原有的 "Tambah Petugas" 和 "Tambah Standby" 按钮 -->
+            <div class="mt-auto pt-6 border-t border-white/10">
+                <p class="text-xs text-center text-gray-500 italic">Hanya admin yang boleh mengubah jadual.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- 只引入 queryData，保证只能读取 -->
+    <script type="module">
+        import { queryData } from './db-helper.js';
+
+        const JADUAL_COLLECTION = "jadual_tugas";
+        let currentSelectedDate = ""; 
+
+        const namaHariBM = ["Ahad", "Isnin", "Selasa", "Rabu", "Khamis", "Jumaat", "Sabtu"];
+        const namaBulanBM = ["Jan", "Feb", "Mac", "Apr", "Mei", "Jun", "Jul", "Ogo", "Sep", "Okt", "Nov", "Dis"];
+
+        function janaKalendarBerterusan() {
+            const grid = document.getElementById('kalendarGrid');
+            grid.innerHTML = ''; 
+
+            let currentDate = new Date();
+            let count = 0;
+            const jumlahHariDipapar = 20; 
+
+            document.getElementById('bulanSemasa').innerText = `Bermula: ${currentDate.getDate()} ${namaBulanBM[currentDate.getMonth()]} ${currentDate.getFullYear()}`;
+
+            while (count < jumlahHariDipapar) {
+                const dayOfWeek = currentDate.getDay(); 
+                
+                if (dayOfWeek !== 0 && dayOfWeek !== 6) {
+                    const isoDate = currentDate.toLocaleDateString('en-CA'); 
+                    const dayName = namaHariBM[dayOfWeek];
+                    const dayNum = currentDate.getDate();
+                    const monthName = namaBulanBM[currentDate.getMonth()];
+                    
+                    const isToday = (count === 0);
+
+                    const card = document.createElement('div');
+                    card.className = `glass-card rounded-xl p-3 h-28 flex flex-col justify-between cursor-pointer transition hover:bg-white/10 date-card`;
+                    card.setAttribute('data-tarikh', isoDate);
+                    card.onclick = () => pilihTarikh(isoDate, card);
+
+                    card.innerHTML = `
+                        <div class="flex justify-between items-start">
+                            <div class="text-xl font-bold ${isToday ? 'text-blue-400' : 'text-gray-200'}">${dayNum}</div>
+                            <div class="text-[10px] uppercase tracking-wider text-gray-400">${dayName}</div>
+                        </div>
+                        <div class="text-xs text-gray-500">${monthName}</div>
+                        <div class="mt-auto text-[10px] text-center rounded-full py-1 ${isToday ? 'bg-blue-500/20 text-blue-300 border border-blue-500/30' : 'bg-white/5 text-gray-400'}">
+                            ${isToday ? 'HARI INI' : 'Klik utk lihat'}
+                        </div>
+                    `;
+                    grid.appendChild(card);
+                    count++;
+                }
+                currentDate.setDate(currentDate.getDate() + 1);
+            }
+        }
+
+        window.pilihTarikh = async function(tarikh, cardElement = null) {
+            currentSelectedDate = tarikh;
+            document.getElementById('tarikhPilihanLabel').innerText = `Tarikh: ${tarikh}`;
+            
+            document.querySelectorAll('.date-card').forEach(c => c.classList.remove('glass-card-active'));
+            if(cardElement) {
+                cardElement.classList.add('glass-card-active');
+            } else {
+                const targetCard = document.querySelector(`.date-card[data-tarikh="${tarikh}"]`);
+                if(targetCard) targetCard.classList.add('glass-card-active');
+            }
+            
+            const utamaContainer = document.getElementById('senaraiUtamaContainer');
+            const standbyContainer = document.getElementById('senaraiStandbyContainer');
+            
+            utamaContainer.innerHTML = '<p class="text-xs text-gray-400 animate-pulse">Memuatkan data dari pangkalan data...</p>';
+            standbyContainer.innerHTML = '<p class="text-xs text-gray-400 animate-pulse">Memuatkan data...</p>';
+
+            try {
+                const dataJadual = await queryData(JADUAL_COLLECTION, 'tarikh', '==', tarikh);
+                
+                utamaContainer.innerHTML = '';
+                standbyContainer.innerHTML = '';
+                let countUtama = 0; let countStandby = 0;
+
+                dataJadual.forEach(item => {
+                    const namaPetugas = item.nama || item.id_pengguna || 'Unknown';
+                    const statusVal = item.status || 'Hadir';
+                    const isTidakHadir = statusVal.toLowerCase().includes('tidak hadir');
+                    const isGanti = statusVal.toLowerCase().includes('ganti');
+
+                    // 移除了操作按钮的卡片 UI
+                    const cardHTML = `
+                        <div class="glass-card rounded-lg p-3 flex justify-between items-center ${isTidakHadir ? 'border-red-500/30 bg-red-900/20' : ''} ${isGanti ? 'border-blue-500/50 bg-blue-900/20 shadow-[0_0_10px_rgba(59,130,246,0.2)]' : ''}">
+                            <div class="flex items-center gap-3">
+                                <div class="w-8 h-8 rounded-full ${isGanti ? 'bg-blue-600' : 'bg-gray-600'} flex items-center justify-center font-bold text-white">${namaPetugas.charAt(0).toUpperCase()}</div>
+                                <div>
+                                    <p class="text-sm ${isTidakHadir ? 'text-gray-400 line-through' : 'text-gray-100'}">${namaPetugas}</p>
+                                    <p class="text-[10px] ${isTidakHadir ? 'text-red-400' : (isGanti ? 'text-blue-300' : 'text-green-400')}">${statusVal}</p>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+
+                    if (item.jenis_tugas === 'utama') {
+                        utamaContainer.innerHTML += cardHTML;
+                        countUtama++;
+                    } else if (item.jenis_tugas === 'standby') {
+                        standbyContainer.innerHTML += cardHTML;
+                        countStandby++;
+                    }
+                });
+
+                if (countUtama === 0) utamaContainer.innerHTML = '<p class="text-xs text-gray-500 italic">Tiada petugas utama.</p>';
+                if (countStandby === 0) standbyContainer.innerHTML = '<p class="text-xs text-gray-500 italic">Tiada petugas standby.</p>';
+
+            } catch (error) {
+                console.error("Gagal dapatkan data db:", error);
+                utamaContainer.innerHTML = '<p class="text-xs text-red-400">Ralat sambungan database.</p>';
+            }
+        };
+
+        window.muatTurunJadualHariIni = function() {
+            const firstCard = document.querySelector('.date-card');
+            if(firstCard) {
+                const firstDate = firstCard.getAttribute('data-tarikh');
+                window.pilihTarikh(firstDate, firstCard);
+            }
+        };
+
+        window.onload = () => {
+            janaKalendarBerterusan();
+            window.muatTurunJadualHariIni();
+        };
+    </script>
+</body>
+</html>
