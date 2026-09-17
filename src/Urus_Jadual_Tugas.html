@@ -118,37 +118,30 @@
         const JADUAL_COLLECTION = "jadual_tugas";
         let currentSelectedDate = ""; 
 
-        // 马来文日期与月份字典
         const namaHariBM = ["Ahad", "Isnin", "Selasa", "Rabu", "Khamis", "Jumaat", "Sabtu"];
         const namaBulanBM = ["Jan", "Feb", "Mac", "Apr", "Mei", "Jun", "Jul", "Ogo", "Sep", "Okt", "Nov", "Dis"];
 
-        /**
-         * 🌟 动态生成排班日历 (从今天开始，仅限周一至周五)
-         */
         function janaKalendarBerterusan() {
             const grid = document.getElementById('kalendarGrid');
             grid.innerHTML = ''; 
 
             let currentDate = new Date();
             let count = 0;
-            const jumlahHariDipapar = 20; // 预设显示未来 20 个工作日 (大约1个月)
+            const jumlahHariDipapar = 20; 
 
-            // 设置标题为当前月份
             document.getElementById('bulanSemasa').innerText = `Bermula: ${currentDate.getDate()} ${namaBulanBM[currentDate.getMonth()]} ${currentDate.getFullYear()}`;
 
             while (count < jumlahHariDipapar) {
-                const dayOfWeek = currentDate.getDay(); // 0 是 Ahad, 6 是 Sabtu
+                const dayOfWeek = currentDate.getDay(); 
                 
-                // 跳过周末 (Sabtu & Ahad)
                 if (dayOfWeek !== 0 && dayOfWeek !== 6) {
-                    const isoDate = currentDate.toLocaleDateString('en-CA'); // 输出 YYYY-MM-DD
+                    const isoDate = currentDate.toLocaleDateString('en-CA'); 
                     const dayName = namaHariBM[dayOfWeek];
                     const dayNum = currentDate.getDate();
                     const monthName = namaBulanBM[currentDate.getMonth()];
                     
                     const isToday = (count === 0);
 
-                    // 构建日历卡片 HTML
                     const card = document.createElement('div');
                     card.className = `glass-card rounded-xl p-3 h-28 flex flex-col justify-between cursor-pointer transition hover:bg-white/10 date-card`;
                     card.setAttribute('data-tarikh', isoDate);
@@ -167,25 +160,18 @@
                     grid.appendChild(card);
                     count++;
                 }
-                
-                // 天数 +1
                 currentDate.setDate(currentDate.getDate() + 1);
             }
         }
 
-        /** 
-         * 真实获取指定日期的排班数据并动态渲染
-         */
         window.pilihTarikh = async function(tarikh, cardElement = null) {
             currentSelectedDate = tarikh;
             document.getElementById('tarikhPilihanLabel').innerText = `Tarikh: ${tarikh}`;
             
-            // 🌟 视觉高亮选中的卡片
             document.querySelectorAll('.date-card').forEach(c => c.classList.remove('glass-card-active'));
             if(cardElement) {
                 cardElement.classList.add('glass-card-active');
             } else {
-                // 如果是从“回到今天”按钮点击的，通过属性寻找并高亮
                 const targetCard = document.querySelector(`.date-card[data-tarikh="${tarikh}"]`);
                 if(targetCard) targetCard.classList.add('glass-card-active');
             }
@@ -197,7 +183,6 @@
             standbyContainer.innerHTML = '<p class="text-xs text-gray-400 animate-pulse">Memuatkan data...</p>';
 
             try {
-                // 使用 queryData 查询 firebase 中 tarikh == 选定日期 的数据
                 const dataJadual = await queryData(JADUAL_COLLECTION, 'tarikh', '==', tarikh);
                 
                 utamaContainer.innerHTML = '';
@@ -211,6 +196,7 @@
                     const isGanti = statusVal.toLowerCase().includes('ganti');
                     const docId = item.id;
 
+                    // 💡 注意这里：Tukar 按钮调用了全新的 kemaskiniPetugas 函数，并且传入了 ID, 名字 和 状态
                     const cardHTML = `
                         <div class="glass-card rounded-lg p-3 flex justify-between items-center ${isTidakHadir ? 'border-red-500/30 bg-red-900/20' : ''} ${isGanti ? 'border-blue-500/50 bg-blue-900/20 shadow-[0_0_10px_rgba(59,130,246,0.2)]' : ''}">
                             <div class="flex items-center gap-3">
@@ -221,7 +207,7 @@
                                 </div>
                             </div>
                             <div class="flex items-center gap-1">
-                                <button onclick="tukarStatusPetugas('${docId}')" class="glass-card glass-btn px-3 py-1 text-[11px] rounded cursor-pointer">Tukar</button>
+                                <button onclick="kemaskiniPetugas('${docId}', '${namaPetugas}', '${statusVal}')" class="glass-card glass-btn px-3 py-1 text-[11px] rounded cursor-pointer">Tukar</button>
                                 <button onclick="padamPetugas('${docId}', '${namaPetugas}')" class="glass-card glass-btn-delete px-3 py-1 text-[11px] rounded cursor-pointer text-red-400 border-red-500/30">Padam</button>
                             </div>
                         </div>
@@ -283,21 +269,40 @@
             }
         };
 
-        window.tukarStatusPetugas = async function(docId) {
-            const statusBaru = prompt("Masukkan status baru:\n(Contoh: 'Tidak Hadir', 'Hadir', 'Ganti Ali')");
-            if (!statusBaru) return;
+        // 💡 全新的 kemaskiniPetugas 函数，支持同时修改 名字(Nama) 和 状态(Status)
+        window.kemaskiniPetugas = async function(docId, namaSemasa, statusSemasa) {
+            // 第一个弹窗：修改名字，默认显示旧名字
+            const namaBaru = prompt("Kemaskini NAMA petugas:", namaSemasa);
+            if (namaBaru === null) return; // 用户按了 Cancel
+
+            // 第二个弹窗：修改状态，默认显示旧状态
+            const statusBaru = prompt("Kemaskini STATUS petugas:\n(Contoh: 'Hadir', 'Tidak Hadir', 'Ganti Ali')", statusSemasa);
+            if (statusBaru === null) return; // 用户按了 Cancel
+
+            // 构造需要更新的数据对象
+            const updateObj = {};
+            if (namaBaru.trim() !== "" && namaBaru !== namaSemasa) {
+                updateObj.nama = namaBaru.trim();
+            }
+            if (statusBaru.trim() !== "" && statusBaru !== statusSemasa) {
+                updateObj.status = statusBaru.trim();
+            }
+
+            // 如果名字和状态都没有发生任何改变，则直接返回
+            if (Object.keys(updateObj).length === 0) {
+                return;
+            }
 
             try {
-                await updateData(JADUAL_COLLECTION, docId, { status: statusBaru });
+                await updateData(JADUAL_COLLECTION, docId, updateObj);
                 window.pilihTarikh(currentSelectedDate);
             } catch (error) {
                 console.error(error);
-                alert("Gagal kemaskini status.");
+                alert("Gagal kemaskini maklumat petugas.");
             }
         };
 
         window.muatTurunJadualHariIni = function() {
-            // 如果今天是周末，那么第一个卡片（星期一）的日期才是“Hari Ini”的代替
             const firstCard = document.querySelector('.date-card');
             if(firstCard) {
                 const firstDate = firstCard.getAttribute('data-tarikh');
@@ -305,7 +310,6 @@
             }
         };
 
-        // 🌟 页面加载时自动生成日历，并选中第一天
         window.onload = () => {
             janaKalendarBerterusan();
             window.muatTurunJadualHariIni();
