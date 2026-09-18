@@ -13,9 +13,9 @@ async function loadKehadiranData() {
         // 使用你的 db_helper 抓取所有数据，并根据 createdAt (创建时间) 降序排列 (最新的在最上面)
         const records = await readAllData(COLLECTION_NAME, 'createdAt', 'desc');
 
-        // 如果没有数据
+        // 如果没有数据 (文字颜色换成白色并加上阴影，适配雾面玻璃背景)
         if (records.length === 0) {
-            container.innerHTML = `<p style="color: #64748b; text-align: center;">Tiada rekod kehadiran buat masa ini.</p>`;
+            container.innerHTML = `<p style="color: #ffffff; text-align: center; text-shadow: 1px 1px 2px rgba(0,0,0,0.3);">Tiada rekod kehadiran buat masa ini.</p>`;
             return;
         }
 
@@ -42,11 +42,12 @@ async function loadKehadiranData() {
             const masa = item.masa || '-';
             const laporan = item.laporan || 'Tiada catatan';
 
+            // 去掉了 <small> 标签里的 color: gray，让外部 CSS 统一控制颜色
             tableHTML += `
                 <tr>
                     <td>${index + 1}</td>
                     <td><strong>${nama}</strong></td>
-                    <td>${tarikh} <br> <small style="color: gray;">${masa}</small></td>
+                    <td>${tarikh} <br> <small>${masa}</small></td>
                     <td style="white-space: pre-line;">${laporan}</td>
                     <td>
                         <button class="btn-delete" onclick="window.padamRekod('${item.id}')">🗑️ Padam</button>
@@ -60,7 +61,8 @@ async function loadKehadiranData() {
 
     } catch (error) {
         console.error("Gagal memuat turun data: ", error);
-        container.innerHTML = `<p style="color: red;">Ralat berlaku semasa mengambil data. Sila semak console.</p>`;
+        // 错误提示也调整了颜色和阴影，确保在背景图上能看清
+        container.innerHTML = `<p style="color: #ffcccc; text-align: center; text-shadow: 1px 1px 2px rgba(0,0,0,0.5);">Ralat berlaku semasa mengambil data. Sila semak console.</p>`;
     }
 }
 
