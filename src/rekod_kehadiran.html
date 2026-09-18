@@ -310,11 +310,13 @@
   
     closePopupBtn.addEventListener('click', () => {
       successPopup.classList.remove('show');
+      window.history.back();
     });
   
     successPopup.addEventListener('click', (e) => {
       if (e.target === successPopup) {
         successPopup.classList.remove('show');
+        window.history.back();
       }
     });
   </script>
