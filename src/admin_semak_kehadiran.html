@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin - Semak Kehadiran</title>
+  <style>
+    /* 基础重置 */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    /* 动态渐变背景 */
+    body {
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background: linear-gradient(45deg, #12c2e9, #c471ed, #f64f59);
+      background-size: 400% 400%;
+      animation: gradientBG 15s ease infinite;
+      padding: 20px;
+      color: #fff;
+    }
+
+    @keyframes gradientBG {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+
+    /* 雾面玻璃容器 - 比打卡页面更宽以容纳表格 */
+    .glass-container {
+      background: rgba(255, 255, 255, 0.15);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.2);
+      border-radius: 20px;
+      padding: 40px;
+      width: 100%;
+      max-width: 900px;
+      overflow: hidden;
+    }
+
+    .glass-container h2 {
+      text-align: center;
+      margin-bottom: 20px;
+      font-size: 28px;
+      font-weight: 600;
+      letter-spacing: 1px;
+      text-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    }
+
+    /* 顶部控制栏 (按钮) */
+    .controls {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 20px;
+    }
+
+    .btn {
+      padding: 10px 20px;
+      border-radius: 10px;
+      color: #fff;
+      font-size: 14px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      backdrop-filter: blur(5px);
+      border: 1px solid rgba(255, 255, 255, 0.5);
+      text-decoration: none;
+    }
+
+    .btn-refresh {
+      background: rgba(255, 255, 255, 0.25);
+    }
+
+    .btn-refresh:hover {
+      background: rgba(255, 255, 255, 0.4);
+      transform: translateY(-2px);
+    }
+
+    .btn-back {
+      background: rgba(0, 0, 0, 0.15);
+    }
+
+    .btn-back:hover {
+      background: rgba(0, 0, 0, 0.25);
+      transform: translateY(-2px);
+    }
+
+    /* 表格响应式容器 */
+    .table-responsive {
+      width: 100%;
+      overflow-x: auto;
+    }
+
+    /* 半透明表格样式 */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+      white-space: nowrap;
+    }
+
+    th, td {
+      padding: 15px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+    }
+
+    th {
+      background: rgba(255, 255, 255, 0.1);
+      font-weight: 600;
+      letter-spacing: 0.5px;
+    }
+
+    tbody tr {
+      transition: background 0.3s ease;
+    }
+
+    tbody tr:hover {
+      background: rgba(255, 255, 255, 0.15);
+    }
+
+    /* 状态提示 */
+    #statusMessage {
+      text-align: center;
+      margin-top: 20px;
+      font-size: 16px;
+    }
+
+    /* 滚动条美化 */
+    ::-webkit-scrollbar {
+      height: 8px;
+    }
+    ::-webkit-scrollbar-track {
+      background: rgba(255,255,255,0.1); 
+      border-radius: 10px;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: rgba(255,255,255,0.4); 
+      border-radius: 10px;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="glass-container">
+    <h2>Senarai Kehadiran (打卡记录)</h2>
+    
+    <div class="controls">
+      <button class="btn btn-back" onclick="window.history.back()">Kembali (返回)</button>
+      <button class="btn btn-refresh" id="refreshBtn">Muat Semula (刷新)</button>
+    </div>
+
+    <div class="table-responsive">
+      <table>
+        <thead>
+          <tr>
+            <th>Bil.</th>
+            <th>Nama Lengkap (姓名)</th>
+            <th>Sesi (时段)</th>
+            <th>Tarikh (日期)</th>
+            <th>Masa (时间)</th>
+          </tr>
+        </thead>
+        <tbody id="tableBody">
+          <!-- 数据将通过 JavaScript 动态插入这里 -->
+        </tbody>
+      </table>
+    </div>
+    
+    <div id="statusMessage">Sedang memuat data... (加载中)</div>
+  </div>
+
+  <!-- 使用 type="module" 引入 JS -->
+  <script type="module">
+    // 引入 readAllData 方法
+    import { readAllData } from './db_helper.js';
+
+    const tableBody = document.getElementById('tableBody');
+    const statusMessage = document.getElementById('statusMessage');
+    const refreshBtn = document.getElementById('refreshBtn');
+
+    // 提取并显示数据的函数
+    async function loadAttendanceData() {
+      // 正在加载状态
+      tableBody.innerHTML = '';
+      statusMessage.textContent = 'Sedang memuat data... (加载中)';
+      refreshBtn.disabled = true;
+
+      try {
+        // 调用 db_helper.js 的方法读取 'rekod_kehadiran' collection
+        // 按照 'createdAt' 字段降序排列 (最新的排在最上面)
+        const records = await readAllData('rekod_kehadiran', 'createdAt', 'desc');
+
+        if (records.length === 0) {
+          statusMessage.textContent = 'Tiada rekod kehadiran dijumpai. (暂无打卡记录)';
+          refreshBtn.disabled = false;
+          return;
+        }
+
+        // 清除状态文字
+        statusMessage.textContent = '';
+
+        // 遍历数据并生成表格行
+        records.forEach((data, index) => {
+          const tr = document.createElement('tr');
+          
+          tr.innerHTML = `
+            <td>${index + 1}</td>
+            <td>${data.nama || '-'}</td>
+            <td>${data.sesi || '-'}</td>
+            <td>${data.tarikhFormat || '-'}</td>
+            <td>${data.masaFormat || '-'}</td>
+          `;
+          
+          tableBody.appendChild(tr);
+        });
+
+      } catch (error) {
+        console.error("Ralat ketika memuat turun data:", error);
+        statusMessage.textContent = 'Gagal memuat data. Sila semak sambungan pangkalan data anda. (读取失败)';
+      } finally {
+        refreshBtn.disabled = false;
+      }
+    }
+
+    // 绑定刷新按钮事件
+    refreshBtn.addEventListener('click', loadAttendanceData);
+
+    // 页面加载完成后自动获取一次数据
+    document.addEventListener('DOMContentLoaded', loadAttendanceData);
+
+  </script>
+</body>
+</html>
