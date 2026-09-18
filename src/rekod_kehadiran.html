@@ -13,7 +13,7 @@
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     }
 
-    /* Dynamic animated gradient background to enhance glassmorphism effect */
+    /* Dynamic animated gradient background */
     body {
       min-height: 100vh;
       display: flex;
@@ -88,7 +88,7 @@
       box-shadow: 0 0 10px rgba(255,255,255,0.2);
     }
 
-    /* Dropdown options compatibility fix for mobile browsers */
+    /* Dropdown options compatibility fix */
     select.form-control option {
       background: #4a154b; 
       color: #ffffff;
@@ -150,33 +150,29 @@
       min-height: 20px;
     }
 
-    /* ================= Pop-up Modal Styles ================= */
+    /* Pop-up Modal Styles */
     .popup-overlay {
       position: fixed;
       top: 0;
       left: 0;
       width: 100%;
       height: 100%;
-      background: rgba(0, 0, 0, 0.4); /* Semi-transparent black backdrop */
+      background: rgba(0, 0, 0, 0.4);
       backdrop-filter: blur(5px);
       display: flex;
       justify-content: center;
       align-items: center;
       z-index: 1000;
-      
-      /* Hidden initial state */
       opacity: 0;
       visibility: hidden;
       transition: all 0.3s ease;
     }
 
-    /* Active pop-up state */
     .popup-overlay.show {
       opacity: 1;
       visibility: visible;
     }
 
-    /* Pop-up modal box (Glassmorphism design) */
     .popup-box {
       background: rgba(255, 255, 255, 0.15);
       backdrop-filter: blur(16px);
@@ -189,8 +185,6 @@
       max-width: 350px;
       text-align: center;
       color: #fff;
-      
-      /* Pop-up initial animation position */
       transform: translateY(-30px) scale(0.95);
       transition: all 0.3s ease;
     }
@@ -270,55 +264,64 @@
   </div>
 
   <script type="module">
-    // Note: If testing locally by double-clicking the file directly (file://), 
-    // the import below may fail due to browser CORS policy. Run via a local web server (e.g., Live Server).
     import { insertData } from './db_helper.js';
 
     const attendanceForm = document.getElementById('attendanceForm');
-  const submitBtn = document.getElementById('submitBtn');
-  const statusMessage = document.getElementById('statusMessage');
-  const successPopup = document.getElementById('successPopup');
-  const closePopupBtn = document.getElementById('closePopupBtn');
+    const submitBtn = document.getElementById('submitBtn');
+    const statusMessage = document.getElementById('statusMessage');
+    const successPopup = document.getElementById('successPopup');
+    const closePopupBtn = document.getElementById('closePopupBtn');
 
-  attendanceForm.addEventListener('submit', async (e) => {
-    e.preventDefault(); 
+    attendanceForm.addEventListener('submit', async (e) => {
+      e.preventDefault(); 
 
-    const nama = document.getElementById('namaLengkap').value.trim();
-    const sesi = document.getElementById('sesiWaktu').value;
+      const nama = document.getElementById('namaLengkap').value.trim();
+      const sesi = document.getElementById('sesiWaktu').value;
 
-    if (!nama || !sesi) {
-      statusMessage.style.color = '#ffcccb';
-      statusMessage.textContent = 'Sila isi semua maklumat.';
-      return;
-    }
+      if (!nama || !sesi) {
+        statusMessage.style.color = '#ffcccb';
+        statusMessage.textContent = 'Sila isi semua maklumat.';
+        return;
+      }
 
-    submitBtn.disabled = true;
-    submitBtn.textContent = 'Menyimpan...';
-    statusMessage.textContent = ''; 
+      // 更改按钮状态为提交中
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'Menyimpan...';
+      statusMessage.textContent = ''; 
 
-    // 模拟 1 秒网络请求延迟
-    setTimeout(() => {
-      // 模拟成功：显示弹窗并重置表单
-      successPopup.classList.add('show');
-      attendanceForm.reset();
+      try {
+        // 调用 db_helper.js 中的 insertData 函数写入数据库 'attendance' 集合
+        await insertData('attendance', {
+          nama: nama,
+          sesi: sesi
+        });
 
-      // 恢复按钮状态
-      submitBtn.disabled = false;
-      submitBtn.textContent = 'Hantar (打卡)';
-    }, 1000);
-  });
+        // 写入成功：弹出成功窗，重置表单
+        successPopup.classList.add('show');
+        attendanceForm.reset();
 
-  // 关闭弹窗
-  closePopupBtn.addEventListener('click', () => {
-    successPopup.classList.remove('show');
-  });
+      } catch (error) {
+        console.error('Submit Failed:', error);
+        statusMessage.style.color = '#ffcccb';
+        statusMessage.textContent = 'Ralat sistem. Sila cuba lagi.';
+      } finally {
+        // 恢复按钮状态
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Hantar (打卡)';
+      }
+    });
 
-  // 点击背景空白处关闭弹窗
-  successPopup.addEventListener('click', (e) => {
-    if (e.target === successPopup) {
+    // 关闭弹窗
+    closePopupBtn.addEventListener('click', () => {
       successPopup.classList.remove('show');
-    }
-  });
+    });
+
+    // 点击背景遮罩关闭弹窗
+    successPopup.addEventListener('click', (e) => {
+      if (e.target === successPopup) {
+        successPopup.classList.remove('show');
+      }
+    });
   </script>
 </body>
 </html>
