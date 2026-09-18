@@ -3,30 +3,120 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Semak Kehadiran & Laporan</title>
+    <title>Semak Kehadiran - Admin</title>
     <style>
-        body { font-family: Arial, sans-serif; padding: 20px; background-color: #f8fafc; }
-        .container { max-width: 1000px; margin: 0 auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
-        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-        th, td { border: 1px solid #e2e8f0; padding: 12px; text-align: left; }
-        th { background-color: #f1f5f9; }
-        .btn-delete { background-color: #ef4444; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; }
-        .btn-delete:hover { background-color: #dc2626; }
+        /* 1. 给 Body 加上背景，这样才能透出雾面玻璃的效果 */
+        body { 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            padding: 20px; 
+            margin: 0;
+            min-height: 100vh;
+            
+            /* 你可以把下面这行渐变色删掉，换成你那张高分辨率的 Sports Image */
+            background: linear-gradient(135deg, #0f172a 0%, #3b82f6 50%, #93c5fd 100%); 
+            
+            /* 如果用图片，请取消下面三行的注释：
+            background-image: url('gambar-sukan-anda.jpg'); 
+            background-size: cover; 
+            background-position: center; */
+            
+            color: #333;
+        }
+
+        /* 2. 雾面玻璃核心容器 (Glassmorphism) */
+        .container { 
+            max-width: 1000px; 
+            margin: 40px auto; 
+            padding: 30px; 
+            border-radius: 16px; 
+            
+            /* 半透明白色背景 */
+            background: rgba(255, 255, 255, 0.2); 
+            
+            /* 核心：背景模糊效果 */
+            backdrop-filter: blur(15px); 
+            -webkit-backdrop-filter: blur(15px); /* 兼容 Safari */
+            
+            /* 边缘加上半透明的高光边框，增加玻璃质感 */
+            border: 1px solid rgba(255, 255, 255, 0.4); 
+            
+            /* 柔和的底层阴影，让容器有悬浮感 */
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.2); 
+        }
+
+        /* 文字颜色调整，确保在复杂背景下能看清 */
+        h2, .subtitle {
+            color: #ffffff;
+            text-shadow: 1px 1px 3px rgba(0,0,0,0.3); /* 加一点文字阴影防止看不清 */
+        }
+
+        /* 3. 表格内部的半透明适配 */
+        table { 
+            width: 100%; 
+            border-collapse: collapse; 
+            margin-top: 20px; 
+            background: rgba(255, 255, 255, 0.5); /* 表格底色稍微亮一点 */
+            border-radius: 10px;
+            overflow: hidden; /* 让边角的圆角生效 */
+        }
+        
+        th, td { 
+            padding: 15px; 
+            text-align: left; 
+            border-bottom: 1px solid rgba(255, 255, 255, 0.6);
+            color: #1e293b;
+        }
+
+        th { 
+            background-color: rgba(255, 255, 255, 0.7); 
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 0.9em;
+            letter-spacing: 0.5px;
+        }
+
+        /* 最后一行去掉底部线条 */
+        tr:last-child td {
+            border-bottom: none;
+        }
+
+        /* 鼠标悬停时的玻璃微光反馈 */
+        tr:hover {
+            background-color: rgba(255, 255, 255, 0.3); 
+            transition: background-color 0.3s ease;
+        }
+
+        /* 4. 按钮也做轻微的玻璃和浮雕效果 */
+        .btn-delete { 
+            background-color: rgba(239, 68, 68, 0.85); 
+            color: white; 
+            border: 1px solid rgba(255, 255, 255, 0.5); 
+            padding: 8px 14px; 
+            border-radius: 6px; 
+            cursor: pointer; 
+            transition: all 0.3s ease;
+            backdrop-filter: blur(4px);
+        }
+
+        .btn-delete:hover { 
+            background-color: rgba(220, 38, 38, 1); 
+            transform: translateY(-2px); /* 悬浮时往上跳一点 */
+            box-shadow: 0 4px 12px rgba(239, 68, 68, 0.4);
+        }
     </style>
 </head>
 <body>
 
 <div class="container">
     <h2>📊 Semak Kehadiran & Laporan Pengguna</h2>
-    <p>Di sini admin boleh menyemak rekod pengguna yang telah punch-in.</p>
+    <p class="subtitle">Di sini admin boleh menyemak rekod pengguna yang telah punch-in.</p>
     
-    <!-- 数据将渲染在这个 div 中 -->
     <div id="kehadiranContainer">
-        <p style="color: #64748b;">Sedang memuat turun data dari Firebase...</p>
+        <!-- 载入状态也改成白色 -->
+        <p style="color: #ffffff; text-align: center;">Sedang memuat turun data dari Firebase...</p>
     </div>
 </div>
 
-<!-- 注意：必须使用 type="module"，因为我们要 import 你的 db_helper.js -->
 <script type="module" src="admin_semak.js"></script>
 
 </body>
