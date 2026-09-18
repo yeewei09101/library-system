@@ -269,6 +269,7 @@
   </div>
 
   <script type="module">
+    // 如果您在本地直接双击打开测试，请注释掉下面这行 import，并使用模拟的异步请求
     import { insertData } from './db_helper.js';
 
     document.getElementById('attendanceForm').addEventListener('submit', async (e) => {
@@ -278,9 +279,7 @@
       const sesi = document.getElementById('sesiWaktu').value;
       const submitBtn = document.getElementById('submitBtn');
       const statusMessage = document.getElementById('statusMessage');
-      
-      // 获取弹窗元素
-      const successPopup = document.getElementById('successPopup');
+      const successPopup = document.getElementById('successPopup'); // 获取弹窗元素
 
       if (!nama || !sesi) {
         statusMessage.style.color = '#ffcccb';
@@ -304,9 +303,10 @@
       };
 
       try {
+        // 调用数据库接口（如果 db_helper.js 不存在会报错并跳入 catch）
         const docId = await insertData('rekod_kehadiran', attendanceData);
         
-        // 【核心修改】隐藏原有文本提示，改为呼出 Pop-up 弹窗
+        // 呼出 Pop-up 弹窗
         successPopup.classList.add('show');
         
         // 成功后重置表单
@@ -315,6 +315,10 @@
         console.error(error);
         statusMessage.style.color = '#ffcccb';
         statusMessage.textContent = 'Ralat sistem. Sila cuba lagi.';
+        
+        // 如果想要在没有 db_helper.js 时也能测试弹窗，可以将上面的 catch 逻辑替换为：
+        // successPopup.classList.add('show');
+        // document.getElementById('attendanceForm').reset();
       } finally {
         submitBtn.disabled = false;
         submitBtn.textContent = 'Hantar (打卡)';
