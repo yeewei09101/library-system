@@ -186,7 +186,8 @@
 
   <!-- Using type="module" to enable ES module imports -->
   <script type="module">
-    import { readAllData } from './db_helper.js';
+    // 修复 1：改为正确的短横线文件名 db-helper.js
+    import { readAllData } from './db-helper.js';
 
     const tableBody = document.getElementById('tableBody');
     const statusMessage = document.getElementById('statusMessage');
@@ -205,30 +206,26 @@
 
     // Function to fetch and display attendance records
     async function loadAttendanceData() {
-      // Set loading UI state
       tableBody.innerHTML = '';
       statusMessage.textContent = 'Sedang memuat data... (加载中)';
       refreshBtn.disabled = true;
 
       try {
-        // Read data sorted by 'createdAt' in descending order (latest records first)
-        const records = await readAllData('rekod_kehadiran', 'createdAt', 'desc');
+        // 修复 2：将集合名称从 'rekod_kehadiran' 改为与提交打卡一致的 'attendance'
+        const records = await readAllData('attendance', 'createdAt', 'desc');
 
         if (!records || records.length === 0) {
           statusMessage.textContent = 'Tiada rekod kehadiran dijumpai. (暂无打卡记录)';
           return;
         }
 
-        // Clear status text when data is successfully loaded
         statusMessage.textContent = '';
 
-        // Use DocumentFragment for optimized DOM batch insertion (prevents multiple reflows)
         const fragment = document.createDocumentFragment();
 
         records.forEach((data, index) => {
           const tr = document.createElement('tr');
           
-          // Render safe sanitized content
           tr.innerHTML = `
             <td>${index + 1}</td>
             <td>${escapeHtml(data.nama)}</td>
@@ -246,15 +243,12 @@
         console.error("Error fetching data:", error);
         statusMessage.textContent = 'Gagal memuat data. Sila semak sambungan pangkalan data anda. (读取失败)';
       } finally {
-        // Re-enable refresh button
         refreshBtn.disabled = false;
       }
     }
 
-    // Attach click event to refresh button
     refreshBtn.addEventListener('click', loadAttendanceData);
 
-    // Initial load: Module scripts execute after HTML parsing, call function directly
     loadAttendanceData();
   </script>
 </body>
