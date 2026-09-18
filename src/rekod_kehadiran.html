@@ -94,13 +94,17 @@
       color: #fff;
     }
 
-    /* 按钮样式 */
-    .submit-btn {
-      width: 100%;
-      padding: 14px;
+    /* 按钮组布局 */
+    .btn-group {
+      display: flex;
+      gap: 15px;
       margin-top: 10px;
-      background: rgba(255, 255, 255, 0.25);
-      border: 1px solid rgba(255, 255, 255, 0.5);
+    }
+
+    /* 共用按钮样式 */
+    .btn {
+      flex: 1; /* 平分宽度 */
+      padding: 14px;
       border-radius: 10px;
       color: #fff;
       font-size: 16px;
@@ -108,6 +112,14 @@
       cursor: pointer;
       transition: all 0.3s ease;
       backdrop-filter: blur(5px);
+      text-align: center;
+      text-decoration: none;
+    }
+
+    /* 提交按钮 (打卡) */
+    .submit-btn {
+      background: rgba(255, 255, 255, 0.25);
+      border: 1px solid rgba(255, 255, 255, 0.5);
     }
 
     .submit-btn:hover {
@@ -120,6 +132,18 @@
       background: rgba(255, 255, 255, 0.1);
       cursor: not-allowed;
       transform: none;
+    }
+
+    /* 返回按钮 (Kembali) */
+    .back-btn {
+      background: rgba(0, 0, 0, 0.15); /* 稍微深色一点以作区分 */
+      border: 1px solid rgba(255, 255, 255, 0.3);
+    }
+
+    .back-btn:hover {
+      background: rgba(0, 0, 0, 0.25);
+      transform: translateY(-2px);
+      box-shadow: 0 4px 15px rgba(0,0,0,0.2);
     }
 
     /* 状态提示信息 */
@@ -151,70 +175,64 @@
         </select>
       </div>
 
-      <button type="submit" class="submit-btn" id="submitBtn">Hantar Kehadiran (打卡)</button>
+      <!-- 加入了 btn-group 容器来并排按钮 -->
+      <div class="btn-group">
+        <!-- 默认行为：回到上一页 -->
+        <button type="button" class="btn back-btn" onclick="window.history.back()">Kembali (返回)</button>
+        <button type="submit" class="btn submit-btn" id="submitBtn">Hantar (打卡)</button>
+      </div>
+      
       <div id="statusMessage"></div>
     </form>
   </div>
 
-  <!-- 使用 type="module" 引入 js，以便使用 import 语法 -->
   <script type="module">
-    // 引入你写好的 db_helper.js 里的 insertData 方法
     import { insertData } from './db_helper.js';
 
     document.getElementById('attendanceForm').addEventListener('submit', async (e) => {
-      e.preventDefault(); // 阻止表单默认刷新行为
+      e.preventDefault(); 
 
       const nama = document.getElementById('namaLengkap').value.trim();
       const sesi = document.getElementById('sesiWaktu').value;
       const submitBtn = document.getElementById('submitBtn');
       const statusMessage = document.getElementById('statusMessage');
 
-      // 基础验证
       if (!nama || !sesi) {
         statusMessage.style.color = '#ffcccb';
         statusMessage.textContent = 'Sila isi semua maklumat.';
         return;
       }
 
-      // 禁用按钮并显示加载中，防止重复点击
       submitBtn.disabled = true;
-      submitBtn.textContent = 'Sedang Menyimpan...';
+      submitBtn.textContent = 'Menyimpan...';
       statusMessage.textContent = '';
 
-      // 获取当前日期和时间 (方便Admin直接查看格式化后的字符串)
       const now = new Date();
-      // 使用马来西亚时区格式化
       const tarikh = now.toLocaleDateString('en-MY'); 
       const masa = now.toLocaleTimeString('en-MY', { hour12: true });
 
-      // 准备存入 Firebase 的数据
       const attendanceData = {
         nama: nama,
         sesi: sesi,
-        tarikhFormat: tarikh, // 格式化的日期 (如 18/09/2026)
-        masaFormat: masa      // 格式化的时间 (如 5:40:15 PM)
-        // 注：db_helper.js 中的 insertData 会自动补充 createdAt 字段
+        tarikhFormat: tarikh,
+        masaFormat: masa 
       };
 
       try {
-        // 调用 db_helper.js 存储到 'rekod_kehadiran' Collection 中
         const docId = await insertData('rekod_kehadiran', attendanceData);
         
         statusMessage.style.color = '#d4edda';
         statusMessage.textContent = 'Kehadiran berjaya direkodkan!';
         
-        // 清空表单
         document.getElementById('attendanceForm').reset();
       } catch (error) {
         console.error(error);
         statusMessage.style.color = '#ffcccb';
         statusMessage.textContent = 'Ralat sistem. Sila cuba lagi.';
       } finally {
-        // 恢复按钮状态
         submitBtn.disabled = false;
-        submitBtn.textContent = 'Hantar Kehadiran (打卡)';
+        submitBtn.textContent = 'Hantar (打卡)';
         
-        // 3秒后清除成功信息
         setTimeout(() => {
           statusMessage.textContent = '';
         }, 3000);
