@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Admin - Semak Kehadiran</title>
   <style>
-    /* 基础重置 */
+    /* Base CSS Reset */
     * {
       margin: 0;
       padding: 0;
@@ -13,7 +13,7 @@
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     }
 
-    /* 动态渐变背景 */
+    /* Dynamic animated gradient background */
     body {
       min-height: 100vh;
       display: flex;
@@ -32,7 +32,7 @@
       100% { background-position: 0% 50%; }
     }
 
-    /* 雾面玻璃容器 - 比打卡页面更宽以容纳表格 */
+    /* Glassmorphism container - wider than submission form to fit the table */
     .glass-container {
       background: rgba(255, 255, 255, 0.15);
       backdrop-filter: blur(16px);
@@ -55,7 +55,7 @@
       text-shadow: 0 2px 4px rgba(0,0,0,0.2);
     }
 
-    /* 顶部控制栏 (按钮) */
+    /* Top action controls bar */
     .controls {
       display: flex;
       justify-content: space-between;
@@ -93,13 +93,20 @@
       transform: translateY(-2px);
     }
 
-    /* 表格响应式容器 */
+    /* Disabled button state handling */
+    .btn:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      transform: none !important;
+    }
+
+    /* Responsive table wrapper */
     .table-responsive {
       width: 100%;
       overflow-x: auto;
     }
 
-    /* 半透明表格样式 */
+    /* Semi-transparent table styling */
     table {
       width: 100%;
       border-collapse: collapse;
@@ -126,14 +133,14 @@
       background: rgba(255, 255, 255, 0.15);
     }
 
-    /* 状态提示 */
+    /* Status message container */
     #statusMessage {
       text-align: center;
       margin-top: 20px;
       font-size: 16px;
     }
 
-    /* 滚动条美化 */
+    /* Custom scrollbar styling */
     ::-webkit-scrollbar {
       height: 8px;
     }
@@ -169,7 +176,7 @@
           </tr>
         </thead>
         <tbody id="tableBody">
-          <!-- 数据将通过 JavaScript 动态插入这里 -->
+          <!-- Data rows will be injected dynamically via JavaScript -->
         </tbody>
       </table>
     </div>
@@ -177,65 +184,78 @@
     <div id="statusMessage">Sedang memuat data... (加载中)</div>
   </div>
 
-  <!-- 使用 type="module" 引入 JS -->
+  <!-- Using type="module" to enable ES module imports -->
   <script type="module">
-    // 引入 readAllData 方法
     import { readAllData } from './db_helper.js';
 
     const tableBody = document.getElementById('tableBody');
     const statusMessage = document.getElementById('statusMessage');
     const refreshBtn = document.getElementById('refreshBtn');
 
-    // 提取并显示数据的函数
+    // Utility function to sanitize string input against XSS
+    function escapeHtml(str) {
+      if (!str) return '-';
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+    }
+
+    // Function to fetch and display attendance records
     async function loadAttendanceData() {
-      // 正在加载状态
+      // Set loading UI state
       tableBody.innerHTML = '';
       statusMessage.textContent = 'Sedang memuat data... (加载中)';
       refreshBtn.disabled = true;
 
       try {
-        // 调用 db_helper.js 的方法读取 'rekod_kehadiran' collection
-        // 按照 'createdAt' 字段降序排列 (最新的排在最上面)
+        // Read data sorted by 'createdAt' in descending order (latest records first)
         const records = await readAllData('rekod_kehadiran', 'createdAt', 'desc');
 
-        if (records.length === 0) {
+        if (!records || records.length === 0) {
           statusMessage.textContent = 'Tiada rekod kehadiran dijumpai. (暂无打卡记录)';
-          refreshBtn.disabled = false;
           return;
         }
 
-        // 清除状态文字
+        // Clear status text when data is successfully loaded
         statusMessage.textContent = '';
 
-        // 遍历数据并生成表格行
+        // Use DocumentFragment for optimized DOM batch insertion (prevents multiple reflows)
+        const fragment = document.createDocumentFragment();
+
         records.forEach((data, index) => {
           const tr = document.createElement('tr');
           
+          // Render safe sanitized content
           tr.innerHTML = `
             <td>${index + 1}</td>
-            <td>${data.nama || '-'}</td>
-            <td>${data.sesi || '-'}</td>
-            <td>${data.tarikhFormat || '-'}</td>
-            <td>${data.masaFormat || '-'}</td>
+            <td>${escapeHtml(data.nama)}</td>
+            <td>${escapeHtml(data.sesi)}</td>
+            <td>${escapeHtml(data.tarikhFormat)}</td>
+            <td>${escapeHtml(data.masaFormat)}</td>
           `;
           
-          tableBody.appendChild(tr);
+          fragment.appendChild(tr);
         });
 
+        tableBody.appendChild(fragment);
+
       } catch (error) {
-        console.error("Ralat ketika memuat turun data:", error);
+        console.error("Error fetching data:", error);
         statusMessage.textContent = 'Gagal memuat data. Sila semak sambungan pangkalan data anda. (读取失败)';
       } finally {
+        // Re-enable refresh button
         refreshBtn.disabled = false;
       }
     }
 
-    // 绑定刷新按钮事件
+    // Attach click event to refresh button
     refreshBtn.addEventListener('click', loadAttendanceData);
 
-    // 页面加载完成后自动获取一次数据
-    document.addEventListener('DOMContentLoaded', loadAttendanceData);
-
+    // Initial load: Module scripts execute after HTML parsing, call function directly
+    loadAttendanceData();
   </script>
 </body>
 </html>
