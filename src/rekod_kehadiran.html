@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sistem Rekod Kehadiran</title>
+  <style>
+    /* 基础重置 */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    /* 动态渐变背景，突出雾面玻璃效果 */
+    body {
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background: linear-gradient(45deg, #12c2e9, #c471ed, #f64f59);
+      background-size: 400% 400%;
+      animation: gradientBG 15s ease infinite;
+      padding: 20px;
+    }
+
+    @keyframes gradientBG {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+
+    /* 雾面玻璃容器 */
+    .glass-container {
+      background: rgba(255, 255, 255, 0.15); /* 半透明白色 */
+      backdrop-filter: blur(16px); /* 核心：模糊背景 */
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid rgba(255, 255, 255, 0.3); /* 边缘高光 */
+      box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.2);
+      border-radius: 20px;
+      padding: 40px;
+      width: 100%;
+      max-width: 450px;
+      color: #fff;
+    }
+
+    .glass-container h2 {
+      text-align: center;
+      margin-bottom: 30px;
+      font-size: 28px;
+      font-weight: 600;
+      letter-spacing: 1px;
+      text-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    }
+
+    /* 表单元素样式 */
+    .form-group {
+      margin-bottom: 25px;
+    }
+
+    .form-group label {
+      display: block;
+      margin-bottom: 8px;
+      font-size: 14px;
+      font-weight: 500;
+    }
+
+    .form-control {
+      width: 100%;
+      padding: 12px 15px;
+      background: rgba(255, 255, 255, 0.2);
+      border: 1px solid rgba(255, 255, 255, 0.4);
+      border-radius: 10px;
+      color: #fff;
+      font-size: 16px;
+      outline: none;
+      transition: all 0.3s ease;
+    }
+
+    .form-control::placeholder {
+      color: rgba(255, 255, 255, 0.7);
+    }
+
+    .form-control:focus {
+      background: rgba(255, 255, 255, 0.3);
+      border-color: #fff;
+      box-shadow: 0 0 10px rgba(255,255,255,0.2);
+    }
+
+    /* 下拉选单文字颜色处理（因为option在部分浏览器下会继承透明背景导致看不清） */
+    select.form-control option {
+      background: #c471ed; 
+      color: #fff;
+    }
+
+    /* 按钮样式 */
+    .submit-btn {
+      width: 100%;
+      padding: 14px;
+      margin-top: 10px;
+      background: rgba(255, 255, 255, 0.25);
+      border: 1px solid rgba(255, 255, 255, 0.5);
+      border-radius: 10px;
+      color: #fff;
+      font-size: 16px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      backdrop-filter: blur(5px);
+    }
+
+    .submit-btn:hover {
+      background: rgba(255, 255, 255, 0.4);
+      transform: translateY(-2px);
+      box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+    }
+
+    .submit-btn:disabled {
+      background: rgba(255, 255, 255, 0.1);
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    /* 状态提示信息 */
+    #statusMessage {
+      margin-top: 20px;
+      text-align: center;
+      font-size: 14px;
+      min-height: 20px;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="glass-container">
+    <h2>Sistem Kehadiran</h2>
+    <form id="attendanceForm">
+      
+      <div class="form-group">
+        <label for="namaLengkap">Nama Lengkap (姓名)</label>
+        <input type="text" id="namaLengkap" class="form-control" placeholder="Masukkan nama anda" required>
+      </div>
+
+      <div class="form-group">
+        <label for="sesiWaktu">Sesi (时段)</label>
+        <select id="sesiWaktu" class="form-control" required>
+          <option value="" disabled selected>Pilih Sesi...</option>
+          <option value="Sesi Pagi">Sesi Pagi (上午)</option>
+          <option value="Sesi Petang">Sesi Petang (下午)</option>
+        </select>
+      </div>
+
+      <button type="submit" class="submit-btn" id="submitBtn">Hantar Kehadiran (打卡)</button>
+      <div id="statusMessage"></div>
+    </form>
+  </div>
+
+  <!-- 使用 type="module" 引入 js，以便使用 import 语法 -->
+  <script type="module">
+    // 引入你写好的 db_helper.js 里的 insertData 方法
+    import { insertData } from './db_helper.js';
+
+    document.getElementById('attendanceForm').addEventListener('submit', async (e) => {
+      e.preventDefault(); // 阻止表单默认刷新行为
+
+      const nama = document.getElementById('namaLengkap').value.trim();
+      const sesi = document.getElementById('sesiWaktu').value;
+      const submitBtn = document.getElementById('submitBtn');
+      const statusMessage = document.getElementById('statusMessage');
+
+      // 基础验证
+      if (!nama || !sesi) {
+        statusMessage.style.color = '#ffcccb';
+        statusMessage.textContent = 'Sila isi semua maklumat.';
+        return;
+      }
+
+      // 禁用按钮并显示加载中，防止重复点击
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'Sedang Menyimpan...';
+      statusMessage.textContent = '';
+
+      // 获取当前日期和时间 (方便Admin直接查看格式化后的字符串)
+      const now = new Date();
+      // 使用马来西亚时区格式化
+      const tarikh = now.toLocaleDateString('en-MY'); 
+      const masa = now.toLocaleTimeString('en-MY', { hour12: true });
+
+      // 准备存入 Firebase 的数据
+      const attendanceData = {
+        nama: nama,
+        sesi: sesi,
+        tarikhFormat: tarikh, // 格式化的日期 (如 18/09/2026)
+        masaFormat: masa      // 格式化的时间 (如 5:40:15 PM)
+        // 注：db_helper.js 中的 insertData 会自动补充 createdAt 字段
+      };
+
+      try {
+        // 调用 db_helper.js 存储到 'rekod_kehadiran' Collection 中
+        const docId = await insertData('rekod_kehadiran', attendanceData);
+        
+        statusMessage.style.color = '#d4edda';
+        statusMessage.textContent = 'Kehadiran berjaya direkodkan!';
+        
+        // 清空表单
+        document.getElementById('attendanceForm').reset();
+      } catch (error) {
+        console.error(error);
+        statusMessage.style.color = '#ffcccb';
+        statusMessage.textContent = 'Ralat sistem. Sila cuba lagi.';
+      } finally {
+        // 恢复按钮状态
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Hantar Kehadiran (打卡)';
+        
+        // 3秒后清除成功信息
+        setTimeout(() => {
+          statusMessage.textContent = '';
+        }, 3000);
+      }
+    });
+  </script>
+</body>
+</html>
