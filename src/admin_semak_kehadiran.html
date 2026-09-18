@@ -186,7 +186,6 @@
 
   <!-- Using type="module" to enable ES module imports -->
   <script type="module">
-    // 修复 1：改为正确的短横线文件名 db-helper.js
     import { readAllData } from './db-helper.js';
 
     const tableBody = document.getElementById('tableBody');
@@ -211,7 +210,6 @@
       refreshBtn.disabled = true;
 
       try {
-        // 修复 2：将集合名称从 'rekod_kehadiran' 改为与提交打卡一致的 'attendance'
         const records = await readAllData('attendance', 'createdAt', 'desc');
 
         if (!records || records.length === 0) {
@@ -226,12 +224,30 @@
         records.forEach((data, index) => {
           const tr = document.createElement('tr');
           
+          // 1. Convert Firestore createdAt Timestamp to JS Date
+          let dateObj = null;
+          if (data.createdAt && typeof data.createdAt.toDate === 'function') {
+            dateObj = data.createdAt.toDate();
+          } else if (data.createdAt) {
+            dateObj = new Date(data.createdAt);
+          }
+
+          // 2. Format Date and Time
+          const tarikhStr = dateObj 
+            ? dateObj.toLocaleDateString('zh-CN', { year: 'numeric', month: '2-digit', day: '2-digit' }) 
+            : '-';
+
+          const masaStr = dateObj 
+            ? dateObj.toLocaleTimeString('zh-CN', { hour12: false }) 
+            : '-';
+          
+          // 3. Render Table Row
           tr.innerHTML = `
             <td>${index + 1}</td>
             <td>${escapeHtml(data.nama)}</td>
             <td>${escapeHtml(data.sesi)}</td>
-            <td>${escapeHtml(data.tarikhFormat)}</td>
-            <td>${escapeHtml(data.masaFormat)}</td>
+            <td>${escapeHtml(tarikhStr)}</td>
+            <td>${escapeHtml(masaStr)}</td>
           `;
           
           fragment.appendChild(tr);
