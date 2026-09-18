@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Semak Kehadiran & Laporan</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; background-color: #f8fafc; }
+        .container { max-width: 1000px; margin: 0 auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { border: 1px solid #e2e8f0; padding: 12px; text-align: left; }
+        th { background-color: #f1f5f9; }
+        .btn-delete { background-color: #ef4444; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; }
+        .btn-delete:hover { background-color: #dc2626; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>📊 Semak Kehadiran & Laporan Pengguna</h2>
+    <p>Di sini admin boleh menyemak rekod pengguna yang telah punch-in.</p>
+    
+    <!-- 数据将渲染在这个 div 中 -->
+    <div id="kehadiranContainer">
+        <p style="color: #64748b;">Sedang memuat turun data dari Firebase...</p>
+    </div>
+</div>
+
+<!-- 注意：必须使用 type="module"，因为我们要 import 你的 db_helper.js -->
+<script type="module" src="admin_semak.js"></script>
+
+</body>
+</html>
