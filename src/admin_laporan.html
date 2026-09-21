@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sistem PSS - Admin Semakan Laporan</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+    body { position: relative; color: #0f172a; min-height: 100vh; padding: 20px; overflow-x: hidden; }
+    body::before { content: ""; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: url('../img/bg-library.jpg') no-repeat center center/cover; filter: blur(8px) brightness(0.85); transform: scale(1.05); z-index: -1; }
+    .container { max-width: 1000px; margin: 0 auto; }
+    .frosted-glass { background: rgba(255, 255, 255, 0.55); backdrop-filter: blur(16px) saturate(180%); -webkit-backdrop-filter: blur(16px) saturate(180%); border: 1px solid rgba(255, 255, 255, 0.6); box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.15); border-radius: 16px; }
+    header { display: flex; justify-content: space-between; align-items: center; padding: 16px 24px; margin-bottom: 20px; }
+    .header-title { font-size: 1.25rem; font-weight: 700; color: #0f172a; display: flex; align-items: center; gap: 10px; }
+    .btn-back { background: rgba(15, 23, 42, 0.1); color: #0f172a; border: 1px solid rgba(15, 23, 42, 0.2); padding: 8px 16px; border-radius: 8px; cursor: pointer; font-weight: 600; text-decoration: none; transition: all 0.2s; }
+    .btn-back:hover { background: rgba(15, 23, 42, 0.2); }
+    .controls-bar { padding: 16px 24px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; }
+    .filter-group { display: flex; align-items: center; gap: 10px; font-size: 0.9rem; font-weight: 600; }
+    .select-filter { padding: 8px 12px; border-radius: 8px; border: 1px solid rgba(255, 255, 255, 0.8); background: rgba(255, 255, 255, 0.8); outline: none; font-size: 0.9rem; cursor: pointer; }
+    .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 20px; }
+    .stat-card { padding: 16px; text-align: center; }
+    .stat-num { font-size: 1.8rem; font-weight: 800; color: #2563eb; }
+    .stat-label { font-size: 0.8rem; color: #475569; font-weight: 600; }
+    .report-list-container { padding: 24px; }
+    .report-card { background: rgba(255, 255, 255, 0.7); border-radius: 12px; padding: 18px; margin-bottom: 16px; border: 1px solid rgba(255, 255, 255, 0.8); box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05); transition: transform 0.2s; }
+    .report-card:hover { transform: translateY(-2px); }
+    .report-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; flex-wrap: wrap; gap: 8px; }
+    .report-user { font-weight: 700; color: #0f172a; font-size: 1rem; }
+    .report-date { font-size: 0.8rem; color: #64748b; }
+    .badge-status { padding: 4px 10px; border-radius: 20px; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; }
+    .status-pending { background: #fef3c7; color: #b45309; border: 1px solid #fde68a; }
+    .status-disemak { background: #dcfce7; color: #15803d; border: 1px solid #bbf7d0; }
+    .category-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px; }
+    .tag { background: #e0e7ff; color: #3730a3; font-size: 0.75rem; padding: 3px 8px; border-radius: 6px; font-weight: 600; }
+    .report-content { font-size: 0.95rem; color: #1e293b; background: rgba(255, 255, 255, 0.5); padding: 12px; border-radius: 8px; margin-bottom: 12px; white-space: pre-line; border-left: 3px solid #3b82f6; }
+    .report-actions { display: flex; justify-content: flex-end; gap: 10px; align-items: center; }
+    .btn-verify { background: #16a34a; color: white; border: none; padding: 8px 16px; border-radius: 6px; font-size: 0.85rem; font-weight: 600; cursor: pointer; transition: background 0.2s; }
+    .btn-verify:hover { background: #15803d; }
+    .btn-verified-disabled { background: #94a3b8; color: white; border: none; padding: 8px 16px; border-radius: 6px; font-size: 0.85rem; font-weight: 600; cursor: not-allowed; }
+  </style>
+</head>
+<body>
+
+  <script>
+    const currentUser = JSON.parse(sessionStorage.getItem("user"));
+    if (!currentUser || currentUser.role !== "admin") {
+      alert("Akses dilarang! Halaman ini hanya untuk Pentadbir / Admin.");
+      window.location.href = "login.html";
+    }
+  </script>
+
+  <div class="container">
+    <header class="frosted-glass">
+      <div class="header-title">📋 Pengurusan & Semakan Laporan PSS</div>
+      <a href="admin.html" class="btn-back">⬅ Dashboard Admin</a>
+    </header>
+
+    <div class="stats-grid">
+      <div class="stat-card frosted-glass">
+        <div class="stat-num" id="totalCount">0</div>
+        <div class="stat-label">Jumlah Laporan</div>
+      </div>
+      <div class="stat-card frosted-glass">
+        <div class="stat-num" id="pendingCount" style="color: #d97706;">0</div>
+        <div class="stat-label">Belum Disemak</div>
+      </div>
+      <div class="stat-card frosted-glass">
+        <div class="stat-num" id="checkedCount" style="color: #16a34a;">0</div>
+        <div class="stat-label">Telah Disemak</div>
+      </div>
+    </div>
+
+    <div class="controls-bar frosted-glass">
+      <div class="filter-group">
+        <label for="statusFilter">Tapis Status Semakan:</label>
+        <select id="statusFilter" class="select-filter">
+          <option value="all">Semua Laporan</option>
+          <option value="Pending">Belum Disemak (Pending)</option>
+          <option value="Disemak">Telah Disemak (Disemak)</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="report-list-container frosted-glass">
+      <div id="reportList">Memuatkan data dari Firebase...</div>
+    </div>
+  </div>
+
+  <script type="module">
+    import { readAllData, updateData } from './db-helper.js';
+
+    let allReports = [];
+
+    // 读取 Firestore 'laporan' 集合所有数据
+    async function fetchAndRenderReports() {
+      const reportList = document.getElementById("reportList");
+      try {
+        allReports = await readAllData('laporan', 'createdAt', 'desc');
+
+        // 更新数字面板
+        document.getElementById("totalCount").textContent = allReports.length;
+        document.getElementById("pendingCount").textContent = allReports.filter(r => r.status === "Pending" || !r.status).length;
+        document.getElementById("checkedCount").textContent = allReports.filter(r => r.status === "Disemak").length;
+
+        applyFilter();
+      } catch (err) {
+        console.error("Ralat Firebase:", err);
+        reportList.innerHTML = `<p style="color:red; text-align:center;">Gagal memuatkan laporan: ${err.message}</p>`;
+      }
+    }
+
+    // 过滤逻辑
+    function applyFilter() {
+      const filterValue = document.getElementById("statusFilter").value;
+      let filteredList = allReports;
+
+      if (filterValue === "Pending") {
+        filteredList = allReports.filter(r => r.status === "Pending" || !r.status);
+      } else if (filterValue === "Disemak") {
+        filteredList = allReports.filter(r => r.status === "Disemak");
+      }
+
+      const reportList = document.getElementById("reportList");
+      if (filteredList.length === 0) {
+        reportList.innerHTML = `<p style="text-align: center; color: #64748b; padding: 20px;">Tiada laporan ditemui.</p>`;
+        return;
+      }
+
+      reportList.innerHTML = filteredList.map(item => {
+        const isDisemak = item.status === "Disemak";
+
+        return `
+          <div class="report-card">
+            <div class="report-header">
+              <div>
+                <span class="report-user">👤 ${escapeHTML(item.pelapor || 'Pengawas')}</span>
+                <span class="report-date"> | 📅 ${escapeHTML(item.tarikh)} (${escapeHTML(item.masa || '')})</span>
+              </div>
+              <span class="badge-status ${isDisemak ? 'status-disemak' : 'status-pending'}">
+                ${isDisemak ? 'Disemak' : 'Pending'}
+              </span>
+            </div>
+
+            <div class="category-tags">
+              ${(item.kategori || []).map(k => `<span class="tag">${escapeHTML(k)}</span>`).join('')}
+            </div>
+
+            <div class="report-content">
+              <strong>Isu / Masalah / Aduan:</strong><br>
+              ${escapeHTML(item.isu)}
+            </div>
+
+            <div class="report-actions">
+              ${isDisemak ? `
+                <button class="btn-verified-disabled" disabled>✓ Telah Disemak oleh Admin</button>
+              ` : `
+                <button class="btn-verify" data-id="${item.id}">✓ Sahkan & Semak Laporan</button>
+              `}
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      // 绑定审核点击事件
+      document.querySelectorAll(".btn-verify").forEach(btn => {
+        btn.addEventListener("click", async (e) => {
+          const docId = e.target.getAttribute("data-id");
+          await verifyReport(docId);
+        });
+      });
+    }
+
+    // 更新 Firestore 数据的状态
+    async function verifyReport(docId) {
+      try {
+        await updateData('laporan', docId, {
+          status: "Disemak",
+          penyemak: "Disemak"
+        });
+        alert("Laporan berjaya disahkan dan disemak dalam Firebase!");
+        fetchAndRenderReports();
+      } catch (err) {
+        alert("Gagal mengemaskini status: " + err.message);
+      }
+    }
+
+    function escapeHTML(str) {
+      return String(str || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    }
+
+    document.getElementById("statusFilter").addEventListener("change", applyFilter);
+
+    fetchAndRenderReports();
+  </script>
+</body>
+</html>
