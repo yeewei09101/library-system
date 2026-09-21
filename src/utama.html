@@ -314,24 +314,10 @@
     </div>
 
     <!-- Hantar Laporan -->
-    <div class="laporan-section frosted-glass">
-      <h3 style="font-size: 1.1rem; margin-bottom: 6px;">📝 Hantar Laporan / Mesej Harian</h3>
-      <p style="font-size: 0.85rem; color: #334155;">Tulis laporan bertugas atau sebarang maklum balas (Maksimum 500 aksara).</p>
-      
-      <textarea 
-        id="laporanInput" 
-        class="laporan-textarea" 
-        maxlength="500" 
-        placeholder="Tulis laporan anda di sini..."
-        oninput="updateCharCount()"></textarea>
-      
-      <div class="char-counter">
-        <span id="charCount">0</span> / 500 Aksara (Varchar 500)
-      </div>
-
-      <button class="btn-submit-laporan" id="btnSubmitLaporan" onclick="submitLaporan()">Hantar Laporan</button>
-    </div>
-  </div>
+    <div class="laporan-section frosted-glass" onclick="window.location.href='rekod_laporan.html'">
+      <div class="card-icon">📝 </div>
+      <div class="card-title">Hantar Laporan</div>
+      <div class="card-desc">Laporan harian bertugas.</div>
 
   <!-- Skrip Pengguna (UI/Accessibility/Clock/Logout) -->
   <script>
