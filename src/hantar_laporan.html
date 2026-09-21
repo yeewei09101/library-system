@@ -112,17 +112,6 @@
         const now = new Date();
         const tarikhToday = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
 
-        // 1. 查询 Firebase 中的 'kehadiran' 集合，检查今天是否签到
-        const userAttendance = await queryData('attendance', 'pelapor', '==', userNameDisplay);
-        const hasAttendedToday = userAttendance.some(k => k.tarikh === tarikhToday);
-
-        if (!hasAttendedToday) {
-          alert("⚠️ Anda belum merekod kehadiran hari ini!\nSila isi Rekod Kehadiran terlebih dahulu sebelum menghantar laporan.");
-          submitBtn.disabled = false;
-          submitBtn.textContent = "Hantar Laporan";
-          return;
-        }
-
         // 2. 表单字段收集
         const checkedCategories = Array.from(document.querySelectorAll('input[name="katLaporan"]:checked')).map(cb => cb.value);
         const isuContent = document.getElementById('laporanInput').value.trim();
