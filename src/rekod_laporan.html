@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hantar Laporan</title>
+    <style>
+        /* 页面背景：使用渐变色来凸显玻璃的折射和模糊效果 */
+        body {
+            margin: 0;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #74ebd5 0%, #9face6 100%);
+        }
+
+        /* 雾面玻璃主体容器 */
+        .glass-container {
+            background: rgba(255, 255, 255, 0.25);
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border-radius: 15px;
+            border: 1px solid rgba(255, 255, 255, 0.4);
+            padding: 40px;
+            width: 90%;
+            max-width: 450px;
+        }
+
+        h2 {
+            text-align: center;
+            color: #333;
+            margin-top: 0;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #333;
+            font-weight: bold;
+        }
+
+        /* 输入框和选择框的半透明设计 */
+        input[type="text"], select, textarea {
+            width: 100%;
+            padding: 12px;
+            box-sizing: border-box;
+            background: rgba(255, 255, 255, 0.5);
+            border: 1px solid rgba(255, 255, 255, 0.6);
+            border-radius: 8px;
+            color: #333;
+            font-size: 16px;
+            outline: none;
+            transition: 0.3s;
+        }
+
+        input[type="text"]:focus, select:focus, textarea:focus {
+            background: rgba(255, 255, 255, 0.8);
+            border-color: #fff;
+            box-shadow: 0 0 5px rgba(255,255,255,0.5);
+        }
+
+        textarea {
+            resize: vertical;
+            height: 120px;
+        }
+
+        /* 提交按钮 */
+        button {
+            width: 100%;
+            padding: 14px;
+            border-radius: 8px;
+            border: none;
+            background: rgba(255, 255, 255, 0.7);
+            color: #333;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+
+        button:hover {
+            background: rgba(255, 255, 255, 0.9);
+            transform: translateY(-2px);
+        }
+
+        button:disabled {
+            background: rgba(255, 255, 255, 0.4);
+            cursor: not-allowed;
+            transform: translateY(0);
+        }
+    </style>
+</head>
+<body>
+
+    <div class="glass-container">
+        <h2>Rekod Laporan</h2>
+        <form id="laporanForm">
+            <div class="form-group">
+                <label for="nama">Nama Pengguna:</label>
+                <input type="text" id="nama" placeholder="Masukkan nama anda" required>
+            </div>
+
+            <div class="form-group">
+                <label for="sesi">Sesi:</label>
+                <select id="sesi" required>
+                    <option value="" disabled selected>Pilih Sesi</option>
+                    <option value="Sesi Pagi">Sesi Pagi</option>
+                    <option value="Sesi Petang">Sesi Petang</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="laporan">Laporan (Min 10 aksara/huruf):</label>
+                <!-- HTML5 自带 minlength="10" 做第一层拦截 -->
+                <textarea id="laporan" placeholder="Tulis laporan anda di sini..." minlength="10" required></textarea>
+            </div>
+
+            <button type="submit" id="submitBtn">Hantar Laporan</button>
+        </form>
+    </div>
+
+    <!-- 注意 type="module"，因为我们要 import 你的 db_helper.js -->
+    <script type="module">
+        import { insertData } from './db_helper.js';
+
+        const form = document.getElementById('laporanForm');
+        const submitBtn = document.getElementById('submitBtn');
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault(); // 阻止表单默认刷新行为
+
+            // 获取用户输入
+            const nama = document.getElementById('nama').value.trim();
+            const sesi = document.getElementById('sesi').value;
+            const laporan = document.getElementById('laporan').value.trim();
+
+            // 第二层安全拦截：检查字数（不少于10个字/字符）
+            if (laporan.length < 10) {
+                alert("Laporan tidak mencukupi! Sila pastikan laporan anda mempunyai sekurang-kurangnya 10 aksara/huruf.");
+                return;
+            }
+
+            // 更改按钮状态，防止重复点击
+            submitBtn.disabled = true;
+            submitBtn.innerText = "Sedang Dihantar...";
+
+            try {
+                // 整理要上传的数据 (createdAt 已经在你的 db_helper.js 中自动加入了)
+                const dataToUpload = {
+                    nama: nama,
+                    sesi: sesi,
+                    laporan: laporan
+                };
+
+                // 调用你的 insertData，上传到名为 "senarai_laporan" 的 collection 中
+                const docId = await insertData('senarai_laporan', dataToUpload);
+                
+                alert("Laporan berjaya dihantar! ID: " + docId);
+                form.reset(); // 清空表格
+            } catch (error) {
+                console.error("Error submitting:", error);
+                alert("Gagal menghantar laporan. Sila cuba lagi.");
+            } finally {
+                // 恢复按钮状态
+                submitBtn.disabled = false;
+                submitBtn.innerText = "Hantar Laporan";
+            }
+        });
+    </script>
+</body>
+</html>

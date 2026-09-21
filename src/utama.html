@@ -216,12 +216,12 @@
         </div>
       </div>
 
-      <!-- 3. Hantar Laporan (Pautan Baru) -->
+      <!-- 3. Hantar Laporan (点击直接跳转到 rekod_laporan.html) -->
       <div class="glass-card frosted-glass" onclick="window.location.href='hantar_laporan.html'">
         <div>
-          <div class="card-icon">📨</div>
-          <div class="card-title">Hantar Laporan (Alt + L)</div>
-          <div class="card-desc">Tulis laporan harian, aduan kerosakan atau cadangan terus kepada admin.</div>
+          <div class="card-icon">📝</div>
+          <div class="card-title">Hantar Laporan</div>
+          <div class="card-desc">Laporan harian bertugas.</div>
         </div>
       </div>
     </div>
@@ -241,14 +241,6 @@
       sessionStorage.removeItem("user");
       window.location.href = "login.html";
     }
-
-    // Global Keyboard Shortcut Alt + L -> Jump to hantar_laporan.html
-    document.addEventListener('keydown', function(e) {
-      if (e.altKey && (e.key === 'l' || e.key === 'L')) {
-        e.preventDefault();
-        window.location.href = "hantar_laporan.html";
-      }
-    });
   </script>
 </body>
 </html>
