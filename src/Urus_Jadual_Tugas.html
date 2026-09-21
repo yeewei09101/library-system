@@ -1,319 +1,225 @@
-<!DOCTYPE html>
-<html lang="zh">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Jadual Bertugas - Glassmorphism</title>
-    <!-- 引入 Tailwind CSS -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <style>
-        .glass-panel {
-            background: rgba(255, 255, 255, 0.05);
-            backdrop-filter: blur(16px);
-            -webkit-backdrop-filter: blur(16px);
-            border: 1px solid rgba(255, 255, 255, 0.15);
-            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
-        }
-        .glass-card {
-            background: rgba(255, 255, 255, 0.03);
-            backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            transition: all 0.3s ease;
-        }
-        .glass-btn:hover {
-            background: rgba(255, 255, 255, 0.15);
-            border-color: rgba(255, 255, 255, 0.4);
-            transform: translateY(-1px);
-        }
-        .glass-btn-delete:hover {
-            background: rgba(239, 68, 68, 0.2);
-            border-color: rgba(239, 68, 68, 0.5);
-            color: #fca5a5;
-        }
-        .glass-card:hover {
-            background: rgba(255, 255, 255, 0.08);
-            border-color: rgba(255, 255, 255, 0.3);
-        }
-        /* 选中的日期卡片高亮 */
-        .glass-card-active {
-            background: rgba(59, 130, 246, 0.15) !important;
-            border: 1px solid rgba(59, 130, 246, 0.5) !important;
-            box-shadow: 0 0 15px rgba(59, 130, 246, 0.3) !important;
-        }
-    </style>
-</head>
-<body class="bg-gray-900 min-h-screen text-white font-sans p-6 bg-gradient-to-br from-gray-900 via-blue-900/40 to-red-900/30">
+<!-- 🌟 与 db-helper.js 真实连接的逻辑（支持每周固定循环排班） 🌟 -->
+<script type="module">
+    import { insertData, queryData, updateData, deleteData } from './db-helper.js';
 
-    <script>
-        const currentUser = JSON.parse(sessionStorage.getItem("user"));
-        if (!currentUser || currentUser.role !== "admin") {
-            alert("Akses dilarang! Halaman ini khas untuk Pentadbir (Admin) sahaja.");
-            window.location.href = "login.html";
-        }
-    </script>
+    const JADUAL_COLLECTION = "jadual_tugas";
+    let currentSelectedDate = ""; 
+    let currentSelectedDayOfWeek = null; // 保存当前选中日期是星期几 (0-6)
 
-    <div class="max-w-7xl mx-auto flex flex-col lg:flex-row gap-6">
+    const namaHariBM = ["Ahad", "Isnin", "Selasa", "Rabu", "Khamis", "Jumaat", "Sabtu"];
+    const namaBulanBM = ["Jan", "Feb", "Mac", "Apr", "Mei", "Jun", "Jul", "Ogo", "Sep", "Okt", "Nov", "Dis"];
+
+    function janaKalendarBerterusan() {
+        const grid = document.getElementById('kalendarGrid');
+        grid.innerHTML = ''; 
+
+        let currentDate = new Date();
+        let count = 0;
+        const jumlahHariDipapar = 20; 
+
+        document.getElementById('bulanSemasa').innerText = `Bermula: ${currentDate.getDate()} ${namaBulanBM[currentDate.getMonth()]} ${currentDate.getFullYear()}`;
+
+        while (count < jumlahHariDipapar) {
+            const dayOfWeek = currentDate.getDay(); 
+            
+            if (dayOfWeek !== 0 && dayOfWeek !== 6) { // 仅显示工作日
+                const isoDate = currentDate.toLocaleDateString('en-CA'); 
+                const dayName = namaHariBM[dayOfWeek];
+                const dayNum = currentDate.getDate();
+                const monthName = namaBulanBM[currentDate.getMonth()];
+                
+                const isToday = (count === 0);
+
+                const card = document.createElement('div');
+                card.className = `glass-card rounded-xl p-3 h-28 flex flex-col justify-between cursor-pointer transition hover:bg-white/10 date-card`;
+                card.setAttribute('data-tarikh', isoDate);
+                card.setAttribute('data-day', dayOfWeek);
+                card.onclick = () => pilihTarikh(isoDate, dayOfWeek, card);
+
+                card.innerHTML = `
+                    <div class="flex justify-between items-start">
+                        <div class="text-xl font-bold ${isToday ? 'text-blue-400' : 'text-gray-200'}">${dayNum}</div>
+                        <div class="text-[10px] uppercase tracking-wider text-gray-400">${dayName}</div>
+                    </div>
+                    <div class="text-xs text-gray-500">${monthName}</div>
+                    <div class="mt-auto text-[10px] text-center rounded-full py-1 ${isToday ? 'bg-blue-500/20 text-blue-300 border border-blue-500/30' : 'bg-white/5 text-gray-400'}">
+                        ${isToday ? 'HARI INI' : 'Klik utk urus'}
+                    </div>
+                `;
+                grid.appendChild(card);
+                count++;
+            }
+            currentDate.setDate(currentDate.getDate() + 1);
+        }
+    }
+
+    window.pilihTarikh = async function(tarikh, dayOfWeek, cardElement = null) {
+        currentSelectedDate = tarikh;
+        currentSelectedDayOfWeek = dayOfWeek;
         
-        <!-- 左侧：日历区域 (70%) -->
-        <div class="glass-panel rounded-2xl p-6 flex-grow lg:w-2/3">
-            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
-                <div class="flex items-center gap-4">
-                    <button onclick="window.location.href='admin.html'" class="glass-card glass-btn px-4 py-2 rounded-lg text-sm font-semibold cursor-pointer flex items-center gap-2">
-                        <span>⬅</span> Kembali
-                    </button>
-                    <h1 class="text-3xl font-bold tracking-wider">Jadual Bertugas</h1>
-                </div>
-                <div class="space-x-3">
-                    <button onclick="muatTurunJadualHariIni()" class="glass-card glass-btn px-4 py-2 rounded-lg text-sm cursor-pointer">Hari Ini</button>
-                </div>
-            </div>
+        const dayName = namaHariBM[dayOfWeek];
+        document.getElementById('tarikhPilihanLabel').innerText = `Tarikh: ${tarikh} (${dayName})`;
+        
+        document.querySelectorAll('.date-card').forEach(c => c.classList.remove('glass-card-active'));
+        if(cardElement) {
+            cardElement.classList.add('glass-card-active');
+        } else {
+            const targetCard = document.querySelector(`.date-card[data-tarikh="${tarikh}"]`);
+            if(targetCard) targetCard.classList.add('glass-card-active');
+        }
+        
+        const utamaContainer = document.getElementById('senaraiUtamaContainer');
+        const standbyContainer = document.getElementById('senaraiStandbyContainer');
+        
+        utamaContainer.innerHTML = '<p class="text-xs text-gray-400 animate-pulse">Memuatkan data dari pangkalan data...</p>';
+        standbyContainer.innerHTML = '<p class="text-xs text-gray-400 animate-pulse">Memuatkan data...</p>';
+
+        try {
+            // 1. 先查询特定日期是否有单独排班
+            let dataJadual = await queryData(JADUAL_COLLECTION, 'tarikh', '==', tarikh);
             
-            <h2 class="text-xl mb-4 text-gray-300" id="bulanSemasa">Memuatkan Kalendar...</h2>
-
-            <!-- 🌟 动态生成的滚动日历网格 (5列，代表工作日) 🌟 -->
-            <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3" id="kalendarGrid">
-                <!-- Javascript 将在这里自动生成从今天开始的卡片 -->
-            </div>
-        </div>
-
-        <!-- 右侧：详情面板 (30%) -->
-        <div class="glass-panel rounded-2xl p-6 lg:w-1/3 flex flex-col">
-            <div class="flex justify-between items-center mb-6 border-b border-white/10 pb-4">
-                <span class="text-sm text-gray-300 font-bold" id="tarikhPilihanLabel">Pilih Tarikh...</span>
-                <span class="bg-green-500/20 border border-green-500/50 text-green-400 text-xs px-2 py-1 rounded flex items-center gap-2">
-                    <span class="w-2 h-2 rounded-full bg-green-500"></span> Admin
-                </span>
-            </div>
-
-            <div class="mb-6">
-                <h3 class="text-xs text-gray-400 font-semibold mb-3 tracking-wider">SENARAI UTAMA</h3>
-                <div class="space-y-3" id="senaraiUtamaContainer">
-                    <p class="text-xs text-gray-500 italic">Sila klik tarikh pada kalendar terlebih dahulu.</p>
-                </div>
-            </div>
-
-            <div class="mb-6">
-                <h3 class="text-xs text-gray-400 font-semibold mb-3 tracking-wider">SENARAI STANDBY</h3>
-                <div class="space-y-3" id="senaraiStandbyContainer">
-                    <p class="text-xs text-gray-500 italic">-</p>
-                </div>
-            </div>
-
-            <div class="mt-auto space-y-3">
-                <button onclick="tambahPetugas(false)" class="w-full glass-card glass-btn py-3 rounded-lg text-sm transition flex justify-center items-center gap-2 cursor-pointer">
-                    <span>+</span> Tambah Petugas (Utama)
-                </button>
-                <button onclick="tambahPetugas(true)" class="w-full glass-card glass-btn py-3 rounded-lg text-sm transition flex justify-center items-center gap-2 cursor-pointer">
-                    <span>+</span> Tambah Standby
-                </button>
-            </div>
-        </div>
-    </div>
-
-    <!-- 🌟 与 db-helper.js 真实连接的逻辑 🌟 -->
-    <script type="module">
-        import { insertData, queryData, updateData, deleteData } from './db-helper.js';
-
-        const JADUAL_COLLECTION = "jadual_tugas";
-        let currentSelectedDate = ""; 
-
-        const namaHariBM = ["Ahad", "Isnin", "Selasa", "Rabu", "Khamis", "Jumaat", "Sabtu"];
-        const namaBulanBM = ["Jan", "Feb", "Mac", "Apr", "Mei", "Jun", "Jul", "Ogo", "Sep", "Okt", "Nov", "Dis"];
-
-        function janaKalendarBerterusan() {
-            const grid = document.getElementById('kalendarGrid');
-            grid.innerHTML = ''; 
-
-            let currentDate = new Date();
-            let count = 0;
-            const jumlahHariDipapar = 20; 
-
-            document.getElementById('bulanSemasa').innerText = `Bermula: ${currentDate.getDate()} ${namaBulanBM[currentDate.getMonth()]} ${currentDate.getFullYear()}`;
-
-            while (count < jumlahHariDipapar) {
-                const dayOfWeek = currentDate.getDay(); 
-                
-                if (dayOfWeek !== 0 && dayOfWeek !== 6) {
-                    const isoDate = currentDate.toLocaleDateString('en-CA'); 
-                    const dayName = namaHariBM[dayOfWeek];
-                    const dayNum = currentDate.getDate();
-                    const monthName = namaBulanBM[currentDate.getMonth()];
-                    
-                    const isToday = (count === 0);
-
-                    const card = document.createElement('div');
-                    card.className = `glass-card rounded-xl p-3 h-28 flex flex-col justify-between cursor-pointer transition hover:bg-white/10 date-card`;
-                    card.setAttribute('data-tarikh', isoDate);
-                    card.onclick = () => pilihTarikh(isoDate, card);
-
-                    card.innerHTML = `
-                        <div class="flex justify-between items-start">
-                            <div class="text-xl font-bold ${isToday ? 'text-blue-400' : 'text-gray-200'}">${dayNum}</div>
-                            <div class="text-[10px] uppercase tracking-wider text-gray-400">${dayName}</div>
-                        </div>
-                        <div class="text-xs text-gray-500">${monthName}</div>
-                        <div class="mt-auto text-[10px] text-center rounded-full py-1 ${isToday ? 'bg-blue-500/20 text-blue-300 border border-blue-500/30' : 'bg-white/5 text-gray-400'}">
-                            ${isToday ? 'HARI INI' : 'Klik utk urus'}
-                        </div>
-                    `;
-                    grid.appendChild(card);
-                    count++;
-                }
-                currentDate.setDate(currentDate.getDate() + 1);
+            // 2. 如果特定日期没有记录，则查询该“星期几”是否有设好的每周固定循环排班
+            if (dataJadual.length === 0) {
+                dataJadual = await queryData(JADUAL_COLLECTION, 'day_of_week', '==', dayOfWeek);
             }
+            
+            utamaContainer.innerHTML = '';
+            standbyContainer.innerHTML = '';
+            let countUtama = 0; let countStandby = 0;
+
+            dataJadual.forEach(item => {
+                const namaPetugas = item.nama || item.id_pengguna || 'Unknown';
+                const statusVal = item.status || 'Hadir';
+                const isTidakHadir = statusVal.toLowerCase().includes('tidak hadir');
+                const isGanti = statusVal.toLowerCase().includes('ganti');
+                const isRecurring = item.is_recurring ? true : false;
+                const docId = item.id;
+
+                const cardHTML = `
+                    <div class="glass-card rounded-lg p-3 flex justify-between items-center ${isTidakHadir ? 'border-red-500/30 bg-red-900/20' : ''} ${isGanti ? 'border-blue-500/50 bg-blue-900/20 shadow-[0_0_10px_rgba(59,130,246,0.2)]' : ''}">
+                        <div class="flex items-center gap-3">
+                            <div class="w-8 h-8 rounded-full ${isGanti ? 'bg-blue-600' : 'bg-gray-600'} flex items-center justify-center font-bold text-white">${namaPetugas.charAt(0).toUpperCase()}</div>
+                            <div>
+                                <div class="flex items-center gap-2">
+                                    <p class="text-sm ${isTidakHadir ? 'text-gray-400 line-through' : 'text-gray-100'}">${namaPetugas}</p>
+                                    ${isRecurring ? '<span class="text-[9px] bg-purple-500/30 text-purple-300 border border-purple-500/40 px-1.5 py-0.5 rounded">Mingguan</span>' : ''}
+                                </div>
+                                <p class="text-[10px] ${isTidakHadir ? 'text-red-400' : (isGanti ? 'text-blue-300' : 'text-green-400')}">${statusVal}</p>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-1">
+                            <button onclick="kemaskiniPetugas('${docId}', '${namaPetugas}', '${statusVal}')" class="glass-card glass-btn px-3 py-1 text-[11px] rounded cursor-pointer">Tukar</button>
+                            <button onclick="padamPetugas('${docId}', '${namaPetugas}')" class="glass-card glass-btn-delete px-3 py-1 text-[11px] rounded cursor-pointer text-red-400 border-red-500/30">Padam</button>
+                        </div>
+                    </div>
+                `;
+
+                if (item.jenis_tugas === 'utama') {
+                    utamaContainer.innerHTML += cardHTML;
+                    countUtama++;
+                } else if (item.jenis_tugas === 'standby') {
+                    standbyContainer.innerHTML += cardHTML;
+                    countStandby++;
+                }
+            });
+
+            if (countUtama === 0) utamaContainer.innerHTML = '<p class="text-xs text-gray-500 italic">Tiada petugas utama.</p>';
+            if (countStandby === 0) standbyContainer.innerHTML = '<p class="text-xs text-gray-500 italic">Tiada petugas standby.</p>';
+
+        } catch (error) {
+            console.error("Gagal dapatkan data db:", error);
+            utamaContainer.innerHTML = '<p class="text-xs text-red-400">Ralat sambungan database.</p>';
+        }
+    };
+
+    window.tambahPetugas = async function(isStandby) {
+        if(!currentSelectedDate) return alert('Sila pilih tarikh pada kalendar terlebih dahulu!');
+        
+        const roleName = isStandby ? "Standby" : "Utama";
+        const dayName = namaHariBM[currentSelectedDayOfWeek];
+        
+        const namaPetugas = prompt(`Masukkan NAMA Petugas untuk ${roleName} (${currentSelectedDate} - ${dayName}):`);
+        if (!namaPetugas) return;
+
+        // 询问 Admin 是否将此人设为每周固定值日人员
+        const tetapkanSetiapMinggu = confirm(`Adakah anda mahu ${namaPetugas} bertugas SETIAP HARI ${dayName.toUpperCase()}? \n\n[OK] = Setiar Hari ${dayName} (Mingguan)\n[Cancel] = Tarikh ${currentSelectedDate} Sahaja`);
+
+        try {
+            const newData = {
+                nama: namaPetugas,
+                status: isStandby ? "Sedia" : "Hadir", 
+                jenis_tugas: isStandby ? "standby" : "utama"
+            };
+
+            if (tetapkanSetiapMinggu) {
+                // 每周固定模式：存储星期几（如 1 代表星期一），不强绑定特定日期
+                newData.day_of_week = currentSelectedDayOfWeek;
+                newData.is_recurring = true;
+            } else {
+                // 单日模式：绑定具体 ISO 日期字符串
+                newData.tarikh = currentSelectedDate;
+                newData.is_recurring = false;
+            }
+
+            await insertData(JADUAL_COLLECTION, newData);
+            window.pilihTarikh(currentSelectedDate, currentSelectedDayOfWeek);
+            
+        } catch (error) {
+            console.error(error);
+            alert("Gagal menyimpan data.");
+        }
+    };
+
+    window.padamPetugas = async function(docId, nama) {
+        const sah = confirm(`Padam ${nama} dari jadual ini?`);
+        if (!sah) return;
+
+        try {
+            await deleteData(JADUAL_COLLECTION, docId);
+            window.pilihTarikh(currentSelectedDate, currentSelectedDayOfWeek);
+        } catch (error) {
+            console.error(error);
+            alert("Gagal memadam data.");
+        }
+    };
+
+    window.kemaskiniPetugas = async function(docId, namaSemasa, statusSemasa) {
+        const namaBaru = prompt("Kemaskini NAMA petugas:", namaSemasa);
+        if (namaBaru === null) return;
+
+        const statusBaru = prompt("Kemaskini STATUS petugas:\n(Contoh: 'Hadir', 'Tidak Hadir', 'Ganti Ali')", statusSemasa);
+        if (statusBaru === null) return;
+
+        const updateObj = {};
+        if (namaBaru.trim() !== "" && namaBaru !== namaSemasa) {
+            updateObj.nama = namaBaru.trim();
+        }
+        if (statusBaru.trim() !== "" && statusBaru !== statusSemasa) {
+            updateObj.status = statusBaru.trim();
         }
 
-        window.pilihTarikh = async function(tarikh, cardElement = null) {
-            currentSelectedDate = tarikh;
-            document.getElementById('tarikhPilihanLabel').innerText = `Tarikh: ${tarikh}`;
-            
-            document.querySelectorAll('.date-card').forEach(c => c.classList.remove('glass-card-active'));
-            if(cardElement) {
-                cardElement.classList.add('glass-card-active');
-            } else {
-                const targetCard = document.querySelector(`.date-card[data-tarikh="${tarikh}"]`);
-                if(targetCard) targetCard.classList.add('glass-card-active');
-            }
-            
-            const utamaContainer = document.getElementById('senaraiUtamaContainer');
-            const standbyContainer = document.getElementById('senaraiStandbyContainer');
-            
-            utamaContainer.innerHTML = '<p class="text-xs text-gray-400 animate-pulse">Memuatkan data dari pangkalan data...</p>';
-            standbyContainer.innerHTML = '<p class="text-xs text-gray-400 animate-pulse">Memuatkan data...</p>';
+        if (Object.keys(updateObj).length === 0) return;
 
-            try {
-                const dataJadual = await queryData(JADUAL_COLLECTION, 'tarikh', '==', tarikh);
-                
-                utamaContainer.innerHTML = '';
-                standbyContainer.innerHTML = '';
-                let countUtama = 0; let countStandby = 0;
+        try {
+            await updateData(JADUAL_COLLECTION, docId, updateObj);
+            window.pilihTarikh(currentSelectedDate, currentSelectedDayOfWeek);
+        } catch (error) {
+            console.error(error);
+            alert("Gagal kemaskini maklumat petugas.");
+        }
+    };
 
-                dataJadual.forEach(item => {
-                    const namaPetugas = item.nama || item.id_pengguna || 'Unknown';
-                    const statusVal = item.status || 'Hadir';
-                    const isTidakHadir = statusVal.toLowerCase().includes('tidak hadir');
-                    const isGanti = statusVal.toLowerCase().includes('ganti');
-                    const docId = item.id;
+    window.muatTurunJadualHariIni = function() {
+        const firstCard = document.querySelector('.date-card');
+        if(firstCard) {
+            const firstDate = firstCard.getAttribute('data-tarikh');
+            const dayOfWeek = parseInt(firstCard.getAttribute('data-day'));
+            window.pilihTarikh(firstDate, dayOfWeek, firstCard);
+        }
+    };
 
-                    // 💡 注意这里：Tukar 按钮调用了全新的 kemaskiniPetugas 函数，并且传入了 ID, 名字 和 状态
-                    const cardHTML = `
-                        <div class="glass-card rounded-lg p-3 flex justify-between items-center ${isTidakHadir ? 'border-red-500/30 bg-red-900/20' : ''} ${isGanti ? 'border-blue-500/50 bg-blue-900/20 shadow-[0_0_10px_rgba(59,130,246,0.2)]' : ''}">
-                            <div class="flex items-center gap-3">
-                                <div class="w-8 h-8 rounded-full ${isGanti ? 'bg-blue-600' : 'bg-gray-600'} flex items-center justify-center font-bold text-white">${namaPetugas.charAt(0).toUpperCase()}</div>
-                                <div>
-                                    <p class="text-sm ${isTidakHadir ? 'text-gray-400 line-through' : 'text-gray-100'}">${namaPetugas}</p>
-                                    <p class="text-[10px] ${isTidakHadir ? 'text-red-400' : (isGanti ? 'text-blue-300' : 'text-green-400')}">${statusVal}</p>
-                                </div>
-                            </div>
-                            <div class="flex items-center gap-1">
-                                <button onclick="kemaskiniPetugas('${docId}', '${namaPetugas}', '${statusVal}')" class="glass-card glass-btn px-3 py-1 text-[11px] rounded cursor-pointer">Tukar</button>
-                                <button onclick="padamPetugas('${docId}', '${namaPetugas}')" class="glass-card glass-btn-delete px-3 py-1 text-[11px] rounded cursor-pointer text-red-400 border-red-500/30">Padam</button>
-                            </div>
-                        </div>
-                    `;
-
-                    if (item.jenis_tugas === 'utama') {
-                        utamaContainer.innerHTML += cardHTML;
-                        countUtama++;
-                    } else if (item.jenis_tugas === 'standby') {
-                        standbyContainer.innerHTML += cardHTML;
-                        countStandby++;
-                    }
-                });
-
-                if (countUtama === 0) utamaContainer.innerHTML = '<p class="text-xs text-gray-500 italic">Tiada petugas utama.</p>';
-                if (countStandby === 0) standbyContainer.innerHTML = '<p class="text-xs text-gray-500 italic">Tiada petugas standby.</p>';
-
-            } catch (error) {
-                console.error("Gagal dapatkan data db:", error);
-                utamaContainer.innerHTML = '<p class="text-xs text-red-400">Ralat sambungan database.</p>';
-            }
-        };
-
-        window.tambahPetugas = async function(isStandby) {
-            if(!currentSelectedDate) return alert('Sila pilih tarikh pada kalendar terlebih dahulu!');
-            
-            const roleName = isStandby ? "Standby" : "Utama";
-            const namaPetugas = prompt(`Masukkan NAMA Petugas untuk ${roleName} (Tarikh: ${currentSelectedDate}):`);
-            
-            if (!namaPetugas) return;
-
-            try {
-                const newData = {
-                    tarikh: currentSelectedDate,
-                    nama: namaPetugas,
-                    status: isStandby ? "Sedia" : "Hadir", 
-                    jenis_tugas: isStandby ? "standby" : "utama"
-                };
-
-                await insertData(JADUAL_COLLECTION, newData);
-                window.pilihTarikh(currentSelectedDate);
-                
-            } catch (error) {
-                console.error(error);
-                alert("Gagal menyimpan data.");
-            }
-        };
-
-        window.padamPetugas = async function(docId, nama) {
-            const sah = confirm(`Padam ${nama} dari jadual tarikh ini?`);
-            if (!sah) return;
-
-            try {
-                await deleteData(JADUAL_COLLECTION, docId);
-                window.pilihTarikh(currentSelectedDate);
-            } catch (error) {
-                console.error(error);
-                alert("Gagal memadam data.");
-            }
-        };
-
-        // 💡 全新的 kemaskiniPetugas 函数，支持同时修改 名字(Nama) 和 状态(Status)
-        window.kemaskiniPetugas = async function(docId, namaSemasa, statusSemasa) {
-            // 第一个弹窗：修改名字，默认显示旧名字
-            const namaBaru = prompt("Kemaskini NAMA petugas:", namaSemasa);
-            if (namaBaru === null) return; // 用户按了 Cancel
-
-            // 第二个弹窗：修改状态，默认显示旧状态
-            const statusBaru = prompt("Kemaskini STATUS petugas:\n(Contoh: 'Hadir', 'Tidak Hadir', 'Ganti Ali')", statusSemasa);
-            if (statusBaru === null) return; // 用户按了 Cancel
-
-            // 构造需要更新的数据对象
-            const updateObj = {};
-            if (namaBaru.trim() !== "" && namaBaru !== namaSemasa) {
-                updateObj.nama = namaBaru.trim();
-            }
-            if (statusBaru.trim() !== "" && statusBaru !== statusSemasa) {
-                updateObj.status = statusBaru.trim();
-            }
-
-            // 如果名字和状态都没有发生任何改变，则直接返回
-            if (Object.keys(updateObj).length === 0) {
-                return;
-            }
-
-            try {
-                await updateData(JADUAL_COLLECTION, docId, updateObj);
-                window.pilihTarikh(currentSelectedDate);
-            } catch (error) {
-                console.error(error);
-                alert("Gagal kemaskini maklumat petugas.");
-            }
-        };
-
-        window.muatTurunJadualHariIni = function() {
-            const firstCard = document.querySelector('.date-card');
-            if(firstCard) {
-                const firstDate = firstCard.getAttribute('data-tarikh');
-                window.pilihTarikh(firstDate, firstCard);
-            }
-        };
-
-        window.onload = () => {
-            janaKalendarBerterusan();
-            window.muatTurunJadualHariIni();
-        };
-    </script>
-</body>
-</html>
+    window.onload = () => {
+        janaKalendarBerterusan();
+        window.muatTurunJadualHariIni();
+    };
+</script>
