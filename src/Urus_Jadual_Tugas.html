@@ -34,7 +34,7 @@
         <!-- Header -->
         <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
             <div>
-                <h1 class="text-2xl font-bold text-white">Jadual Tugas Petugas</h1>
+                <h1 class="text-2xl font-bold text-white">Jadual Tugas Petugas (Firebase Cloud Sync)</h1>
                 <p id="bulanSemasa" class="text-xs text-gray-400 mt-1">Memuatkan tarikh...</p>
             </div>
             <div id="tarikhPilihanLabel" class="text-sm font-medium bg-blue-500/20 text-blue-300 px-4 py-2 rounded-lg border border-blue-500/30">
@@ -62,7 +62,6 @@
                     </button>
                 </div>
                 
-                <!-- 🌟 ID: senaraiUtamaContainer 🌟 -->
                 <div id="senaraiUtamaContainer" class="space-y-2.5 min-h-[120px]">
                     <p class="text-xs text-gray-500 italic">Sila pilih tarikh di atas.</p>
                 </div>
@@ -80,7 +79,6 @@
                     </button>
                 </div>
 
-                <!-- 🌟 ID: senaraiStandbyContainer 🌟 -->
                 <div id="senaraiStandbyContainer" class="space-y-2.5 min-h-[120px]">
                     <p class="text-xs text-gray-500 italic">Sila pilih tarikh di atas.</p>
                 </div>
@@ -90,10 +88,11 @@
 
     </div>
 
-    <!-- 🌟 JavaScript Engine 🌟 -->
+    <!-- JavaScript Engine -->
     <script type="module">
         import { insertData, queryData, updateData, deleteData } from './db-helper.js';
 
+        // 统一使用 Firebase 中的集合名称 jadual_tugas
         const JADUAL_COLLECTION = "jadual_tugas";
         let currentSelectedDate = ""; 
         let currentSelectedDayOfWeek = null; 
@@ -170,17 +169,13 @@
             const utamaContainer = document.getElementById('senaraiUtamaContainer');
             const standbyContainer = document.getElementById('senaraiStandbyContainer');
 
-            // 安全防护检查
-            if (!utamaContainer || !standbyContainer) {
-                console.error("❌ 找不到 DOM 容器！请检查 HTML 中是否存在 id='senaraiUtamaContainer' 和 id='senaraiStandbyContainer'");
-                return;
-            }
+            if (!utamaContainer || !standbyContainer) return;
             
-            utamaContainer.innerHTML = '<p class="text-xs text-gray-400 animate-pulse">Memuatkan data dari pangkalan data...</p>';
-            standbyContainer.innerHTML = '<p class="text-xs text-gray-400 animate-pulse">Memuatkan data...</p>';
+            utamaContainer.innerHTML = '<p class="text-xs text-gray-400 animate-pulse">Memuatkan data dari Firebase...</p>';
+            standbyContainer.innerHTML = '<p class="text-xs text-gray-400 animate-pulse">Memuatkan data dari Firebase...</p>';
 
             try {
-                // 并发查询：同时获取单日特定排班及固定循环排班（支持 String 和 Number 类型匹配）
+                // 从 Firebase Cloud 查询数据
                 const [dataTarikh, dataHariNum, dataHariStr] = await Promise.all([
                     queryData(JADUAL_COLLECTION, 'tarikh', '==', tarikh),
                     queryData(JADUAL_COLLECTION, 'day_of_week', '==', currentSelectedDayOfWeek),
@@ -247,9 +242,9 @@
                 }
 
             } catch (error) {
-                console.error("Gagal dapatkan data db:", error);
-                utamaContainer.innerHTML = '<p class="text-xs text-red-400">Ralat sambungan database.</p>';
-                standbyContainer.innerHTML = '<p class="text-xs text-red-400">Ralat sambungan database.</p>';
+                console.error("Gagal dapatkan data Firebase:", error);
+                utamaContainer.innerHTML = `<p class="text-xs text-red-400">Ralat Firebase: ${error.message}</p>`;
+                standbyContainer.innerHTML = `<p class="text-xs text-red-400">Ralat Firebase: ${error.message}</p>`;
             }
         };
 
@@ -265,10 +260,12 @@
             const tetapkanSetiapMinggu = confirm(`Adakah anda mahu ${namaPetugas.trim()} bertugas SETIAP HARI ${dayName.toUpperCase()}? \n\n[OK] = Setiap Hari ${dayName} (Mingguan)\n[Cancel] = Tarikh ${currentSelectedDate} Sahaja`);
 
             try {
+                // 直接向 Firebase 插入数据
                 const newData = {
                     nama: namaPetugas.trim(),
                     status: isStandby ? "Sedia" : "Hadir", 
-                    jenis_tugas: isStandby ? "standby" : "utama"
+                    jenis_tugas: isStandby ? "standby" : "utama",
+                    created_at: new Date().toISOString()
                 };
 
                 if (tetapkanSetiapMinggu) {
@@ -280,24 +277,25 @@
                 }
 
                 await insertData(JADUAL_COLLECTION, newData);
+                alert("Berjaya disimpan ke pangkalan data Firebase!");
                 window.pilihTarikh(currentSelectedDate, currentSelectedDayOfWeek);
                 
             } catch (error) {
-                console.error(error);
-                alert("Gagal menyimpan data.");
+                console.error("Ralat simpan Firebase:", error);
+                alert("Gagal menyimpan ke Firebase: " + error.message);
             }
         };
 
         window.padamPetugas = async function(docId, nama) {
-            const sah = confirm(`Padam ${nama} dari jadual ini?`);
+            const sah = confirm(`Padam ${nama} dari jadual Firebase ini?`);
             if (!sah) return;
 
             try {
                 await deleteData(JADUAL_COLLECTION, docId);
                 window.pilihTarikh(currentSelectedDate, currentSelectedDayOfWeek);
             } catch (error) {
-                console.error(error);
-                alert("Gagal memadam data.");
+                console.error("Ralat padam Firebase:", error);
+                alert("Gagal memadam data dari Firebase: " + error.message);
             }
         };
 
@@ -322,8 +320,8 @@
                 await updateData(JADUAL_COLLECTION, docId, updateObj);
                 window.pilihTarikh(currentSelectedDate, currentSelectedDayOfWeek);
             } catch (error) {
-                console.error(error);
-                alert("Gagal kemaskini maklumat petugas.");
+                console.error("Ralat kemaskini Firebase:", error);
+                alert("Gagal kemaskini maklumat petugas di Firebase: " + error.message);
             }
         };
 
