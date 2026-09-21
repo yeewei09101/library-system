@@ -21,7 +21,7 @@
       overflow-x: hidden;
     }
 
-    /* Latar Belakang Frosted */
+    /* Frosted Background */
     body::before {
       content: "";
       position: fixed;
@@ -40,7 +40,7 @@
       margin: 0 auto;
     }
 
-    /* Frosted Glass Base */
+    /* Glass Effect Base */
     .frosted-glass {
       background: rgba(255, 255, 255, 0.45);
       backdrop-filter: blur(16px) saturate(180%);
@@ -55,7 +55,7 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
-      padding: 15px 24px;
+      padding: 16px 24px;
       margin-bottom: 20px;
     }
 
@@ -84,29 +84,6 @@
       background: rgba(15, 23, 42, 0.2);
     }
 
-    /* Shortcuts Banner */
-    .shortcut-banner {
-      padding: 12px 20px;
-      margin-bottom: 20px;
-      font-size: 0.85rem;
-      color: #1e293b;
-      display: flex;
-      gap: 15px;
-      flex-wrap: wrap;
-      align-items: center;
-    }
-
-    .kbd {
-      background: #ffffff;
-      border: 1px solid #cbd5e1;
-      border-bottom-color: #94a3b8;
-      border-radius: 4px;
-      box-shadow: 0 1px 2px rgba(0,0,0,0.1);
-      padding: 2px 6px;
-      font-family: monospace;
-      font-weight: bold;
-    }
-
     /* Form Section */
     .laporan-card {
       padding: 28px;
@@ -114,19 +91,47 @@
     }
 
     .form-group {
-      margin-bottom: 18px;
+      margin-bottom: 20px;
     }
 
     .form-label {
       display: block;
-      font-weight: 600;
+      font-weight: 700;
       font-size: 0.95rem;
-      margin-bottom: 6px;
+      margin-bottom: 10px;
       color: #0f172a;
     }
 
-    .form-select, .laporan-textarea {
+    /* Checkbox Group Layout */
+    .checkbox-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 10px;
+      background: rgba(255, 255, 255, 0.3);
+      padding: 14px;
+      border-radius: 10px;
+      border: 1px solid rgba(255, 255, 255, 0.5);
+    }
+
+    .checkbox-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 0.92rem;
+      cursor: pointer;
+      color: #1e293b;
+    }
+
+    .checkbox-item input[type="checkbox"] {
+      width: 18px;
+      height: 18px;
+      cursor: pointer;
+      accent-color: #2563eb;
+    }
+
+    .laporan-textarea {
       width: 100%;
+      height: 120px;
       padding: 12px;
       border-radius: 10px;
       border: 1px solid rgba(255, 255, 255, 0.6);
@@ -134,26 +139,39 @@
       backdrop-filter: blur(4px);
       font-size: 0.95rem;
       outline: none;
+      resize: vertical;
       transition: border-color 0.2s, background 0.2s;
     }
 
-    .form-select:focus, .laporan-textarea:focus {
+    .laporan-textarea:focus {
       border-color: #2563eb;
       background: rgba(255, 255, 255, 0.9);
       box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.2);
     }
 
-    .laporan-textarea {
-      height: 140px;
-      resize: vertical;
+    /* Signatures Meta Grid */
+    .signature-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 15px;
+      margin-bottom: 20px;
     }
 
-    .char-counter {
-      text-align: right;
-      font-size: 0.8rem;
-      color: #334155;
-      margin-top: 6px;
-      margin-bottom: 15px;
+    .meta-box {
+      background: rgba(255, 255, 255, 0.35);
+      padding: 12px;
+      border-radius: 8px;
+      border: 1px solid rgba(255, 255, 255, 0.5);
+      font-size: 0.85rem;
+    }
+
+    .meta-box span {
+      display: block;
+      color: #64748b;
+      font-size: 0.75rem;
+      margin-bottom: 4px;
+      text-transform: uppercase;
+      font-weight: 700;
     }
 
     .btn-submit {
@@ -173,11 +191,7 @@
       background: #1d4ed8;
     }
 
-    .btn-submit:active {
-      transform: scale(0.99);
-    }
-
-    /* Historical Submissions */
+    /* History List */
     .history-section {
       padding: 24px;
     }
@@ -192,7 +206,7 @@
     .history-item {
       background: rgba(255, 255, 255, 0.5);
       border-left: 4px solid #2563eb;
-      padding: 12px 16px;
+      padding: 14px 16px;
       border-radius: 6px;
       margin-bottom: 12px;
     }
@@ -205,21 +219,42 @@
       margin-bottom: 6px;
     }
 
-    .history-type {
-      font-weight: 700;
+    .history-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-bottom: 8px;
+    }
+
+    .tag {
+      background: #dbeafe;
       color: #1e40af;
+      font-size: 0.75rem;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-weight: 600;
     }
 
     .history-body {
       font-size: 0.9rem;
       color: #0f172a;
       white-space: pre-line;
+      margin-bottom: 8px;
+    }
+
+    .history-footer {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.8rem;
+      color: #64748b;
+      border-top: 1px dashed rgba(0,0,0,0.1);
+      padding-top: 6px;
     }
   </style>
 </head>
 <body>
 
-  <!-- Safety Control -->
+  <!-- Access Control Guard -->
   <script>
     const currentUser = JSON.parse(sessionStorage.getItem("user"));
     if (!currentUser || currentUser.role !== "user") {
@@ -231,77 +266,93 @@
   <div class="container">
     <!-- Header -->
     <header class="frosted-glass">
-      <div class="header-title">📝 Hantar Laporan / Mesej Harian</div>
+      <div class="header-title">📝 Borang Hantar Laporan PSS</div>
       <a href="user_dashboard.html" class="btn-back">⬅ Kembali ke Utama</a>
     </header>
 
-    <!-- Shortcuts Indicator -->
-    <div class="shortcut-banner frosted-glass">
-      <span>⚡ <strong>Pintasan Papan Kekunci (Shortcuts):</strong></span>
-      <span><span class="kbd">Alt</span> + <span class="kbd">L</span> Focus Input Box</span>
-      <span><span class="kbd">Ctrl</span> + <span class="kbd">Enter</span> Hantar Laporan</span>
-    </div>
-
-    <!-- Main Form -->
+    <!-- Form Section -->
     <div class="laporan-card frosted-glass">
       <form id="formLaporan" onsubmit="event.preventDefault(); submitLaporan();">
         
+        <!-- 1. Kategori Laporan (Checkboxes mapped from image) -->
         <div class="form-group">
-          <label class="form-label" for="jenisLaporan">Jenis Laporan / Mesej:</label>
-          <select id="jenisLaporan" class="form-select" required>
-            <option value="Laporan Harian">📌 Laporan Tugas Harian</option>
-            <option value="Aduan/Masalah">⚠️ Aduan / Masalah Kerosakan</option>
-            <option value="Cadangan">💡 Cadangan / Maklum Balas</option>
-            <option value="Lain-lain">💬 Lain-lain</option>
-          </select>
+          <label class="form-label">Kategori Laporan Aktiviti (Pilih berkaitan):</label>
+          <div class="checkbox-grid">
+            <label class="checkbox-item">
+              <input type="checkbox" name="katLaporan" value="Sirkulasi (Aktiviti)">
+              <span>Sirkulasi (Aktiviti)</span>
+            </label>
+            <label class="checkbox-item">
+              <input type="checkbox" name="katLaporan" value="Proses Bahan Baharu">
+              <span>Proses Bahan Baharu</span>
+            </label>
+            <label class="checkbox-item">
+              <input type="checkbox" name="katLaporan" value="Pelupusan Bahan Lama / NILAM">
+              <span>Pelupusan Bahan Lama / NILAM</span>
+            </label>
+            <label class="checkbox-item">
+              <input type="checkbox" name="katLaporan" value="Kemas Sistem / Cerita Disiplin">
+              <span>Kemas Sistem / Cerita Disiplin</span>
+            </label>
+            <label class="checkbox-item">
+              <input type="checkbox" name="katLaporan" value="Surat Pustakawan baru & kemas / Fail Tegak">
+              <span>Surat Pustakawan baru & kemas / Fail Tegak</span>
+            </label>
+          </div>
         </div>
 
+        <!-- 2. Isu / Masalah / Aduan -->
         <div class="form-group">
-          <label class="form-label" for="laporanInput">Kandungan Laporan:</label>
+          <label class="form-label" for="laporanInput">Isu / Masalah / Aduan:</label>
           <textarea 
             id="laporanInput" 
             class="laporan-textarea" 
-            maxlength="500" 
-            placeholder="Tulis laporan anda di sini... (Tekan Ctrl + Enter untuk hantar)"
-            required
-            oninput="updateCharCount()"></textarea>
+            placeholder="Tulis butiran isu, masalah atau aduan di sini..."
+            required></textarea>
         </div>
 
-        <div class="char-counter">
-          <span id="charCount">0</span> / 500 Aksara
+        <!-- 3. Pelapor & Penyemak Status -->
+        <div class="signature-grid">
+          <div class="meta-box">
+            <span>Pelapor (Dihantar Oleh):</span>
+            <strong id="pelaporName">-</strong>
+          </div>
+          <div class="meta-box">
+            <span>Penyemak (Status Semakan):</span>
+            <strong id="penyemakStatus" style="color: #d97706;">Belum Disemak (Pending)</strong>
+          </div>
         </div>
 
-        <button type="submit" class="btn-submit" id="btnSubmit">Hantar Laporan</button>
+        <button type="submit" class="btn-submit">Hantar Laporan</button>
       </form>
     </div>
 
     <!-- History Section -->
     <div class="history-section frosted-glass">
-      <div class="history-title">📜 Rekod Laporan Terakhir Anda</div>
+      <div class="history-title">📜 Sejarah Laporan Dihantar</div>
       <div id="historyList">
-        <!-- Rendered by JS -->
+        <!-- JS rendered content -->
       </div>
     </div>
   </div>
 
   <script>
     const userNameDisplay = currentUser.id_pengguna || currentUser.nama || "Pengawas";
-    let userSesi = currentUser.sesi || "Sesi Pagi";
+    document.getElementById("pelaporName").textContent = userNameDisplay;
 
-    // 1. Counter Length
-    function updateCharCount() {
-      const input = document.getElementById('laporanInput');
-      document.getElementById('charCount').textContent = input.value.length;
-    }
-
-    // 2. Submit Logic
+    // Submit Logic
     function submitLaporan() {
-      const input = document.getElementById('laporanInput');
-      const jenis = document.getElementById('jenisLaporan').value;
-      const content = input.value.trim();
+      const checkedCategories = Array.from(document.querySelectorAll('input[name="katLaporan"]:checked'))
+                                     .map(cb => cb.value);
+      const isuContent = document.getElementById('laporanInput').value.trim();
 
-      if (!content) {
-        alert("Sila tulis laporan sebelum menghantar!");
+      if (checkedCategories.length === 0) {
+        alert("Sila pilih sekurang-kurangnya satu kategori laporan!");
+        return;
+      }
+
+      if (!isuContent) {
+        alert("Sila isi ruang Isu / Masalah / Aduan!");
         return;
       }
 
@@ -310,12 +361,13 @@
       const masaStr = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}:${String(now.getSeconds()).padStart(2, '0')}`;
 
       const laporanBaru = {
-        nama: userNameDisplay,
-        sesi: userSesi,
-        jenis: jenis,
+        pelapor: userNameDisplay,
+        kategori: checkedCategories,
+        isu: isuContent,
         tarikh: tarikhStr,
         masa: masaStr,
-        kandungan: content
+        penyemak: "Belum Disemak",
+        status: "Pending"
       };
 
       // Save to localStorage
@@ -325,31 +377,38 @@
 
       alert("Laporan berjaya dihantar!");
       
-      input.value = "";
-      updateCharCount();
+      // Reset form
+      document.getElementById('formLaporan').reset();
       renderHistory();
     }
 
-    // 3. Render Historical Submissions
+    // Render Previous Submissions
     function renderHistory() {
       const historyList = document.getElementById('historyList');
       let senaraiLaporan = JSON.parse(localStorage.getItem("laporanList")) || [];
       
-      // Filter reports submitted by current user
-      const myReports = senaraiLaporan.filter(item => item.nama === userNameDisplay);
+      const myReports = senaraiLaporan.filter(item => item.pelapor === userNameDisplay);
 
       if (myReports.length === 0) {
         historyList.innerHTML = `<p style="font-size:0.85rem; color:#64748b;">Tiada rekod laporan yang dihantar lagi.</p>`;
         return;
       }
 
-      historyList.innerHTML = myReports.slice(0, 5).map(item => `
+      historyList.innerHTML = myReports.map(item => `
         <div class="history-item">
           <div class="history-header">
-            <span class="history-type">[${escapeHTML(item.jenis || 'Laporan')}]</span>
-            <span>${escapeHTML(item.tarikh)} | ${escapeHTML(item.masa)}</span>
+            <span>📅 ${escapeHTML(item.tarikh)} (${escapeHTML(item.masa)})</span>
+            <span style="font-weight:bold; color: ${item.status === 'Disemak' ? '#16a34a' : '#d97706'}">
+              Status: ${escapeHTML(item.penyemak)}
+            </span>
           </div>
-          <div class="history-body">${escapeHTML(item.kandungan)}</div>
+          <div class="history-tags">
+            ${item.kategori.map(k => `<span class="tag">${escapeHTML(k)}</span>`).join('')}
+          </div>
+          <div class="history-body"><strong>Isu/Aduan:</strong> ${escapeHTML(item.isu)}</div>
+          <div class="history-footer">
+            <span>Pelapor: ${escapeHTML(item.pelapor)}</span>
+          </div>
         </div>
       `).join('');
     }
@@ -362,23 +421,7 @@
         .replace(/"/g, '&quot;');
     }
 
-    // 4. Keyboard Shortcuts Handler
-    document.addEventListener('keydown', function(e) {
-      // Alt + L: Jump to Textarea
-      if (e.altKey && (e.key === 'l' || e.key === 'L')) {
-        e.preventDefault();
-        const textarea = document.getElementById('laporanInput');
-        textarea.focus();
-      }
-
-      // Ctrl + Enter: Submit Form
-      if (e.ctrlKey && e.key === 'Enter') {
-        e.preventDefault();
-        submitLaporan();
-      }
-    });
-
-    // Initial render
+    // Initial load
     renderHistory();
   </script>
 </body>
