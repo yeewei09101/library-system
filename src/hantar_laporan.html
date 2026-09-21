@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sistem PSS - Hantar Laporan</title>
+  <style>
+    /* Reset & Fonts */
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    body {
+      position: relative;
+      color: #0f172a;
+      min-height: 100vh;
+      padding: 20px;
+      overflow-x: hidden;
+    }
+
+    /* Latar Belakang Frosted */
+    body::before {
+      content: "";
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: url('../img/bg-library.jpg') no-repeat center center/cover;
+      filter: blur(8px) brightness(0.85);
+      transform: scale(1.05);
+      z-index: -1;
+    }
+
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+    }
+
+    /* Frosted Glass Base */
+    .frosted-glass {
+      background: rgba(255, 255, 255, 0.45);
+      backdrop-filter: blur(16px) saturate(180%);
+      -webkit-backdrop-filter: blur(16px) saturate(180%);
+      border: 1px solid rgba(255, 255, 255, 0.6);
+      box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.15);
+      border-radius: 16px;
+    }
+
+    /* Header Navigasi */
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 15px 24px;
+      margin-bottom: 20px;
+    }
+
+    .header-title {
+      font-size: 1.2rem;
+      font-weight: 700;
+      color: #0f172a;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .btn-back {
+      background: rgba(15, 23, 42, 0.1);
+      color: #0f172a;
+      border: 1px solid rgba(15, 23, 42, 0.2);
+      padding: 8px 16px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 600;
+      text-decoration: none;
+      transition: all 0.2s;
+    }
+
+    .btn-back:hover {
+      background: rgba(15, 23, 42, 0.2);
+    }
+
+    /* Shortcuts Banner */
+    .shortcut-banner {
+      padding: 12px 20px;
+      margin-bottom: 20px;
+      font-size: 0.85rem;
+      color: #1e293b;
+      display: flex;
+      gap: 15px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+
+    .kbd {
+      background: #ffffff;
+      border: 1px solid #cbd5e1;
+      border-bottom-color: #94a3b8;
+      border-radius: 4px;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+      padding: 2px 6px;
+      font-family: monospace;
+      font-weight: bold;
+    }
+
+    /* Form Section */
+    .laporan-card {
+      padding: 28px;
+      margin-bottom: 25px;
+    }
+
+    .form-group {
+      margin-bottom: 18px;
+    }
+
+    .form-label {
+      display: block;
+      font-weight: 600;
+      font-size: 0.95rem;
+      margin-bottom: 6px;
+      color: #0f172a;
+    }
+
+    .form-select, .laporan-textarea {
+      width: 100%;
+      padding: 12px;
+      border-radius: 10px;
+      border: 1px solid rgba(255, 255, 255, 0.6);
+      background: rgba(255, 255, 255, 0.6);
+      backdrop-filter: blur(4px);
+      font-size: 0.95rem;
+      outline: none;
+      transition: border-color 0.2s, background 0.2s;
+    }
+
+    .form-select:focus, .laporan-textarea:focus {
+      border-color: #2563eb;
+      background: rgba(255, 255, 255, 0.9);
+      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.2);
+    }
+
+    .laporan-textarea {
+      height: 140px;
+      resize: vertical;
+    }
+
+    .char-counter {
+      text-align: right;
+      font-size: 0.8rem;
+      color: #334155;
+      margin-top: 6px;
+      margin-bottom: 15px;
+    }
+
+    .btn-submit {
+      background: #2563eb;
+      color: white;
+      border: none;
+      padding: 12px 24px;
+      border-radius: 8px;
+      font-weight: 600;
+      font-size: 1rem;
+      cursor: pointer;
+      width: 100%;
+      transition: background 0.2s, transform 0.1s;
+    }
+
+    .btn-submit:hover {
+      background: #1d4ed8;
+    }
+
+    .btn-submit:active {
+      transform: scale(0.99);
+    }
+
+    /* Historical Submissions */
+    .history-section {
+      padding: 24px;
+    }
+
+    .history-title {
+      font-size: 1.1rem;
+      font-weight: 700;
+      margin-bottom: 15px;
+      color: #0f172a;
+    }
+
+    .history-item {
+      background: rgba(255, 255, 255, 0.5);
+      border-left: 4px solid #2563eb;
+      padding: 12px 16px;
+      border-radius: 6px;
+      margin-bottom: 12px;
+    }
+
+    .history-header {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.8rem;
+      color: #475569;
+      margin-bottom: 6px;
+    }
+
+    .history-type {
+      font-weight: 700;
+      color: #1e40af;
+    }
+
+    .history-body {
+      font-size: 0.9rem;
+      color: #0f172a;
+      white-space: pre-line;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Safety Control -->
+  <script>
+    const currentUser = JSON.parse(sessionStorage.getItem("user"));
+    if (!currentUser || currentUser.role !== "user") {
+      alert("Akses dilarang! Sila log masuk terlebih dahulu.");
+      window.location.href = "login.html";
+    }
+  </script>
+
+  <div class="container">
+    <!-- Header -->
+    <header class="frosted-glass">
+      <div class="header-title">📝 Hantar Laporan / Mesej Harian</div>
+      <a href="user_dashboard.html" class="btn-back">⬅ Kembali ke Utama</a>
+    </header>
+
+    <!-- Shortcuts Indicator -->
+    <div class="shortcut-banner frosted-glass">
+      <span>⚡ <strong>Pintasan Papan Kekunci (Shortcuts):</strong></span>
+      <span><span class="kbd">Alt</span> + <span class="kbd">L</span> Focus Input Box</span>
+      <span><span class="kbd">Ctrl</span> + <span class="kbd">Enter</span> Hantar Laporan</span>
+    </div>
+
+    <!-- Main Form -->
+    <div class="laporan-card frosted-glass">
+      <form id="formLaporan" onsubmit="event.preventDefault(); submitLaporan();">
+        
+        <div class="form-group">
+          <label class="form-label" for="jenisLaporan">Jenis Laporan / Mesej:</label>
+          <select id="jenisLaporan" class="form-select" required>
+            <option value="Laporan Harian">📌 Laporan Tugas Harian</option>
+            <option value="Aduan/Masalah">⚠️ Aduan / Masalah Kerosakan</option>
+            <option value="Cadangan">💡 Cadangan / Maklum Balas</option>
+            <option value="Lain-lain">💬 Lain-lain</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="laporanInput">Kandungan Laporan:</label>
+          <textarea 
+            id="laporanInput" 
+            class="laporan-textarea" 
+            maxlength="500" 
+            placeholder="Tulis laporan anda di sini... (Tekan Ctrl + Enter untuk hantar)"
+            required
+            oninput="updateCharCount()"></textarea>
+        </div>
+
+        <div class="char-counter">
+          <span id="charCount">0</span> / 500 Aksara
+        </div>
+
+        <button type="submit" class="btn-submit" id="btnSubmit">Hantar Laporan</button>
+      </form>
+    </div>
+
+    <!-- History Section -->
+    <div class="history-section frosted-glass">
+      <div class="history-title">📜 Rekod Laporan Terakhir Anda</div>
+      <div id="historyList">
+        <!-- Rendered by JS -->
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const userNameDisplay = currentUser.id_pengguna || currentUser.nama || "Pengawas";
+    let userSesi = currentUser.sesi || "Sesi Pagi";
+
+    // 1. Counter Length
+    function updateCharCount() {
+      const input = document.getElementById('laporanInput');
+      document.getElementById('charCount').textContent = input.value.length;
+    }
+
+    // 2. Submit Logic
+    function submitLaporan() {
+      const input = document.getElementById('laporanInput');
+      const jenis = document.getElementById('jenisLaporan').value;
+      const content = input.value.trim();
+
+      if (!content) {
+        alert("Sila tulis laporan sebelum menghantar!");
+        return;
+      }
+
+      const now = new Date();
+      const tarikhStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+      const masaStr = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}:${String(now.getSeconds()).padStart(2, '0')}`;
+
+      const laporanBaru = {
+        nama: userNameDisplay,
+        sesi: userSesi,
+        jenis: jenis,
+        tarikh: tarikhStr,
+        masa: masaStr,
+        kandungan: content
+      };
+
+      // Save to localStorage
+      let senaraiLaporan = JSON.parse(localStorage.getItem("laporanList")) || [];
+      senaraiLaporan.unshift(laporanBaru);
+      localStorage.setItem("laporanList", JSON.stringify(senaraiLaporan));
+
+      alert("Laporan berjaya dihantar!");
+      
+      input.value = "";
+      updateCharCount();
+      renderHistory();
+    }
+
+    // 3. Render Historical Submissions
+    function renderHistory() {
+      const historyList = document.getElementById('historyList');
+      let senaraiLaporan = JSON.parse(localStorage.getItem("laporanList")) || [];
+      
+      // Filter reports submitted by current user
+      const myReports = senaraiLaporan.filter(item => item.nama === userNameDisplay);
+
+      if (myReports.length === 0) {
+        historyList.innerHTML = `<p style="font-size:0.85rem; color:#64748b;">Tiada rekod laporan yang dihantar lagi.</p>`;
+        return;
+      }
+
+      historyList.innerHTML = myReports.slice(0, 5).map(item => `
+        <div class="history-item">
+          <div class="history-header">
+            <span class="history-type">[${escapeHTML(item.jenis || 'Laporan')}]</span>
+            <span>${escapeHTML(item.tarikh)} | ${escapeHTML(item.masa)}</span>
+          </div>
+          <div class="history-body">${escapeHTML(item.kandungan)}</div>
+        </div>
+      `).join('');
+    }
+
+    function escapeHTML(str) {
+      return String(str || '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+    }
+
+    // 4. Keyboard Shortcuts Handler
+    document.addEventListener('keydown', function(e) {
+      // Alt + L: Jump to Textarea
+      if (e.altKey && (e.key === 'l' || e.key === 'L')) {
+        e.preventDefault();
+        const textarea = document.getElementById('laporanInput');
+        textarea.focus();
+      }
+
+      // Ctrl + Enter: Submit Form
+      if (e.ctrlKey && e.key === 'Enter') {
+        e.preventDefault();
+        submitLaporan();
+      }
+    });
+
+    // Initial render
+    renderHistory();
+  </script>
+</body>
+</html>
