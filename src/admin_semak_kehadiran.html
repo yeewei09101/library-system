@@ -3,9 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Admin - Semak Kehadiran</title>
+  <title>Semak Kehadiran - Admin</title>
   <style>
-    /* Base CSS Reset */
     * {
       margin: 0;
       padding: 0;
@@ -13,12 +12,8 @@
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     }
 
-    /* Dynamic animated gradient background */
     body {
       min-height: 100vh;
-      display: flex;
-      justify-content: center;
-      align-items: center;
       background: linear-gradient(45deg, #12c2e9, #c471ed, #f64f59);
       background-size: 400% 400%;
       animation: gradientBG 15s ease infinite;
@@ -32,395 +27,235 @@
       100% { background-position: 0% 50%; }
     }
 
-    /* Glassmorphism container */
-    .glass-container {
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+    }
+
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 25px;
+    }
+
+    .header h2 {
+      font-size: 26px;
+      text-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    }
+
+    .back-btn {
+      padding: 10px 20px;
+      background: rgba(0, 0, 0, 0.2);
+      border: 1px solid rgba(255, 255, 255, 0.4);
+      border-radius: 10px;
+      color: #fff;
+      font-weight: bold;
+      cursor: pointer;
+      text-decoration: none;
+      transition: all 0.3s ease;
+    }
+
+    .back-btn:hover {
+      background: rgba(0, 0, 0, 0.4);
+    }
+
+    .glass-card {
       background: rgba(255, 255, 255, 0.15);
       backdrop-filter: blur(16px);
       -webkit-backdrop-filter: blur(16px);
       border: 1px solid rgba(255, 255, 255, 0.3);
       box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.2);
-      border-radius: 20px;
-      padding: 40px;
-      width: 100%;
-      max-width: 950px;
-      overflow: hidden;
-    }
-
-    .glass-container h2 {
-      text-align: center;
+      border-radius: 15px;
+      padding: 25px;
       margin-bottom: 20px;
-      font-size: 28px;
-      font-weight: 600;
-      letter-spacing: 1px;
-      text-shadow: 0 2px 4px rgba(0,0,0,0.2);
     }
 
-    /* Top action controls bar */
-    .controls {
+    .card-info {
       display: flex;
       justify-content: space-between;
-      margin-bottom: 20px;
+      margin-bottom: 15px;
+      font-size: 15px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+      padding-bottom: 10px;
     }
 
-    .btn {
-      padding: 10px 20px;
+    .member-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px 15px;
+      background: rgba(255, 255, 255, 0.1);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: 10px;
+      margin-bottom: 10px;
+    }
+
+    .member-name {
+      font-size: 16px;
+      font-weight: 500;
+    }
+
+    .radio-group {
+      display: flex;
+      gap: 15px;
+    }
+
+    .radio-group label {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      cursor: pointer;
+      font-size: 14px;
+    }
+
+    .radio-group input[type="radio"] {
+      accent-color: #4a154b;
+      width: 16px;
+      height: 16px;
+      cursor: pointer;
+    }
+
+    .save-btn {
+      width: 100%;
+      padding: 12px;
+      margin-top: 15px;
+      background: rgba(255, 255, 255, 0.25);
+      border: 1px solid rgba(255, 255, 255, 0.5);
       border-radius: 10px;
       color: #fff;
-      font-size: 14px;
+      font-size: 16px;
       font-weight: bold;
       cursor: pointer;
       transition: all 0.3s ease;
-      backdrop-filter: blur(5px);
-      border: 1px solid rgba(255, 255, 255, 0.5);
-      text-decoration: none;
     }
 
-    .btn-refresh {
-      background: rgba(255, 255, 255, 0.25);
-    }
-
-    .btn-refresh:hover {
+    .save-btn:hover {
       background: rgba(255, 255, 255, 0.4);
-      transform: translateY(-2px);
     }
 
-    .btn-back {
-      background: rgba(0, 0, 0, 0.15);
-    }
-
-    .btn-back:hover {
-      background: rgba(0, 0, 0, 0.25);
-      transform: translateY(-2px);
-    }
-
-    .btn:disabled {
-      opacity: 0.6;
-      cursor: not-allowed;
-      transform: none !important;
-    }
-
-    /* Responsive table wrapper */
-    .table-responsive {
-      width: 100%;
-      overflow-x: auto;
-    }
-
-    /* Semi-transparent table styling */
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      text-align: left;
-      white-space: nowrap;
-    }
-
-    th, td {
-      padding: 15px;
-      border-bottom: 1px solid rgba(255, 255, 255, 0.2);
-    }
-
-    th {
-      background: rgba(255, 255, 255, 0.1);
-      font-weight: 600;
-      letter-spacing: 0.5px;
-    }
-
-    tbody tr {
-      transition: background 0.3s ease;
-    }
-
-    tbody tr:hover {
-      background: rgba(255, 255, 255, 0.15);
-    }
-
-    /* 点击名字的样式 */
-    .user-click-btn {
-      background: rgba(255, 255, 255, 0.25);
-      border: 1px solid rgba(255, 255, 255, 0.4);
-      color: #fff;
-      padding: 6px 12px;
-      border-radius: 6px;
-      cursor: pointer;
-      font-weight: 600;
-      transition: all 0.2s;
-    }
-    .user-click-btn:hover {
-      background: rgba(255, 255, 255, 0.45);
-      transform: scale(1.02);
-    }
-
-    /* Status message container */
-    #statusMessage {
+    .empty-state {
       text-align: center;
-      margin-top: 20px;
-      font-size: 16px;
-    }
-
-    /* Glassmorphism Modal (弹窗) */
-    .modal-overlay {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100vw;
-      height: 100vh;
-      background: rgba(0, 0, 0, 0.5);
-      backdrop-filter: blur(8px);
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      z-index: 1000;
-      opacity: 0;
-      pointer-events: none;
-      transition: opacity 0.3s ease;
-    }
-
-    .modal-overlay.active {
-      opacity: 1;
-      pointer-events: auto;
-    }
-
-    .modal-content {
-      background: rgba(255, 255, 255, 0.25);
-      backdrop-filter: blur(20px);
-      border: 1px solid rgba(255, 255, 255, 0.4);
-      box-shadow: 0 16px 40px rgba(0, 0, 0, 0.3);
-      border-radius: 16px;
-      padding: 30px;
-      width: 90%;
-      max-width: 500px;
-      color: #fff;
-    }
-
-    .modal-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      border-bottom: 1px solid rgba(255, 255, 255, 0.3);
-      padding-bottom: 12px;
-      margin-bottom: 15px;
-    }
-
-    .modal-title {
-      font-size: 20px;
-      font-weight: 700;
-    }
-
-    .close-btn {
-      background: transparent;
-      border: none;
-      color: #fff;
-      font-size: 24px;
-      cursor: pointer;
-    }
-
-    .member-list {
-      list-style: none;
-      max-height: 250px;
-      overflow-y: auto;
-    }
-
-    .member-item {
-      background: rgba(255, 255, 255, 0.15);
-      padding: 10px 14px;
-      border-radius: 8px;
-      margin-bottom: 8px;
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      border: 1px solid rgba(255, 255, 255, 0.2);
+      padding: 40px;
+      font-size: 18px;
     }
   </style>
 </head>
 <body>
 
-  <div class="glass-container">
-    <h2>Senarai Kehadiran (打卡记录)</h2>
-    
-    <div class="controls">
-      <button class="btn btn-back" onclick="window.history.back()">Kembali (返回)</button>
-      <button class="btn btn-refresh" id="refreshBtn">Muat Semula (刷新)</button>
+  <div class="container">
+    <div class="header">
+      <h2>Semak Kehadiran (管理员审核)</h2>
+      <a href="javascript:history.back()" class="back-btn">Kembali (返回)</a>
     </div>
 
-    <div class="table-responsive">
-      <table>
-        <thead>
-          <tr>
-            <th>Bil.</th>
-            <th>Ketua / Pelapor (提交人)</th>
-            <th>Jumlah Ahli (人数)</th>
-            <th>Sesi (时段)</th>
-            <th>Tarikh (日期)</th>
-            <th>Masa (时间)</th>
-          </tr>
-        </thead>
-        <tbody id="tableBody">
-          <!-- Data rows will be injected dynamically via JavaScript -->
-        </tbody>
-      </table>
-    </div>
-    
-    <div id="statusMessage">Sedang memuat data... (加载中)</div>
-  </div>
-
-  <!-- 组员名单弹窗 -->
-  <div class="modal-overlay" id="groupModal">
-    <div class="modal-content">
-      <div class="modal-header">
-        <div class="modal-title" id="modalTitle">Ahli Kumpulan</div>
-        <button class="close-btn" id="closeModal">&times;</button>
-      </div>
-      <p style="font-size: 13px; margin-bottom: 12px; opacity: 0.8;">Senarai ahli yang didaftarkan bersama (同组上交名单):</p>
-      <ul class="member-list" id="memberList">
-        <!-- 动态生成组员名字 -->
-      </ul>
+    <div id="attendanceContainer">
+      <div class="empty-state">Memuatkan data...</div>
     </div>
   </div>
 
-  <!-- Using type="module" to enable ES module imports -->
   <script type="module">
-    import { readAllData } from './db-helper.js';
+    import { getData, updateData } from './db-helper.js';
 
-    const tableBody = document.getElementById('tableBody');
-    const statusMessage = document.getElementById('statusMessage');
-    const refreshBtn = document.getElementById('refreshBtn');
+    const attendanceContainer = document.getElementById('attendanceContainer');
 
-    const groupModal = document.getElementById('groupModal');
-    const closeModal = document.getElementById('closeModal');
-    const modalTitle = document.getElementById('modalTitle');
-    const memberList = document.getElementById('memberList');
-
-    let cachedRecords = [];
-
-    // Utility function to sanitize string input against XSS
-    function escapeHtml(str) {
-      if (!str) return '-';
-      return String(str)
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;')
-        .replace(/'/g, '&#039;');
-    }
-
-    // Function to fetch and display attendance records
     async function loadAttendanceData() {
-      tableBody.innerHTML = '';
-      statusMessage.textContent = 'Sedang memuat data... (加载中)';
-      refreshBtn.disabled = true;
-
       try {
-        const records = await readAllData('attendance', 'createdAt', 'desc');
-        cachedRecords = records || [];
+        // 从数据库中拉取所有打卡组数据
+        const records = await getData('attendance');
 
         if (!records || records.length === 0) {
-          statusMessage.textContent = 'Tiada rekod kehadiran dijumpai. (暂无打卡记录)';
+          attendanceContainer.innerHTML = '<div class="empty-state glass-card">Tiada rekod kehadiran. (暂无打卡记录)</div>';
           return;
         }
 
-        statusMessage.textContent = '';
+        attendanceContainer.innerHTML = '';
 
-        const fragment = document.createDocumentFragment();
+        // 按时间倒序（最新的显示在最前）
+        records.reverse().forEach((record) => {
+          const card = document.createElement('div');
+          card.className = 'glass-card';
 
-        records.forEach((data, index) => {
-          const tr = document.createElement('tr');
-          
-          // 1. Format Firestore timestamp
-          let dateObj = null;
-          if (data.createdAt && typeof data.createdAt.toDate === 'function') {
-            dateObj = data.createdAt.toDate();
-          } else if (data.createdAt) {
-            dateObj = new Date(data.createdAt);
-          }
+          let membersHTML = '';
+          record.members.forEach((member) => {
+            membersHTML += `
+              <div class="member-row">
+                <span class="member-name">${member.id}. ${member.nama}</span>
+                <div class="radio-group">
+                  <label>
+                    <input type="radio" name="status_${record.id}_${member.id}" value="Datang" ${member.status === 'Datang' ? 'checked' : ''}>
+                    <span>Datang (出席)</span>
+                  </label>
+                  <label>
+                    <input type="radio" name="status_${record.id}_${member.id}" value="Tidak Datang" ${member.status === 'Tidak Datang' ? 'checked' : ''}>
+                    <span>Tidak Datang (缺席)</span>
+                  </label>
+                </div>
+              </div>
+            `;
+          });
 
-          const tarikhStr = dateObj 
-            ? dateObj.toLocaleDateString('zh-CN', { year: 'numeric', month: '2-digit', day: '2-digit' }) 
-            : '-';
-
-          const masaStr = dateObj 
-            ? dateObj.toLocaleTimeString('zh-CN', { hour12: false }) 
-            : '-';
-
-          // 2. 解析同组的成员名单（兼容数组 `ahli` 或由逗号分隔的字符串）
-          let groupMembers = [];
-          if (Array.isArray(data.ahli)) {
-            groupMembers = data.ahli;
-          } else if (typeof data.ahli === 'string' && data.ahli.trim() !== '') {
-            groupMembers = data.ahli.split(',').map(s => s.trim());
-          } else {
-            // 如果只有提交者一个人
-            groupMembers = [data.nama || 'Tiada Nama'];
-          }
-
-          const ketuaNama = data.nama || groupMembers[0] || '-';
-          const memberCount = groupMembers.length;
-
-          // 3. 渲染数据行
-          tr.innerHTML = `
-            <td>${index + 1}</td>
-            <td>
-              <button class="user-click-btn" data-index="${index}">
-                👤 ${escapeHtml(ketuaNama)}
-              </button>
-            </td>
-            <td><span style="background: rgba(255,255,255,0.2); padding: 4px 10px; border-radius: 12px; font-weight: bold;">${memberCount} Orang</span></td>
-            <td>${escapeHtml(data.sesi)}</td>
-            <td>${escapeHtml(tarikhStr)}</td>
-            <td>${escapeHtml(masaStr)}</td>
+          card.innerHTML = `
+            <div class="card-info">
+              <div><strong>Sesi:</strong> ${record.sesi}</div>
+              <div><strong>Tarikh:</strong> ${record.tarikh || '-'} ${record.masa || ''}</div>
+              <div><strong>Jumlah:</strong> ${record.jumlah_ahli} Ahli</div>
+            </div>
+            
+            <form id="form_${record.id}">
+              ${membersHTML}
+              <button type="button" class="save-btn" data-record-id="${record.id}">Simpan Semakan (保存审核)</button>
+            </form>
           `;
-          
-          fragment.appendChild(tr);
+
+          attendanceContainer.appendChild(card);
         });
 
-        tableBody.appendChild(fragment);
-
-        // 绑定所有名字按钮的点击事件
-        document.querySelectorAll('.user-click-btn').forEach(btn => {
-          btn.addEventListener('click', (e) => {
-            const index = e.currentTarget.getAttribute('data-index');
-            showMembersModal(cachedRecords[index]);
+        // 绑定每个卡片的保存按钮事件
+        document.querySelectorAll('.save-btn').forEach(button => {
+          button.addEventListener('click', async (e) => {
+            const recordId = e.target.getAttribute('data-record-id');
+            await handleSaveStatus(recordId, records, e.target);
           });
         });
 
       } catch (error) {
-        console.error("Error fetching data:", error);
-        statusMessage.textContent = 'Gagal memuat data. Sila semak sambungan pangkalan data anda. (读取失败)';
+        console.error('Error loading data:', error);
+        attendanceContainer.innerHTML = '<div class="empty-state glass-card">Ralat memuatkan data. (加载失败)</div>';
+      }
+    }
+
+    async function handleSaveStatus(recordId, records, btnElement) {
+      const targetRecord = records.find(r => String(r.id) === String(recordId));
+      if (!targetRecord) return;
+
+      // 提取勾选的状态并更新数据
+      const updatedMembers = targetRecord.members.map(member => {
+        const selectedRadio = document.querySelector(`input[name="status_${recordId}_${member.id}"]:checked`);
+        return {
+          ...member,
+          status: selectedRadio ? selectedRadio.value : member.status
+        };
+      });
+
+      btnElement.disabled = true;
+      btnElement.textContent = 'Menyimpan...';
+
+      try {
+        // 调用数据库更新函数
+        await updateData('attendance', recordId, {
+          members: updatedMembers
+        });
+        alert('Kehadiran berjaya dikemas kini! (更新成功)');
+      } catch (error) {
+        console.error('Save status failed:', error);
+        alert('Ralat semasa menyimpan. Sila cuba lagi. (保存失败)');
       } finally {
-        refreshBtn.disabled = false;
+        btnElement.disabled = false;
+        btnElement.textContent = 'Simpan Semakan (保存审核)';
       }
     }
 
-    // 弹出 Modal 显示组员名单
-    function showMembersModal(record) {
-      if (!record) return;
-
-      const ketuaNama = record.nama || 'Pengawas';
-      modalTitle.textContent = `Laporan oleh: ${ketuaNama}`;
-
-      let members = [];
-      if (Array.isArray(record.ahli)) {
-        members = record.ahli;
-      } else if (typeof record.ahli === 'string' && record.ahli.trim() !== '') {
-        members = record.ahli.split(',').map(s => s.trim());
-      } else {
-        members = [ketuaNama];
-      }
-
-      memberList.innerHTML = members.map((name, i) => `
-        <li class="member-item">
-          <span>${i + 1}.</span>
-          <strong>${escapeHtml(name)}</strong>
-        </li>
-      `).join('');
-
-      groupModal.classList.add('active');
-    }
-
-    // 关闭 Modal 弹窗
-    closeModal.addEventListener('click', () => groupModal.classList.remove('active'));
-    groupModal.addEventListener('click', (e) => {
-      if (e.target === groupModal) groupModal.classList.remove('active');
-    });
-
-    refreshBtn.addEventListener('click', loadAttendanceData);
     loadAttendanceData();
   </script>
 </body>

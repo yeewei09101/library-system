@@ -5,7 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Sistem Rekod Kehadiran</title>
   <style>
-    /* Base CSS Reset */
     * {
       margin: 0;
       padding: 0;
@@ -13,7 +12,6 @@
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     }
 
-    /* Dynamic animated gradient background */
     body {
       min-height: 100vh;
       display: flex;
@@ -31,7 +29,6 @@
       100% { background-position: 0% 50%; }
     }
 
-    /* Glassmorphism main container */
     .glass-container {
       background: rgba(255, 255, 255, 0.15);
       backdrop-filter: blur(16px);
@@ -54,7 +51,6 @@
       text-shadow: 0 2px 4px rgba(0,0,0,0.2);
     }
 
-    /* Form element styles */
     .form-group {
       margin-bottom: 25px;
     }
@@ -88,13 +84,11 @@
       box-shadow: 0 0 10px rgba(255,255,255,0.2);
     }
 
-    /* Dropdown options compatibility fix */
     select.form-control option {
       background: #4a154b; 
       color: #ffffff;
     }
 
-    /* Button group layout */
     .btn-group {
       display: flex;
       gap: 15px;
@@ -150,7 +144,6 @@
       min-height: 20px;
     }
 
-    /* Pop-up Modal Styles */
     .popup-overlay {
       position: fixed;
       top: 0;
@@ -225,18 +218,15 @@
 </head>
 <body>
 
-  <!-- Main Glassmorphism Container -->
   <div class="glass-container">
     <h2>Sistem Kehadiran</h2>
     <form id="attendanceForm">
       
-      <!-- Jumlah Ahli Input -->
       <div class="form-group">
         <label for="jumlahAhli">Jumlah Ahli (出席人数)</label>
         <input type="number" id="jumlahAhli" class="form-control" min="1" max="50" value="1" placeholder="Masukkan jumlah ahli" required>
       </div>
 
-      <!-- Container for dynamically generated member name inputs -->
       <div id="membersContainer"></div>
 
       <div class="form-group">
@@ -253,12 +243,10 @@
         <button type="submit" class="btn submit-btn" id="submitBtn">Hantar (打卡)</button>
       </div>
       
-      <!-- Container for displaying error/status messages -->
       <div id="statusMessage"></div>
     </form>
   </div>
 
-  <!-- Success Pop-up Modal -->
   <div class="popup-overlay" id="successPopup">
     <div class="popup-box">
       <h3>Berjaya! 🎉</h3>
@@ -278,7 +266,6 @@
     const jumlahAhliInput = document.getElementById('jumlahAhli');
     const membersContainer = document.getElementById('membersContainer');
 
-    // 动态渲染姓名输入框函数
     function renderMemberInputs() {
       const count = parseInt(jumlahAhliInput.value, 10) || 1;
       membersContainer.innerHTML = '';
@@ -294,18 +281,14 @@
       }
     }
 
-    // 初始化运行一次，并监听人数变化事件
     renderMemberInputs();
     jumlahAhliInput.addEventListener('input', renderMemberInputs);
 
-    // 表单提交事件处理
     attendanceForm.addEventListener('submit', async (e) => {
       e.preventDefault();
 
       const sesi = document.getElementById('sesiWaktu').value;
       const nameInputs = document.querySelectorAll('.member-name');
-      
-      // 收集所有输入的姓名
       const namaList = Array.from(nameInputs).map(input => input.value.trim());
 
       if (namaList.some(nama => !nama) || !sesi) {
@@ -319,18 +302,26 @@
       statusMessage.textContent = '';
 
       try {
-        // 遍历将每一位成员的记录写入数据库
-        for (const nama of namaList) {
-          await insertData('attendance', {
+        const now = new Date();
+        const tarikh = now.toISOString().split('T')[0];
+        const masa = now.toTimeString().split(' ')[0];
+
+        // 核心修改：打包为一整条包含成员列表的组记录一次性写入
+        await insertData('attendance', {
+          sesi: sesi,
+          jumlah_ahli: namaList.length,
+          tarikh: tarikh,
+          masa: masa,
+          members: namaList.map((nama, idx) => ({
+            id: idx + 1,
             nama: nama,
-            sesi: sesi,
-            jumlah_ahli: namaList.length
-          });
-        }
+            status: 'Belum Disemak' // 默认等待管理员审核
+          }))
+        });
 
         successPopup.classList.add('show');
         attendanceForm.reset();
-        renderMemberInputs(); // 重置为默认 1 个输入框
+        renderMemberInputs();
 
       } catch (error) {
         console.error('Submit Failed:', error);

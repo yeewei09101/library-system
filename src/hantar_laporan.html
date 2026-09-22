@@ -44,7 +44,7 @@
     const currentUser = JSON.parse(sessionStorage.getItem("user"));
     if (!currentUser || currentUser.role !== "user") {
       alert("Akses dilarang! Sila log masuk terlebih dahulu.");
-      window.location.href = "login.html";
+      window.location.href = "index.html";
     }
   </script>
 
@@ -59,26 +59,26 @@
         <div class="form-group">
           <label class="form-label">Kategori Laporan Aktiviti (Pilih berkaitan):</label>
           <div class="checkbox-grid">
-            <label class="checkbox-item"><input type="checkbox" name="katLaporan" value="Sirkulasi (Aktiviti)"><span>Sirkulasi (Aktiviti)</span></label>[cite: 1]
-            <label class="checkbox-item"><input type="checkbox" name="katLaporan" value="Proses Bahan Baharu"><span>Proses Bahan Baharu</span></label>[cite: 1]
-            <label class="checkbox-item"><input type="checkbox" name="katLaporan" value="Pelupusan Bahan Lama / NILAM"><span>Pelupusan Bahan Lama / NILAM</span></label>[cite: 1]
-            <label class="checkbox-item"><input type="checkbox" name="katLaporan" value="Kemas Sistem / Cerita Disiplin"><span>Kemas Sistem / Cerita Disiplin</span></label>[cite: 1]
-            <label class="checkbox-item"><input type="checkbox" name="katLaporan" value="Surat Pustakawan baru & kemas / Fail Tegak"><span>Surat Pustakawan baru & kemas / Fail Tegak</span></label>[cite: 1]
+            <label class="checkbox-item"><input type="checkbox" name="katLaporan" value="Sirkulasi / Autonomi"><span>Sirkulasi / Autonomi</span></label>
+            <label class="checkbox-item"><input type="checkbox" name="katLaporan" value="Proses Bahan Baharu"><span>Proses Bahan Baharu</span></label>
+            <label class="checkbox-item"><input type="checkbox" name="katLaporan" value="Pelupusan Bahan Lama / NILAM"><span>Pelupusan Bahan Lama / NILAM</span></label>
+            <label class="checkbox-item"><input type="checkbox" name="katLaporan" value="Kemas / Susun / Cerita / Disiplin"><span>Kemas / Susun / Cerita / Disiplin</span></label>
+            <label class="checkbox-item"><input type="checkbox" name="katLaporan" value="Surat Khabah baru & lama / Fail Tegak"><span>Surat Khabah baru & lama / Fail Tegak</span></label>
           </div>
         </div>
 
         <div class="form-group">
-          <label class="form-label" for="laporanInput">Isu / Masalah / Aduan:</label>[cite: 1]
+          <label class="form-label" for="laporanInput">Isu / Masalah / Aduan:</label>
           <textarea id="laporanInput" class="laporan-textarea" placeholder="Tulis butiran isu, masalah atau aduan di sini..." required></textarea>
         </div>
 
         <div class="signature-grid">
           <div class="meta-box">
-            <span>Pelapor (Dihantar Oleh):</span>[cite: 1]
+            <span>Pelapor (Dihantar Oleh):</span>
             <strong id="pelaporName">-</strong>
           </div>
           <div class="meta-box">
-            <span>Penyemak (Status Semakan):</span>[cite: 1]
+            <span>Penyemak (Status Semakan):</span>
             <strong id="penyemakStatus" style="color: #d97706;">Belum Disemak (Pending)</strong>
           </div>
         </div>
@@ -93,7 +93,6 @@
     </div>
   </div>
 
-  <!-- 引入 ES Module 版本的 Firebase 辅助函数 -->
   <script type="module">
     import { insertData, queryData } from './db-helper.js';
 
@@ -112,7 +111,6 @@
         const now = new Date();
         const tarikhToday = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
 
-        // 2. 表单字段收集
         const checkedCategories = Array.from(document.querySelectorAll('input[name="katLaporan"]:checked')).map(cb => cb.value);
         const isuContent = document.getElementById('laporanInput').value.trim();
 
@@ -125,7 +123,6 @@
 
         const masaStr = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}:${String(now.getSeconds()).padStart(2, '0')}`;
 
-        // 3. 构建插入 Firebase 的数据
         const laporanData = {
           pelapor: userNameDisplay,
           kategori: checkedCategories,
@@ -136,7 +133,6 @@
           status: "Pending"
         };
 
-        // 插入数据库表 'laporan'
         await insertData('laporan', laporanData);
 
         alert("Laporan berjaya dihantar ke sistem Firebase!");
@@ -162,7 +158,6 @@
           return;
         }
 
-        // 按时间倒序
         myReports.sort((a, b) => (b.createdAt?.toDate?.() || 0) - (a.createdAt?.toDate?.() || 0));
 
         historyList.innerHTML = myReports.map(item => `
