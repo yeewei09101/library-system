@@ -155,7 +155,6 @@
   </div>
 
   <script type="module">
-    // 使用你 db-helper.js 实际导出的 readAllData 和 updateData
     import { readAllData, updateData } from './db-helper.js';
 
     const attendanceContainer = document.getElementById('attendanceContainer');
@@ -163,7 +162,6 @@
 
     async function loadAttendanceData() {
       try {
-        // 读取 "attendance" collection 的所有数据
         globalRecords = await readAllData('attendance');
 
         if (!globalRecords || globalRecords.length === 0) {
@@ -173,28 +171,31 @@
 
         attendanceContainer.innerHTML = '';
 
-        // 遍历生成卡片
         globalRecords.forEach((record) => {
-          const recordId = record.id || record.docId; // 兼容常见的 Firebase 文档 ID 字段
+          const recordId = record.id || record.docId;
           const card = document.createElement('div');
           card.className = 'glass-card';
 
           let membersHTML = '';
           
-          // 如果 members 存在且是数组
           if (Array.isArray(record.members)) {
             record.members.forEach((member, index) => {
               const memberId = member.id || (index + 1);
+              
+              // 关键点：优先读取用户提交时选择的 status，若无状态则默认勾选 Datang
+              const isDatang = member.status ? member.status === 'Datang' : true;
+              const isTidakDatang = member.status === 'Tidak Datang';
+
               membersHTML += `
                 <div class="member-row">
                   <span class="member-name">${memberId}. ${member.nama}</span>
                   <div class="radio-group">
                     <label>
-                      <input type="radio" name="status_${recordId}_${memberId}" value="Datang" ${member.status === 'Datang' ? 'checked' : ''}>
+                      <input type="radio" name="status_${recordId}_${memberId}" value="Datang" ${isDatang ? 'checked' : ''}>
                       <span>Datang (出席)</span>
                     </label>
                     <label>
-                      <input type="radio" name="status_${recordId}_${memberId}" value="Tidak Datang" ${member.status === 'Tidak Datang' ? 'checked' : ''}>
+                      <input type="radio" name="status_${recordId}_${memberId}" value="Tidak Datang" ${isTidakDatang ? 'checked' : ''}>
                       <span>Tidak Datang (缺席)</span>
                     </label>
                   </div>
@@ -219,7 +220,7 @@
           attendanceContainer.appendChild(card);
         });
 
-        // 绑定按钮保存事件
+        // 绑定保存按钮事件
         document.querySelectorAll('.save-btn').forEach(button => {
           button.addEventListener('click', async (e) => {
             const recId = e.target.getAttribute('data-record-id');
@@ -237,13 +238,13 @@
       const targetRecord = globalRecords.find(r => (r.id || r.docId) === recordId);
       if (!targetRecord || !targetRecord.members) return;
 
-      // 收集单选框选中的 Datang / Tidak Datang 状态
+      // 收集管理员更改后的单选框状态
       const updatedMembers = targetRecord.members.map((member, index) => {
         const memberId = member.id || (index + 1);
         const selectedRadio = document.querySelector(`input[name="status_${recordId}_${memberId}"]:checked`);
         return {
           ...member,
-          status: selectedRadio ? selectedRadio.value : (member.status || 'Belum Disemak')
+          status: selectedRadio ? selectedRadio.value : (member.status || 'Datang')
         };
       });
 
@@ -251,7 +252,6 @@
       btnElement.textContent = 'Menyimpan...';
 
       try {
-        // 调用 updateData 更新当前 collection 的文档数据
         await updateData('attendance', recordId, {
           members: updatedMembers
         });
