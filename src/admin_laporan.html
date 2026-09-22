@@ -15,8 +15,14 @@
     .btn-back { background: rgba(15, 23, 42, 0.1); color: #0f172a; border: 1px solid rgba(15, 23, 42, 0.2); padding: 8px 16px; border-radius: 8px; cursor: pointer; font-weight: 600; text-decoration: none; transition: all 0.2s; }
     .btn-back:hover { background: rgba(15, 23, 42, 0.2); }
     .controls-bar { padding: 16px 24px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; }
-    .filter-group { display: flex; align-items: center; gap: 10px; font-size: 0.9rem; font-weight: 600; }
-    .select-filter { padding: 8px 12px; border-radius: 8px; border: 1px solid rgba(255, 255, 255, 0.8); background: rgba(255, 255, 255, 0.8); outline: none; font-size: 0.9rem; cursor: pointer; }
+    .filter-group { display: flex; align-items: center; gap: 10px; font-size: 0.9rem; font-weight: 600; flex-wrap: wrap; }
+    
+    /* 搜索框和下拉框样式 */
+    .input-search, .select-filter { padding: 8px 12px; border-radius: 8px; border: 1px solid rgba(255, 255, 255, 0.8); background: rgba(255, 255, 255, 0.8); outline: none; font-size: 0.9rem; }
+    .input-search { min-width: 240px; transition: all 0.2s; }
+    .input-search:focus { background: rgba(255, 255, 255, 0.95); border-color: #2563eb; box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15); }
+    .select-filter { cursor: pointer; }
+
     .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 20px; }
     .stat-card { padding: 16px; text-align: center; }
     .stat-num { font-size: 1.8rem; font-weight: 800; color: #2563eb; }
@@ -71,8 +77,15 @@
     </div>
 
     <div class="controls-bar frosted-glass">
+      <!-- 搜索框 -->
       <div class="filter-group">
-        <label for="statusFilter">Tapis Status Semakan:</label>
+        <label for="searchInput">Carian:</label>
+        <input type="text" id="searchInput" class="input-search" placeholder="Cari pelapor, isu, atau tarikh...">
+      </div>
+
+      <!-- 状态筛选下拉菜单 -->
+      <div class="filter-group">
+        <label for="statusFilter">Status:</label>
         <select id="statusFilter" class="select-filter">
           <option value="all">Semua Laporan</option>
           <option value="Pending">Belum Disemak (Pending)</option>
@@ -109,15 +122,33 @@
       }
     }
 
-    // 过滤逻辑
+    // 综合过滤逻辑（状态 + 关键词搜索）
     function applyFilter() {
       const filterValue = document.getElementById("statusFilter").value;
+      const searchQuery = document.getElementById("searchInput").value.trim().toLowerCase();
+
       let filteredList = allReports;
 
+      // 1. 按状态过滤
       if (filterValue === "Pending") {
-        filteredList = allReports.filter(r => r.status === "Pending" || !r.status);
+        filteredList = filteredList.filter(r => r.status === "Pending" || !r.status);
       } else if (filterValue === "Disemak") {
-        filteredList = allReports.filter(r => r.status === "Disemak");
+        filteredList = filteredList.filter(r => r.status === "Disemak");
+      }
+
+      // 2. 按关键词搜索（名字、问题内容、日期、分类标签）
+      if (searchQuery !== "") {
+        filteredList = filteredList.filter(r => {
+          const pelapor = (r.pelapor || '').toLowerCase();
+          const isu = (r.isu || '').toLowerCase();
+          const tarikh = (r.tarikh || '').toLowerCase();
+          const kategori = Array.isArray(r.kategori) ? r.kategori.join(' ').toLowerCase() : '';
+
+          return pelapor.includes(searchQuery) ||
+                 isu.includes(searchQuery) ||
+                 tarikh.includes(searchQuery) ||
+                 kategori.includes(searchQuery);
+        });
       }
 
       const reportList = document.getElementById("reportList");
@@ -188,7 +219,9 @@
       return String(str || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
     }
 
+    // 绑定事件：状态改变或搜索框打字时实时过滤
     document.getElementById("statusFilter").addEventListener("change", applyFilter);
+    document.getElementById("searchInput").addEventListener("input", applyFilter);
 
     fetchAndRenderReports();
   </script>

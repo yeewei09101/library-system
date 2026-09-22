@@ -60,6 +60,80 @@
       background: rgba(0, 0, 0, 0.4);
     }
 
+    /* 新增：搜索与筛选面板玻璃组件 */
+    .filter-card {
+      background: rgba(255, 255, 255, 0.2);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid rgba(255, 255, 255, 0.4);
+      box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.2);
+      border-radius: 15px;
+      padding: 20px;
+      margin-bottom: 25px;
+    }
+
+    .filter-title {
+      font-size: 16px;
+      font-weight: bold;
+      margin-bottom: 15px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .filter-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 12px;
+    }
+
+    .filter-group {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+    }
+
+    .filter-group label {
+      font-size: 13px;
+      font-weight: 500;
+    }
+
+    .filter-control {
+      width: 100%;
+      padding: 10px 12px;
+      background: rgba(255, 255, 255, 0.25);
+      border: 1px solid rgba(255, 255, 255, 0.4);
+      border-radius: 8px;
+      color: #fff;
+      font-size: 14px;
+      outline: none;
+    }
+
+    .filter-control::placeholder {
+      color: rgba(255, 255, 255, 0.7);
+    }
+
+    .filter-control option {
+      background: #4a154b;
+      color: #fff;
+    }
+
+    .reset-btn {
+      padding: 10px 15px;
+      background: rgba(255, 255, 255, 0.3);
+      border: 1px solid rgba(255, 255, 255, 0.5);
+      border-radius: 8px;
+      color: #fff;
+      font-weight: bold;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      align-self: flex-end;
+    }
+
+    .reset-btn:hover {
+      background: rgba(255, 255, 255, 0.5);
+    }
+
     .glass-card {
       background: rgba(255, 255, 255, 0.15);
       backdrop-filter: blur(16px);
@@ -149,6 +223,43 @@
       <a href="javascript:history.back()" class="back-btn">Kembali (返回)</a>
     </div>
 
+    <!-- 管理员快速查询/筛选栏 -->
+    <div class="filter-card">
+      <div class="filter-title">🔍 Carian & Tapis Rekod (查询与筛选)</div>
+      <div class="filter-grid">
+        <div class="filter-group">
+          <label for="searchName">Nama Ahli (成员名字)</label>
+          <input type="text" id="searchName" class="filter-control" placeholder="Cari nama...">
+        </div>
+        
+        <div class="filter-group">
+          <label for="filterDate">Tarikh (日期)</label>
+          <input type="date" id="filterDate" class="filter-control">
+        </div>
+
+        <div class="filter-group">
+          <label for="filterSesi">Sesi (班次)</label>
+          <select id="filterSesi" class="filter-control">
+            <option value="">Semua Sesi (全部)</option>
+            <option value="Sesi Pagi">Sesi Pagi (上午)</option>
+            <option value="Sesi Petang">Sesi Petang (下午)</option>
+          </select>
+        </div>
+
+        <div class="filter-group">
+          <label for="filterStatus">Status (状态)</label>
+          <select id="filterStatus" class="filter-control">
+            <option value="">Semua Status (全部)</option>
+            <option value="Tidak Datang">Ada Tidak Datang (包含缺席)</option>
+            <option value="Datang">Semua Datang (全勤)</option>
+          </select>
+        </div>
+
+        <button type="button" id="resetFilterBtn" class="reset-btn">Reset (重置)</button>
+      </div>
+    </div>
+
+    <!-- 记录显示区域 -->
     <div id="attendanceContainer">
       <div class="empty-state">Memuatkan data...</div>
     </div>
@@ -158,8 +269,17 @@
     import { readAllData, updateData } from './db-helper.js';
 
     const attendanceContainer = document.getElementById('attendanceContainer');
+    
+    // 筛选元素
+    const searchNameInput = document.getElementById('searchName');
+    const filterDateInput = document.getElementById('filterDate');
+    const filterSesiSelect = document.getElementById('filterSesi');
+    const filterStatusSelect = document.getElementById('filterStatus');
+    const resetFilterBtn = document.getElementById('resetFilterBtn');
+
     let globalRecords = [];
 
+    // 加载数据
     async function loadAttendanceData() {
       try {
         globalRecords = await readAllData('attendance');
@@ -169,64 +289,7 @@
           return;
         }
 
-        attendanceContainer.innerHTML = '';
-
-        globalRecords.forEach((record) => {
-          const recordId = record.id || record.docId;
-          const card = document.createElement('div');
-          card.className = 'glass-card';
-
-          let membersHTML = '';
-          
-          if (Array.isArray(record.members)) {
-            record.members.forEach((member, index) => {
-              const memberId = member.id || (index + 1);
-              
-              // 关键点：优先读取用户提交时选择的 status，若无状态则默认勾选 Datang
-              const isDatang = member.status ? member.status === 'Datang' : true;
-              const isTidakDatang = member.status === 'Tidak Datang';
-
-              membersHTML += `
-                <div class="member-row">
-                  <span class="member-name">${memberId}. ${member.nama}</span>
-                  <div class="radio-group">
-                    <label>
-                      <input type="radio" name="status_${recordId}_${memberId}" value="Datang" ${isDatang ? 'checked' : ''}>
-                      <span>Datang (出席)</span>
-                    </label>
-                    <label>
-                      <input type="radio" name="status_${recordId}_${memberId}" value="Tidak Datang" ${isTidakDatang ? 'checked' : ''}>
-                      <span>Tidak Datang (缺席)</span>
-                    </label>
-                  </div>
-                </div>
-              `;
-            });
-          }
-
-          card.innerHTML = `
-            <div class="card-info">
-              <div><strong>Sesi:</strong> ${record.sesi || '-'}</div>
-              <div><strong>Tarikh:</strong> ${record.tarikh || '-'} ${record.masa || ''}</div>
-              <div><strong>Jumlah:</strong> ${record.jumlah_ahli || (record.members ? record.members.length : 0)} Ahli</div>
-            </div>
-            
-            <form id="form_${recordId}">
-              ${membersHTML}
-              <button type="button" class="save-btn" data-record-id="${recordId}">Simpan Semakan (保存审核)</button>
-            </form>
-          `;
-
-          attendanceContainer.appendChild(card);
-        });
-
-        // 绑定保存按钮事件
-        document.querySelectorAll('.save-btn').forEach(button => {
-          button.addEventListener('click', async (e) => {
-            const recId = e.target.getAttribute('data-record-id');
-            await handleSaveStatus(recId, e.target);
-          });
-        });
+        renderFilteredData();
 
       } catch (error) {
         console.error('Error loading data:', error);
@@ -234,11 +297,114 @@
       }
     }
 
+    // 根据筛选条件过滤并渲染卡片
+    function renderFilteredData() {
+      const nameQuery = searchNameInput.value.trim().toLowerCase();
+      const dateQuery = filterDateInput.value;
+      const sesiQuery = filterSesiSelect.value;
+      const statusQuery = filterStatusSelect.value;
+
+      const filteredRecords = globalRecords.filter(record => {
+        // 1. 名字搜索
+        if (nameQuery) {
+          const matchName = record.members && record.members.some(m => m.nama && m.nama.toLowerCase().includes(nameQuery));
+          if (!matchName) return false;
+        }
+
+        // 2. 日期搜索
+        if (dateQuery && record.tarikh !== dateQuery) {
+          return false;
+        }
+
+        // 3. 时段/班次搜索
+        if (sesiQuery && record.sesi !== sesiQuery) {
+          return false;
+        }
+
+        // 4. 出席状态过滤 (如：只看有缺席人员的记录)
+        if (statusQuery) {
+          if (!record.members) return false;
+          if (statusQuery === 'Tidak Datang') {
+            const hasAbsent = record.members.some(m => m.status === 'Tidak Datang');
+            if (!hasAbsent) return false;
+          } else if (statusQuery === 'Datang') {
+            const allPresent = record.members.every(m => m.status === 'Datang' || !m.status);
+            if (!allPresent) return false;
+          }
+        }
+
+        return true;
+      });
+
+      if (filteredRecords.length === 0) {
+        attendanceContainer.innerHTML = '<div class="empty-state glass-card">Tiada rekod padan dengan carian. (未找到符合条件的记录)</div>';
+        return;
+      }
+
+      attendanceContainer.innerHTML = '';
+
+      filteredRecords.forEach((record) => {
+        const recordId = record.id || record.docId;
+        const card = document.createElement('div');
+        card.className = 'glass-card';
+
+        let membersHTML = '';
+        
+        if (Array.isArray(record.members)) {
+          record.members.forEach((member, index) => {
+            const memberId = member.id || (index + 1);
+            
+            const isDatang = member.status ? member.status === 'Datang' : true;
+            const isTidakDatang = member.status === 'Tidak Datang';
+
+            membersHTML += `
+              <div class="member-row">
+                <span class="member-name">${memberId}. ${member.nama}</span>
+                <div class="radio-group">
+                  <label>
+                    <input type="radio" name="status_${recordId}_${memberId}" value="Datang" ${isDatang ? 'checked' : ''}>
+                    <span>Datang (出席)</span>
+                  </label>
+                  <label>
+                    <input type="radio" name="status_${recordId}_${memberId}" value="Tidak Datang" ${isTidakDatang ? 'checked' : ''}>
+                    <span>Tidak Datang (缺席)</span>
+                  </label>
+                </div>
+              </div>
+            `;
+          });
+        }
+
+        card.innerHTML = `
+          <div class="card-info">
+            <div><strong>Sesi:</strong> ${record.sesi || '-'}</div>
+            <div><strong>Tarikh:</strong> ${record.tarikh || '-'} ${record.masa || ''}</div>
+            <div><strong>Jumlah:</strong> ${record.jumlah_ahli || (record.members ? record.members.length : 0)} Ahli</div>
+          </div>
+          
+          <form id="form_${recordId}">
+            ${membersHTML}
+            <button type="button" class="save-btn" data-record-id="${recordId}">Simpan Semakan (保存审核)</button>
+          </form>
+        `;
+
+        attendanceContainer.appendChild(card);
+      });
+
+      // 重新绑定保存按钮事件
+      document.querySelectorAll('.save-btn').forEach(button => {
+        button.addEventListener('click', async (e) => {
+          const recId = e.target.getAttribute('data-record-id');
+          await handleSaveStatus(recId, e.target);
+        });
+      });
+    }
+
+    // 保存审核修改
     async function handleSaveStatus(recordId, btnElement) {
       const targetRecord = globalRecords.find(r => (r.id || r.docId) === recordId);
       if (!targetRecord || !targetRecord.members) return;
 
-      // 收集管理员更改后的单选框状态
       const updatedMembers = targetRecord.members.map((member, index) => {
         const memberId = member.id || (index + 1);
         const selectedRadio = document.querySelector(`input[name="status_${recordId}_${memberId}"]:checked`);
@@ -255,6 +421,10 @@
         await updateData('attendance', recordId, {
           members: updatedMembers
         });
+        
+        // 更新本地数据
+        targetRecord.members = updatedMembers;
+
         alert('Kehadiran berjaya dikemas kini! (更新成功)');
       } catch (error) {
         console.error('Save status failed:', error);
@@ -264,6 +434,21 @@
         btnElement.textContent = 'Simpan Semakan (保存审核)';
       }
     }
+
+    // 绑定筛选事件（实时筛选）
+    searchNameInput.addEventListener('input', renderFilteredData);
+    filterDateInput.addEventListener('change', renderFilteredData);
+    filterSesiSelect.addEventListener('change', renderFilteredData);
+    filterStatusSelect.addEventListener('change', renderFilteredData);
+
+    // 重置按钮逻辑
+    resetFilterBtn.addEventListener('click', () => {
+      searchNameInput.value = '';
+      filterDateInput.value = '';
+      filterSesiSelect.value = '';
+      filterStatusSelect.value = '';
+      renderFilteredData();
+    });
 
     loadAttendanceData();
   </script>
