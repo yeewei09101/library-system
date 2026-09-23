@@ -291,7 +291,7 @@
         const group = document.createElement('div');
         group.className = 'form-group member-item';
         group.innerHTML = `
-          <label>Ahli ${i} )</label>
+          <label>Ahli ${i} </label>
           <div class="member-row">
             <input type="text" class="form-control member-name" placeholder="Nama Ahli ${i}" required>
             <select class="form-control member-status" required>
@@ -365,7 +365,7 @@
         statusMessage.textContent = 'Ralat sistem. Sila cuba lagi.';
       } finally {
         submitBtn.disabled = false;
-        submitBtn.textContent = 'Hantar (打卡)';
+        submitBtn.textContent = 'Hantar';
       }
     });
 
