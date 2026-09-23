@@ -92,10 +92,13 @@
     <script type="module">
         import { insertData, queryData, updateData, deleteData } from './db-helper.js';
 
-        // 统一使用 Firebase 中的集合名称 jadual_tugas
+        // Standardize Firebase collection name
         const JADUAL_COLLECTION = "jadual_tugas";
         let currentSelectedDate = ""; 
         let currentSelectedDayOfWeek = null; 
+        
+        // PERFORMANCE IMPROVEMENT: Client-side cache to load clicked dates instantly
+        let dataCache = {}; 
 
         const namaHariBM = ["Ahad", "Isnin", "Selasa", "Rabu", "Khamis", "Jumaat", "Sabtu"];
         const namaBulanBM = ["Jan", "Feb", "Mac", "Apr", "Mei", "Jun", "Jul", "Ogo", "Sep", "Okt", "Nov", "Dis"];
@@ -117,7 +120,8 @@
             while (count < jumlahHariDipapar) {
                 const dayOfWeek = currentDate.getDay(); 
                 
-                if (dayOfWeek !== 0 && dayOfWeek !== 6) { // 仅显示工作日 (Isnin - Jumaat)
+                // Only show weekdays (Isnin - Jumaat)
+                if (dayOfWeek !== 0 && dayOfWeek !== 6) { 
                     const isoDate = currentDate.toLocaleDateString('en-CA'); 
                     const dayName = namaHariBM[dayOfWeek];
                     const dayNum = currentDate.getDate();
@@ -148,6 +152,58 @@
             }
         }
 
+        // Render function separated for caching performance
+        function paparJadual(dataJadual, utamaContainer, standbyContainer) {
+            utamaContainer.innerHTML = '';
+            standbyContainer.innerHTML = '';
+            let countUtama = 0; 
+            let countStandby = 0;
+
+            dataJadual.forEach(item => {
+                const namaPetugas = item.nama || item.id_pengguna || 'Unknown';
+                const statusVal = item.status || 'Hadir';
+                const isTidakHadir = statusVal.toLowerCase().includes('tidak hadir');
+                const isGanti = statusVal.toLowerCase().includes('ganti');
+                const isRecurring = item.is_recurring || item.day_of_week !== undefined;
+                const docId = item.id;
+                const jenisTugas = (item.jenis_tugas || 'utama').toLowerCase();
+
+                const cardHTML = `
+                    <div class="glass-card rounded-lg p-3 flex justify-between items-center ${isTidakHadir ? 'border-red-500/30 bg-red-900/20' : ''} ${isGanti ? 'border-blue-500/50 bg-blue-900/20 shadow-[0_0_10px_rgba(59,130,246,0.2)]' : ''}">
+                        <div class="flex items-center gap-3">
+                            <div class="w-8 h-8 rounded-full ${isGanti ? 'bg-blue-600' : 'bg-gray-600'} flex items-center justify-center font-bold text-white">${namaPetugas.charAt(0).toUpperCase()}</div>
+                            <div>
+                                <div class="flex items-center gap-2">
+                                    <p class="text-sm ${isTidakHadir ? 'text-gray-400 line-through' : 'text-gray-100'}">${namaPetugas}</p>
+                                    ${isRecurring ? '<span class="text-[9px] bg-purple-500/30 text-purple-300 border border-purple-500/40 px-1.5 py-0.5 rounded">Mingguan</span>' : ''}
+                                </div>
+                                <p class="text-[10px] ${isTidakHadir ? 'text-red-400' : (isGanti ? 'text-blue-300' : 'text-green-400')}">${statusVal}</p>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-1">
+                            <button onclick="kemaskiniPetugas('${docId}', '${namaPetugas}', '${statusVal}')" class="glass-card glass-btn px-3 py-1 text-[11px] rounded cursor-pointer">Tukar</button>
+                            <button onclick="padamPetugas('${docId}', '${namaPetugas}')" class="glass-card glass-btn-delete px-3 py-1 text-[11px] rounded cursor-pointer text-red-400 border-red-500/30">Padam</button>
+                        </div>
+                    </div>
+                `;
+
+                if (jenisTugas === 'standby') {
+                    standbyContainer.innerHTML += cardHTML;
+                    countStandby++;
+                } else {
+                    utamaContainer.innerHTML += cardHTML;
+                    countUtama++;
+                }
+            });
+
+            if (countUtama === 0) {
+                utamaContainer.innerHTML = '<p class="text-xs text-gray-500 italic">Tiada petugas utama.</p>';
+            }
+            if (countStandby === 0) {
+                standbyContainer.innerHTML = '<p class="text-xs text-gray-500 italic">Tiada petugas standby.</p>';
+            }
+        }
+
         window.pilihTarikh = async function(tarikh, dayOfWeek, cardElement = null) {
             currentSelectedDate = tarikh;
             currentSelectedDayOfWeek = Number(dayOfWeek); 
@@ -171,18 +227,25 @@
 
             if (!utamaContainer || !standbyContainer) return;
             
-            utamaContainer.innerHTML = '<p class="text-xs text-gray-400 animate-pulse">Memuatkan data dari Firebase...</p>';
-            standbyContainer.innerHTML = '<p class="text-xs text-gray-400 animate-pulse">Memuatkan data dari Firebase...</p>';
+            const cacheKey = `${tarikh}_${dayOfWeek}`;
+
+            // Check if data is already in cache for instant display
+            if (dataCache[cacheKey]) {
+                paparJadual(dataCache[cacheKey], utamaContainer, standbyContainer);
+            } else {
+                utamaContainer.innerHTML = '<p class="text-xs text-gray-400 animate-pulse">Memuatkan data dari Firebase...</p>';
+                standbyContainer.innerHTML = '<p class="text-xs text-gray-400 animate-pulse">Memuatkan data dari Firebase...</p>';
+            }
 
             try {
-                // 从 Firebase Cloud 查询数据
+                // Fetch data from Firebase concurrently
                 const [dataTarikh, dataHariNum, dataHariStr] = await Promise.all([
                     queryData(JADUAL_COLLECTION, 'tarikh', '==', tarikh),
                     queryData(JADUAL_COLLECTION, 'day_of_week', '==', currentSelectedDayOfWeek),
                     queryData(JADUAL_COLLECTION, 'day_of_week', '==', String(currentSelectedDayOfWeek))
                 ]);
 
-                // 合并去重
+                // Merge and remove duplicates using Map
                 const mapJadual = new Map();
                 [...dataHariNum, ...dataHariStr, ...dataTarikh].forEach(item => {
                     if (item && item.id) {
@@ -191,55 +254,12 @@
                 });
 
                 const dataJadual = Array.from(mapJadual.values());
+                
+                // Save to local cache
+                dataCache[cacheKey] = dataJadual;
 
-                utamaContainer.innerHTML = '';
-                standbyContainer.innerHTML = '';
-                let countUtama = 0; 
-                let countStandby = 0;
-
-                dataJadual.forEach(item => {
-                    const namaPetugas = item.nama || item.id_pengguna || 'Unknown';
-                    const statusVal = item.status || 'Hadir';
-                    const isTidakHadir = statusVal.toLowerCase().includes('tidak hadir');
-                    const isGanti = statusVal.toLowerCase().includes('ganti');
-                    const isRecurring = item.is_recurring || item.day_of_week !== undefined;
-                    const docId = item.id;
-                    const jenisTugas = (item.jenis_tugas || 'utama').toLowerCase();
-
-                    const cardHTML = `
-                        <div class="glass-card rounded-lg p-3 flex justify-between items-center ${isTidakHadir ? 'border-red-500/30 bg-red-900/20' : ''} ${isGanti ? 'border-blue-500/50 bg-blue-900/20 shadow-[0_0_10px_rgba(59,130,246,0.2)]' : ''}">
-                            <div class="flex items-center gap-3">
-                                <div class="w-8 h-8 rounded-full ${isGanti ? 'bg-blue-600' : 'bg-gray-600'} flex items-center justify-center font-bold text-white">${namaPetugas.charAt(0).toUpperCase()}</div>
-                                <div>
-                                    <div class="flex items-center gap-2">
-                                        <p class="text-sm ${isTidakHadir ? 'text-gray-400 line-through' : 'text-gray-100'}">${namaPetugas}</p>
-                                        ${isRecurring ? '<span class="text-[9px] bg-purple-500/30 text-purple-300 border border-purple-500/40 px-1.5 py-0.5 rounded">Mingguan</span>' : ''}
-                                    </div>
-                                    <p class="text-[10px] ${isTidakHadir ? 'text-red-400' : (isGanti ? 'text-blue-300' : 'text-green-400')}">${statusVal}</p>
-                                </div>
-                            </div>
-                            <div class="flex items-center gap-1">
-                                <button onclick="kemaskiniPetugas('${docId}', '${namaPetugas}', '${statusVal}')" class="glass-card glass-btn px-3 py-1 text-[11px] rounded cursor-pointer">Tukar</button>
-                                <button onclick="padamPetugas('${docId}', '${namaPetugas}')" class="glass-card glass-btn-delete px-3 py-1 text-[11px] rounded cursor-pointer text-red-400 border-red-500/30">Padam</button>
-                            </div>
-                        </div>
-                    `;
-
-                    if (jenisTugas === 'standby') {
-                        standbyContainer.innerHTML += cardHTML;
-                        countStandby++;
-                    } else {
-                        utamaContainer.innerHTML += cardHTML;
-                        countUtama++;
-                    }
-                });
-
-                if (countUtama === 0) {
-                    utamaContainer.innerHTML = '<p class="text-xs text-gray-500 italic">Tiada petugas utama.</p>';
-                }
-                if (countStandby === 0) {
-                    standbyContainer.innerHTML = '<p class="text-xs text-gray-500 italic">Tiada petugas standby.</p>';
-                }
+                // Render the updated data
+                paparJadual(dataJadual, utamaContainer, standbyContainer);
 
             } catch (error) {
                 console.error("Gagal dapatkan data Firebase:", error);
@@ -260,7 +280,7 @@
             const tetapkanSetiapMinggu = confirm(`Adakah anda mahu ${namaPetugas.trim()} bertugas SETIAP HARI ${dayName.toUpperCase()}? \n\n[OK] = Setiap Hari ${dayName} (Mingguan)\n[Cancel] = Tarikh ${currentSelectedDate} Sahaja`);
 
             try {
-                // 直接向 Firebase 插入数据
+                // Insert data to Firebase
                 const newData = {
                     nama: namaPetugas.trim(),
                     status: isStandby ? "Sedia" : "Hadir", 
@@ -278,6 +298,9 @@
 
                 await insertData(JADUAL_COLLECTION, newData);
                 alert("Berjaya disimpan ke pangkalan data Firebase!");
+                
+                // Clear cache for this date to fetch fresh data
+                delete dataCache[`${currentSelectedDate}_${currentSelectedDayOfWeek}`];
                 window.pilihTarikh(currentSelectedDate, currentSelectedDayOfWeek);
                 
             } catch (error) {
@@ -292,6 +315,9 @@
 
             try {
                 await deleteData(JADUAL_COLLECTION, docId);
+                
+                // Clear cache for this date to fetch fresh data
+                delete dataCache[`${currentSelectedDate}_${currentSelectedDayOfWeek}`];
                 window.pilihTarikh(currentSelectedDate, currentSelectedDayOfWeek);
             } catch (error) {
                 console.error("Ralat padam Firebase:", error);
@@ -318,6 +344,9 @@
 
             try {
                 await updateData(JADUAL_COLLECTION, docId, updateObj);
+                
+                // Clear cache for this date to fetch fresh data
+                delete dataCache[`${currentSelectedDate}_${currentSelectedDayOfWeek}`];
                 window.pilihTarikh(currentSelectedDate, currentSelectedDayOfWeek);
             } catch (error) {
                 console.error("Ralat kemaskini Firebase:", error);
