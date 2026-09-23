@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Log Masuk - PSS System</title>
-    <!-- link Style CSS -->
+    <!-- Link Style CSS -->
     <link rel="stylesheet" href="../style/style.css">
 </head>
 <body>
@@ -24,8 +24,6 @@
 
             <div class="input-group">
                 <label for="password">Kata Laluan</label>
-
-                <!-- HTML 输入框 ID 保留为 password -->
                 <input type="password" id="password" placeholder="Masukkan Kata Laluan" required>
             </div>
 
@@ -33,7 +31,7 @@
         </form>
     </div>
 
-    <!-- Proses Login JS -->
+    <!-- Login Process JS -->
     <script type="module">
         import { queryData } from './db-helper.js';
 
@@ -43,8 +41,8 @@
         loginForm.addEventListener('submit', async (e) => {
             e.preventDefault(); 
 
+            // Get the input values
             const idPengguna = document.getElementById('id_pengguna').value.trim();
-            // 读取输入框输入的内容
             const kataLaluanInput = document.getElementById('password').value.trim();
 
             if (!idPengguna || !kataLaluanInput) {
@@ -59,16 +57,21 @@
                 let userRole = null;
                 let userData = null;
 
-                // 1. 匹配 admin 数据库里的 password 字段
-                const adminList = await queryData("admin", "id_admin", "==", idPengguna);
+                // PERFORMANCE IMPROVEMENT: 
+                // Fetch admin and user data concurrently using Promise.all to reduce waiting time.
+                const [adminList, userList] = await Promise.all([
+                    queryData("admin", "id_admin", "==", idPengguna),
+                    queryData("users", "id_pengguna", "==", idPengguna)
+                ]);
+
+                // 1. Check if the user exists in the admin list and verify password
                 const matchedAdmin = adminList.find(admin => admin.password === kataLaluanInput);
 
                 if (matchedAdmin) {
                     userRole = "admin";
                     userData = matchedAdmin;
                 } else {
-                    // 2. 匹配 users 数据库里的 password 字段
-                    const userList = await queryData("users", "id_pengguna", "==", idPengguna);
+                    // 2. If not admin, check if the user exists in the users list and verify password
                     const matchedUser = userList.find(user => user.password === kataLaluanInput);
 
                     if (matchedUser) {
@@ -77,13 +80,14 @@
                     }
                 }
 
-                // 3. 验证通过
+                // 3. Validation successful
                 if (userData) {
                     alert(`Log masuk berjaya! (${userRole === 'admin' ? 'Admin' : 'Pengguna'})`);
                     
                     userData.role = userRole;
                     sessionStorage.setItem("user", JSON.stringify(userData));
 
+                    // Redirect based on role
                     if (userRole === "admin") {
                         window.location.href = "admin.html";
                     } else {
