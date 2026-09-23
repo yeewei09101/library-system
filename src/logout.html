@@ -5,6 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Log Keluar - Sistem PSS</title>
   <link rel="stylesheet" href="../style/logout.css">
+  
+  <!-- PERFORMANCE IMPROVEMENT: Prefetch the login page so it loads instantly in the background -->
+  <link rel="prefetch" href="index.html">
 </head>
 <body>
   <div class="card">
@@ -13,14 +16,15 @@
   </div>
 
   <script>
-    // 1. 清除 session 状态
+    // 1. Clear session status and wipe sessionStorage completely
     sessionStorage.removeItem("user");
-    sessionStorage.clear(); // 彻底清理 session
+    sessionStorage.clear(); 
 
-    // 2. 延迟 1.5 秒后跳转到 index.html
+    // 2. Reduced delay to 800ms for a faster experience
     setTimeout(() => {
-      window.location.href = "index.html";
-    }, 1500);
+      // 3. Use location.replace() so users cannot click the "Back" button to return to the logout page
+      window.location.replace("index.html");
+    }, 800);
   </script>
 </body>
 </html>
