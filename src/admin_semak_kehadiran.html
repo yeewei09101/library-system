@@ -219,43 +219,43 @@
 
   <div class="container">
     <div class="header">
-      <h2>Semak Kehadiran (管理员审核)</h2>
-      <a href="javascript:history.back()" class="back-btn">Kembali (返回)</a>
+      <h2>Semak Kehadiran </h2>
+      <a href="javascript:history.back()" class="back-btn">Kembali </a>
     </div>
 
     <!-- 管理员快速查询/筛选栏 -->
     <div class="filter-card">
-      <div class="filter-title">🔍 Carian & Tapis Rekod (查询与筛选)</div>
+      <div class="filter-title">🔍 Carian & Tapis Rekod </div>
       <div class="filter-grid">
         <div class="filter-group">
-          <label for="searchName">Nama Ahli (成员名字)</label>
+          <label for="searchName">Nama Ahli </label>
           <input type="text" id="searchName" class="filter-control" placeholder="Cari nama...">
         </div>
         
         <div class="filter-group">
-          <label for="filterDate">Tarikh (日期)</label>
+          <label for="filterDate">Tarikh </label>
           <input type="date" id="filterDate" class="filter-control">
         </div>
 
         <div class="filter-group">
-          <label for="filterSesi">Sesi (班次)</label>
+          <label for="filterSesi">Sesi </label>
           <select id="filterSesi" class="filter-control">
-            <option value="">Semua Sesi (全部)</option>
-            <option value="Sesi Pagi">Sesi Pagi (上午)</option>
-            <option value="Sesi Petang">Sesi Petang (下午)</option>
+            <option value="">Semua Sesi </option>
+            <option value="Sesi Pagi">Sesi Pagi </option>
+            <option value="Sesi Petang">Sesi Petang </option>
           </select>
         </div>
 
         <div class="filter-group">
-          <label for="filterStatus">Status (状态)</label>
+          <label for="filterStatus">Status </label>
           <select id="filterStatus" class="filter-control">
-            <option value="">Semua Status (全部)</option>
-            <option value="Tidak Datang">Ada Tidak Datang (包含缺席)</option>
-            <option value="Datang">Semua Datang (全勤)</option>
+            <option value="">Semua Status </option>
+            <option value="Tidak Datang">Ada Tidak Datang </option>
+            <option value="Datang">Semua Datang </option>
           </select>
         </div>
 
-        <button type="button" id="resetFilterBtn" class="reset-btn">Reset (重置)</button>
+        <button type="button" id="resetFilterBtn" class="reset-btn">Reset </button>
       </div>
     </div>
 
@@ -337,7 +337,7 @@
       });
 
       if (filteredRecords.length === 0) {
-        attendanceContainer.innerHTML = '<div class="empty-state glass-card">Tiada rekod padan dengan carian. (未找到符合条件的记录)</div>';
+        attendanceContainer.innerHTML = '<div class="empty-state glass-card">Tiada rekod padan dengan carian. </div>';
         return;
       }
 
@@ -363,11 +363,11 @@
                 <div class="radio-group">
                   <label>
                     <input type="radio" name="status_${recordId}_${memberId}" value="Datang" ${isDatang ? 'checked' : ''}>
-                    <span>Datang (出席)</span>
+                    <span>Datang </span>
                   </label>
                   <label>
                     <input type="radio" name="status_${recordId}_${memberId}" value="Tidak Datang" ${isTidakDatang ? 'checked' : ''}>
-                    <span>Tidak Datang (缺席)</span>
+                    <span>Tidak Datang </span>
                   </label>
                 </div>
               </div>
@@ -384,7 +384,7 @@
           
           <form id="form_${recordId}">
             ${membersHTML}
-            <button type="button" class="save-btn" data-record-id="${recordId}">Simpan Semakan (保存审核)</button>
+            <button type="button" class="save-btn" data-record-id="${recordId}">Simpan Semakan </button>
           </form>
         `;
 
@@ -425,13 +425,13 @@
         // 更新本地数据
         targetRecord.members = updatedMembers;
 
-        alert('Kehadiran berjaya dikemas kini! (更新成功)');
+        alert('Kehadiran berjaya dikemas kini! ');
       } catch (error) {
         console.error('Save status failed:', error);
-        alert('Ralat semasa menyimpan. Sila cuba lagi. (保存失败)');
+        alert('Ralat semasa menyimpan. Sila cuba lagi. ');
       } finally {
         btnElement.disabled = false;
-        btnElement.textContent = 'Simpan Semakan (保存审核)';
+        btnElement.textContent = 'Simpan Semakan ';
       }
     }
 
