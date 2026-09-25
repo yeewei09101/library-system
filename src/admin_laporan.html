@@ -17,7 +17,7 @@
     .controls-bar { padding: 16px 24px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; }
     .filter-group { display: flex; align-items: center; gap: 10px; font-size: 0.9rem; font-weight: 600; flex-wrap: wrap; }
     
-    /* 搜索框和下拉框样式 */
+    /* Search input and select dropdown styles */
     .input-search, .select-filter { padding: 8px 12px; border-radius: 8px; border: 1px solid rgba(255, 255, 255, 0.8); background: rgba(255, 255, 255, 0.8); outline: none; font-size: 0.9rem; }
     .input-search { min-width: 240px; transition: all 0.2s; }
     .input-search:focus { background: rgba(255, 255, 255, 0.95); border-color: #2563eb; box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15); }
@@ -39,10 +39,15 @@
     .category-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px; }
     .tag { background: #e0e7ff; color: #3730a3; font-size: 0.75rem; padding: 3px 8px; border-radius: 6px; font-weight: 600; }
     .report-content { font-size: 0.95rem; color: #1e293b; background: rgba(255, 255, 255, 0.5); padding: 12px; border-radius: 8px; margin-bottom: 12px; white-space: pre-line; border-left: 3px solid #3b82f6; }
+    
     .report-actions { display: flex; justify-content: flex-end; gap: 10px; align-items: center; }
     .btn-verify { background: #16a34a; color: white; border: none; padding: 8px 16px; border-radius: 6px; font-size: 0.85rem; font-weight: 600; cursor: pointer; transition: background 0.2s; }
     .btn-verify:hover { background: #15803d; }
     .btn-verified-disabled { background: #94a3b8; color: white; border: none; padding: 8px 16px; border-radius: 6px; font-size: 0.85rem; font-weight: 600; cursor: not-allowed; }
+    
+    /* Delete Button Styles */
+    .btn-delete { background: #ef4444; color: white; border: none; padding: 8px 16px; border-radius: 6px; font-size: 0.85rem; font-weight: 600; cursor: pointer; transition: background 0.2s; }
+    .btn-delete:hover { background: #dc2626; }
   </style>
 </head>
 <body>
@@ -77,13 +82,13 @@
     </div>
 
     <div class="controls-bar frosted-glass">
-      <!-- 搜索框 -->
+      <!-- Search Input -->
       <div class="filter-group">
         <label for="searchInput">Carian:</label>
         <input type="text" id="searchInput" class="input-search" placeholder="Cari pelapor, isu, atau tarikh...">
       </div>
 
-      <!-- 状态筛选下拉菜单 -->
+      <!-- Status Filter Dropdown -->
       <div class="filter-group">
         <label for="statusFilter">Status:</label>
         <select id="statusFilter" class="select-filter">
@@ -93,24 +98,25 @@
         </select>
       </div>
     </div>
-
+    
     <div class="report-list-container frosted-glass">
       <div id="reportList">Memuatkan data dari Firebase...</div>
     </div>
   </div>
 
+  <!-- Make sure deleteData is exported in your db-helper.js -->
   <script type="module">
-    import { readAllData, updateData } from './db-helper.js';
+    import { readAllData, updateData, deleteData } from './db-helper.js';
 
     let allReports = [];
 
-    // 读取 Firestore 'laporan' 集合所有数据
+    // Fetch all data from Firestore 'laporan' collection
     async function fetchAndRenderReports() {
       const reportList = document.getElementById("reportList");
       try {
         allReports = await readAllData('laporan', 'createdAt', 'desc');
 
-        // 更新数字面板
+        // Update statistic counters
         document.getElementById("totalCount").textContent = allReports.length;
         document.getElementById("pendingCount").textContent = allReports.filter(r => r.status === "Pending" || !r.status).length;
         document.getElementById("checkedCount").textContent = allReports.filter(r => r.status === "Disemak").length;
@@ -122,21 +128,21 @@
       }
     }
 
-    // 综合过滤逻辑（状态 + 关键词搜索）
+    // Combined filtering logic (Status + Keyword Search)
     function applyFilter() {
       const filterValue = document.getElementById("statusFilter").value;
       const searchQuery = document.getElementById("searchInput").value.trim().toLowerCase();
 
       let filteredList = allReports;
 
-      // 1. 按状态过滤
+      // 1. Filter by status
       if (filterValue === "Pending") {
         filteredList = filteredList.filter(r => r.status === "Pending" || !r.status);
       } else if (filterValue === "Disemak") {
         filteredList = filteredList.filter(r => r.status === "Disemak");
       }
 
-      // 2. 按关键词搜索（名字、问题内容、日期、分类标签）
+      // 2. Filter by keyword (name, issue, date, category tags)
       if (searchQuery !== "") {
         filteredList = filteredList.filter(r => {
           const pelapor = (r.pelapor || '').toLowerCase();
@@ -187,26 +193,35 @@
               ` : `
                 <button class="btn-verify" data-id="${item.id}">✓ Sahkan & Semak Laporan</button>
               `}
+              <button class="btn-delete" data-id="${item.id}">🗑 Padam</button>
             </div>
           </div>
         `;
       }).join('');
 
-      // 绑定审核点击事件
+      // Bind click event for verify buttons
       document.querySelectorAll(".btn-verify").forEach(btn => {
         btn.addEventListener("click", async (e) => {
           const docId = e.target.getAttribute("data-id");
           await verifyReport(docId);
         });
       });
+
+      // Bind click event for delete buttons
+      document.querySelectorAll(".btn-delete").forEach(btn => {
+        btn.addEventListener("click", async (e) => {
+          const docId = e.target.getAttribute("data-id");
+          await deleteReport(docId);
+        });
+      });
     }
 
-    // 更新 Firestore 数据的状态
+    // Update Firestore data status
     async function verifyReport(docId) {
       try {
         await updateData('laporan', docId, {
           status: "Disemak",
-          penyemak: "Disemak"
+          penyemak: "Admin" // Changed from "Disemak" to "Admin" as it makes more sense logically
         });
         alert("Laporan berjaya disahkan dan disemak dalam Firebase!");
         fetchAndRenderReports();
@@ -215,11 +230,25 @@
       }
     }
 
+    // Delete Report from Firestore
+    async function deleteReport(docId) {
+      const confirmDelete = confirm("Adakah anda pasti mahu memadam laporan ini secara kekal?");
+      if (confirmDelete) {
+        try {
+          await deleteData('laporan', docId);
+          alert("Laporan berjaya dipadam dari Firebase!");
+          fetchAndRenderReports(); // Refresh the list after deletion
+        } catch (err) {
+          alert("Gagal memadam laporan: " + err.message);
+        }
+      }
+    }
+
     function escapeHTML(str) {
       return String(str || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
     }
 
-    // 绑定事件：状态改变或搜索框打字时实时过滤
+    // Bind events: Real-time filter on status change or typing in search input
     document.getElementById("statusFilter").addEventListener("change", applyFilter);
     document.getElementById("searchInput").addEventListener("input", applyFilter);
 
