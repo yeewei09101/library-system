@@ -60,7 +60,7 @@
       background: rgba(0, 0, 0, 0.4);
     }
 
-    /* Filter Panel Glass UI */
+    /* 新增：搜索与筛选面板玻璃组件 */
     .filter-card {
       background: rgba(255, 255, 255, 0.2);
       backdrop-filter: blur(16px);
@@ -190,16 +190,11 @@
       cursor: pointer;
     }
 
-    /* Action Buttons Container */
-    .action-buttons {
-      display: flex;
-      gap: 10px;
-      margin-top: 15px;
-    }
-
-    .save-btn, .delete-btn {
-      flex: 1;
+    .save-btn {
+      width: 100%;
       padding: 12px;
+      margin-top: 15px;
+      background: rgba(255, 255, 255, 0.25);
       border: 1px solid rgba(255, 255, 255, 0.5);
       border-radius: 10px;
       color: #fff;
@@ -209,20 +204,8 @@
       transition: all 0.3s ease;
     }
 
-    .save-btn {
-      background: rgba(255, 255, 255, 0.25);
-    }
-
     .save-btn:hover {
       background: rgba(255, 255, 255, 0.4);
-    }
-
-    .delete-btn {
-      background: rgba(239, 68, 68, 0.7); /* Red color for delete */
-    }
-
-    .delete-btn:hover {
-      background: rgba(220, 38, 38, 0.9);
     }
 
     .empty-state {
@@ -240,7 +223,7 @@
       <a href="javascript:history.back()" class="back-btn">Kembali </a>
     </div>
 
-    <!-- Admin Quick Search & Filter Panel -->
+    <!-- 管理员快速查询/筛选栏 -->
     <div class="filter-card">
       <div class="filter-title">🔍 Carian & Tapis Rekod </div>
       <div class="filter-grid">
@@ -276,19 +259,18 @@
       </div>
     </div>
 
-    <!-- Attendance Records Display Container -->
+    <!-- 记录显示区域 -->
     <div id="attendanceContainer">
       <div class="empty-state">Memuatkan data...</div>
     </div>
   </div>
 
   <script type="module">
-    // Make sure deleteData is imported here
-    import { readAllData, updateData, deleteData } from './db-helper.js';
+    import { readAllData, updateData } from './db-helper.js';
 
     const attendanceContainer = document.getElementById('attendanceContainer');
     
-    // Filter Elements
+    // 筛选元素
     const searchNameInput = document.getElementById('searchName');
     const filterDateInput = document.getElementById('filterDate');
     const filterSesiSelect = document.getElementById('filterSesi');
@@ -297,13 +279,13 @@
 
     let globalRecords = [];
 
-    // Load Initial Data
+    // 加载数据
     async function loadAttendanceData() {
       try {
         globalRecords = await readAllData('attendance');
 
         if (!globalRecords || globalRecords.length === 0) {
-          attendanceContainer.innerHTML = '<div class="empty-state glass-card">Tiada rekod kehadiran. (No attendance records)</div>';
+          attendanceContainer.innerHTML = '<div class="empty-state glass-card">Tiada rekod kehadiran. (暂无打卡记录)</div>';
           return;
         }
 
@@ -311,11 +293,11 @@
 
       } catch (error) {
         console.error('Error loading data:', error);
-        attendanceContainer.innerHTML = '<div class="empty-state glass-card">Ralat memuatkan data. (Error loading data)</div>';
+        attendanceContainer.innerHTML = '<div class="empty-state glass-card">Ralat memuatkan data. (加载失败)</div>';
       }
     }
 
-    // Filter and Render Cards Based on Filter Criteria
+    // 根据筛选条件过滤并渲染卡片
     function renderFilteredData() {
       const nameQuery = searchNameInput.value.trim().toLowerCase();
       const dateQuery = filterDateInput.value;
@@ -323,23 +305,23 @@
       const statusQuery = filterStatusSelect.value;
 
       const filteredRecords = globalRecords.filter(record => {
-        // 1. Search by Member Name
+        // 1. 名字搜索
         if (nameQuery) {
           const matchName = record.members && record.members.some(m => m.nama && m.nama.toLowerCase().includes(nameQuery));
           if (!matchName) return false;
         }
 
-        // 2. Filter by Date
+        // 2. 日期搜索
         if (dateQuery && record.tarikh !== dateQuery) {
           return false;
         }
 
-        // 3. Filter by Session
+        // 3. 时段/班次搜索
         if (sesiQuery && record.sesi !== sesiQuery) {
           return false;
         }
 
-        // 4. Filter by Status
+        // 4. 出席状态过滤 (如：只看有缺席人员的记录)
         if (statusQuery) {
           if (!record.members) return false;
           if (statusQuery === 'Tidak Datang') {
@@ -355,7 +337,7 @@
       });
 
       if (filteredRecords.length === 0) {
-        attendanceContainer.innerHTML = '<div class="empty-state glass-card">Tiada rekod padan dengan carian. (No matching records found)</div>';
+        attendanceContainer.innerHTML = '<div class="empty-state glass-card">Tiada rekod padan dengan carian. </div>';
         return;
       }
 
@@ -402,34 +384,23 @@
           
           <form id="form_${recordId}">
             ${membersHTML}
-            <div class="action-buttons">
-              <button type="button" class="save-btn" data-record-id="${recordId}">Simpan Semakan </button>
-              <button type="button" class="delete-btn" data-record-id="${recordId}">Padam Rekod </button>
-            </div>
+            <button type="button" class="save-btn" data-record-id="${recordId}">Simpan Semakan </button>
           </form>
         `;
 
         attendanceContainer.appendChild(card);
       });
 
-      // Bind Event Listener to Save Buttons
+      // 重新绑定保存按钮事件
       document.querySelectorAll('.save-btn').forEach(button => {
         button.addEventListener('click', async (e) => {
           const recId = e.target.getAttribute('data-record-id');
           await handleSaveStatus(recId, e.target);
         });
       });
-
-      // Bind Event Listener to Delete Buttons
-      document.querySelectorAll('.delete-btn').forEach(button => {
-        button.addEventListener('click', async (e) => {
-          const recId = e.target.getAttribute('data-record-id');
-          await handleDeleteRecord(recId);
-        });
-      });
     }
 
-    // Save Updated Attendance Status
+    // 保存审核修改
     async function handleSaveStatus(recordId, btnElement) {
       const targetRecord = globalRecords.find(r => (r.id || r.docId) === recordId);
       if (!targetRecord || !targetRecord.members) return;
@@ -451,7 +422,7 @@
           members: updatedMembers
         });
         
-        // Update Local Data Array
+        // 更新本地数据
         targetRecord.members = updatedMembers;
 
         alert('Kehadiran berjaya dikemas kini! ');
@@ -464,38 +435,13 @@
       }
     }
 
-    // Delete Attendance Record
-    async function handleDeleteRecord(recordId) {
-      const confirmDelete = confirm("Adakah anda pasti mahu memadam rekod kehadiran ini secara kekal?");
-      if (!confirmDelete) return;
-
-      try {
-        await deleteData('attendance', recordId);
-        
-        // Remove the deleted record from the local array
-        globalRecords = globalRecords.filter(r => (r.id || r.docId) !== recordId);
-        
-        alert("Rekod berjaya dipadam dari Firebase!");
-        
-        // Re-render the UI
-        if (globalRecords.length === 0) {
-          attendanceContainer.innerHTML = '<div class="empty-state glass-card">Tiada rekod kehadiran. (No attendance records)</div>';
-        } else {
-          renderFilteredData();
-        }
-      } catch (error) {
-        console.error("Delete failed:", error);
-        alert("Gagal memadam rekod: " + error.message);
-      }
-    }
-
-    // Event Listeners for Filters (Real-time updates)
+    // 绑定筛选事件（实时筛选）
     searchNameInput.addEventListener('input', renderFilteredData);
     filterDateInput.addEventListener('change', renderFilteredData);
     filterSesiSelect.addEventListener('change', renderFilteredData);
     filterStatusSelect.addEventListener('change', renderFilteredData);
 
-    // Reset Filters Functionality
+    // 重置按钮逻辑
     resetFilterBtn.addEventListener('click', () => {
       searchNameInput.value = '';
       filterDateInput.value = '';
@@ -504,7 +450,6 @@
       renderFilteredData();
     });
 
-    // Initialize Application
     loadAttendanceData();
   </script>
 </body>
