@@ -60,6 +60,10 @@
       background: rgba(0, 0, 0, 0.4);
     }
 
+<<<<<<< HEAD
+=======
+    /* 新增：搜索与筛选面板玻璃组件 */
+>>>>>>> parent of 432166f (Update admin_semak_kehadiran.html)
     .filter-card {
       background: rgba(255, 255, 255, 0.2);
       backdrop-filter: blur(16px);
@@ -207,6 +211,7 @@
       background: rgba(255, 255, 255, 0.4);
     }
 
+<<<<<<< HEAD
     /* Delete Button Styling */
     .delete-btn {
       width: 100%;
@@ -226,6 +231,8 @@
       background: rgba(255, 50, 50, 0.6);
     }
 
+=======
+>>>>>>> parent of 432166f (Update admin_semak_kehadiran.html)
     .empty-state {
       text-align: center;
       padding: 40px;
@@ -241,7 +248,11 @@
       <a href="javascript:history.back()" class="back-btn">Kembali (Back) </a>
     </div>
 
+<<<<<<< HEAD
     <!-- Search and Filter Panel -->
+=======
+    <!-- 管理员快速查询/筛选栏 -->
+>>>>>>> parent of 432166f (Update admin_semak_kehadiran.html)
     <div class="filter-card">
       <div class="filter-title">🔍 Carian & Tapis Rekod (Search & Filter) </div>
       <div class="filter-grid">
@@ -277,19 +288,27 @@
       </div>
     </div>
 
+<<<<<<< HEAD
     <!-- Attendance Record Container -->
+=======
+    <!-- 记录显示区域 -->
+>>>>>>> parent of 432166f (Update admin_semak_kehadiran.html)
     <div id="attendanceContainer">
       <div class="empty-state">Memuatkan data... (Loading data...)</div>
     </div>
   </div>
 
   <script type="module">
+<<<<<<< HEAD
     // Make sure 'deleteData' is exported from your db-helper.js
     import { readAllData, updateData, deleteData } from './db-helper.js';
+=======
+    import { readAllData, updateData } from './db-helper.js';
+>>>>>>> parent of 432166f (Update admin_semak_kehadiran.html)
 
     const attendanceContainer = document.getElementById('attendanceContainer');
     
-    // Filter Elements
+    // 筛选元素
     const searchNameInput = document.getElementById('searchName');
     const filterDateInput = document.getElementById('filterDate');
     const filterSesiSelect = document.getElementById('filterSesi');
@@ -298,13 +317,21 @@
 
     let globalRecords = [];
 
+<<<<<<< HEAD
     // Load Data from Firebase
+=======
+    // 加载数据
+>>>>>>> parent of 432166f (Update admin_semak_kehadiran.html)
     async function loadAttendanceData() {
       try {
         globalRecords = await readAllData('attendance');
 
         if (!globalRecords || globalRecords.length === 0) {
+<<<<<<< HEAD
           attendanceContainer.innerHTML = '<div class="empty-state glass-card">Tiada rekod kehadiran. (No attendance record found)</div>';
+=======
+          attendanceContainer.innerHTML = '<div class="empty-state glass-card">Tiada rekod kehadiran. (暂无打卡记录)</div>';
+>>>>>>> parent of 432166f (Update admin_semak_kehadiran.html)
           return;
         }
 
@@ -312,11 +339,15 @@
 
       } catch (error) {
         console.error('Error loading data:', error);
-        attendanceContainer.innerHTML = '<div class="empty-state glass-card">Ralat memuatkan data. (Error loading data)</div>';
+        attendanceContainer.innerHTML = '<div class="empty-state glass-card">Ralat memuatkan data. (加载失败)</div>';
       }
     }
 
+<<<<<<< HEAD
     // Render Data based on Filters
+=======
+    // 根据筛选条件过滤并渲染卡片
+>>>>>>> parent of 432166f (Update admin_semak_kehadiran.html)
     function renderFilteredData() {
       const nameQuery = searchNameInput.value.trim().toLowerCase();
       const dateQuery = filterDateInput.value;
@@ -324,19 +355,35 @@
       const statusQuery = filterStatusSelect.value;
 
       const filteredRecords = globalRecords.filter(record => {
+<<<<<<< HEAD
+=======
+        // 1. 名字搜索
+>>>>>>> parent of 432166f (Update admin_semak_kehadiran.html)
         if (nameQuery) {
           const matchName = record.members && record.members.some(m => m.nama && m.nama.toLowerCase().includes(nameQuery));
           if (!matchName) return false;
         }
 
+<<<<<<< HEAD
+=======
+        // 2. 日期搜索
+>>>>>>> parent of 432166f (Update admin_semak_kehadiran.html)
         if (dateQuery && record.tarikh !== dateQuery) {
           return false;
         }
 
+<<<<<<< HEAD
+=======
+        // 3. 时段/班次搜索
+>>>>>>> parent of 432166f (Update admin_semak_kehadiran.html)
         if (sesiQuery && record.sesi !== sesiQuery) {
           return false;
         }
 
+<<<<<<< HEAD
+=======
+        // 4. 出席状态过滤 (如：只看有缺席人员的记录)
+>>>>>>> parent of 432166f (Update admin_semak_kehadiran.html)
         if (statusQuery) {
           if (!record.members) return false;
           if (statusQuery === 'Tidak Datang') {
@@ -352,7 +399,11 @@
       });
 
       if (filteredRecords.length === 0) {
+<<<<<<< HEAD
         attendanceContainer.innerHTML = '<div class="empty-state glass-card">Tiada rekod padan dengan carian. (No records match the search)</div>';
+=======
+        attendanceContainer.innerHTML = '<div class="empty-state glass-card">Tiada rekod padan dengan carian. </div>';
+>>>>>>> parent of 432166f (Update admin_semak_kehadiran.html)
         return;
       }
 
@@ -398,21 +449,30 @@
           
           <form id="form_${recordId}">
             ${membersHTML}
+<<<<<<< HEAD
             <button type="button" class="save-btn" data-record-id="${recordId}">Simpan Semakan (Save Changes)</button>
             <button type="button" class="delete-btn" data-record-id="${recordId}">Padam Rekod (Delete Record)</button>
+=======
+            <button type="button" class="save-btn" data-record-id="${recordId}">Simpan Semakan </button>
+>>>>>>> parent of 432166f (Update admin_semak_kehadiran.html)
           </form>
         `;
 
         attendanceContainer.appendChild(card);
       });
 
+<<<<<<< HEAD
       // Bind Event for Save Buttons
+=======
+      // 重新绑定保存按钮事件
+>>>>>>> parent of 432166f (Update admin_semak_kehadiran.html)
       document.querySelectorAll('.save-btn').forEach(button => {
         button.addEventListener('click', async () => {
           const recId = button.getAttribute('data-record-id');
           await handleSaveStatus(recId, button);
         });
       });
+<<<<<<< HEAD
 
       // Bind Event for Delete Buttons
       document.querySelectorAll('.delete-btn').forEach(button => {
@@ -424,6 +484,11 @@
     }
 
     // Handle Status Update
+=======
+    }
+
+    // 保存审核修改
+>>>>>>> parent of 432166f (Update admin_semak_kehadiran.html)
     async function handleSaveStatus(recordId, btnElement) {
       // 解决潜在的 ID 数据类型不匹配（转为字符串统一比对）
       const targetRecord = globalRecords.find(r => String(r.id || r.docId) === String(recordId));
@@ -448,6 +513,10 @@
           members: updatedMembers
         });
         
+<<<<<<< HEAD
+=======
+        // 更新本地数据
+>>>>>>> parent of 432166f (Update admin_semak_kehadiran.html)
         targetRecord.members = updatedMembers;
         alert('Kehadiran berjaya dikemas kini! (Attendance successfully updated!)');
       } catch (error) {
@@ -459,6 +528,7 @@
       }
     }
 
+<<<<<<< HEAD
     // Handle Delete Record Logic
     async function handleDeleteRecord(recordId, btnElement) {
       const confirmDelete = confirm('Adakah anda pasti mahu memadam rekod ini secara kekal? (Are you sure you want to permanently delete this record?)');
@@ -496,12 +566,19 @@
     }
 
     // Bind Filter Events
+=======
+    // 绑定筛选事件（实时筛选）
+>>>>>>> parent of 432166f (Update admin_semak_kehadiran.html)
     searchNameInput.addEventListener('input', renderFilteredData);
     filterDateInput.addEventListener('change', renderFilteredData);
     filterSesiSelect.addEventListener('change', renderFilteredData);
     filterStatusSelect.addEventListener('change', renderFilteredData);
 
+<<<<<<< HEAD
     // Reset Button Logic
+=======
+    // 重置按钮逻辑
+>>>>>>> parent of 432166f (Update admin_semak_kehadiran.html)
     resetFilterBtn.addEventListener('click', () => {
       searchNameInput.value = '';
       filterDateInput.value = '';
