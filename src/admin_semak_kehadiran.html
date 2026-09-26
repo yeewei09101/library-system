@@ -60,7 +60,6 @@
       background: rgba(0, 0, 0, 0.4);
     }
 
-    /* 新增：搜索与筛选面板玻璃组件 */
     .filter-card {
       background: rgba(255, 255, 255, 0.2);
       backdrop-filter: blur(16px);
@@ -208,6 +207,25 @@
       background: rgba(255, 255, 255, 0.4);
     }
 
+    /* NEW: Delete Button Styling */
+    .delete-btn {
+      width: 100%;
+      padding: 12px;
+      margin-top: 10px;
+      background: rgba(255, 50, 50, 0.3); /* Reddish background */
+      border: 1px solid rgba(255, 100, 100, 0.5);
+      border-radius: 10px;
+      color: #fff;
+      font-size: 16px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .delete-btn:hover {
+      background: rgba(255, 50, 50, 0.6);
+    }
+
     .empty-state {
       text-align: center;
       padding: 40px;
@@ -220,57 +238,58 @@
   <div class="container">
     <div class="header">
       <h2>Semak Kehadiran </h2>
-      <a href="javascript:history.back()" class="back-btn">Kembali </a>
+      <a href="javascript:history.back()" class="back-btn">Kembali (Back) </a>
     </div>
 
-    <!-- 管理员快速查询/筛选栏 -->
+    <!-- Search and Filter Panel -->
     <div class="filter-card">
-      <div class="filter-title">🔍 Carian & Tapis Rekod </div>
+      <div class="filter-title">🔍 Carian & Tapis Rekod (Search & Filter) </div>
       <div class="filter-grid">
         <div class="filter-group">
-          <label for="searchName">Nama Ahli </label>
-          <input type="text" id="searchName" class="filter-control" placeholder="Cari nama...">
+          <label for="searchName">Nama Ahli (Name)</label>
+          <input type="text" id="searchName" class="filter-control" placeholder="Cari nama (Search name)...">
         </div>
         
         <div class="filter-group">
-          <label for="filterDate">Tarikh </label>
+          <label for="filterDate">Tarikh (Date)</label>
           <input type="date" id="filterDate" class="filter-control">
         </div>
 
         <div class="filter-group">
-          <label for="filterSesi">Sesi </label>
+          <label for="filterSesi">Sesi (Session)</label>
           <select id="filterSesi" class="filter-control">
-            <option value="">Semua Sesi </option>
-            <option value="Sesi Pagi">Sesi Pagi </option>
-            <option value="Sesi Petang">Sesi Petang </option>
+            <option value="">Semua Sesi (All)</option>
+            <option value="Sesi Pagi">Sesi Pagi (Morning)</option>
+            <option value="Sesi Petang">Sesi Petang (Afternoon)</option>
           </select>
         </div>
 
         <div class="filter-group">
-          <label for="filterStatus">Status </label>
+          <label for="filterStatus">Status</label>
           <select id="filterStatus" class="filter-control">
-            <option value="">Semua Status </option>
-            <option value="Tidak Datang">Ada Tidak Datang </option>
-            <option value="Datang">Semua Datang </option>
+            <option value="">Semua Status (All)</option>
+            <option value="Tidak Datang">Ada Tidak Datang (Contains Absent)</option>
+            <option value="Datang">Semua Datang (All Present)</option>
           </select>
         </div>
 
-        <button type="button" id="resetFilterBtn" class="reset-btn">Reset </button>
+        <button type="button" id="resetFilterBtn" class="reset-btn">Reset</button>
       </div>
     </div>
 
-    <!-- 记录显示区域 -->
+    <!-- Attendance Record Container -->
     <div id="attendanceContainer">
-      <div class="empty-state">Memuatkan data...</div>
+      <div class="empty-state">Memuatkan data... (Loading data...)</div>
     </div>
   </div>
 
   <script type="module">
-    import { readAllData, updateData } from './db-helper.js';
+    // Make sure 'deleteData' is exported from your db-helper.js
+    import { readAllData, updateData, deleteData } from './db-helper.js';
 
     const attendanceContainer = document.getElementById('attendanceContainer');
     
-    // 筛选元素
+    // Filter Elements
     const searchNameInput = document.getElementById('searchName');
     const filterDateInput = document.getElementById('filterDate');
     const filterSesiSelect = document.getElementById('filterSesi');
@@ -279,13 +298,13 @@
 
     let globalRecords = [];
 
-    // 加载数据
+    // Load Data from Firebase
     async function loadAttendanceData() {
       try {
         globalRecords = await readAllData('attendance');
 
         if (!globalRecords || globalRecords.length === 0) {
-          attendanceContainer.innerHTML = '<div class="empty-state glass-card">Tiada rekod kehadiran. (暂无打卡记录)</div>';
+          attendanceContainer.innerHTML = '<div class="empty-state glass-card">Tiada rekod kehadiran. (No attendance record found)</div>';
           return;
         }
 
@@ -293,11 +312,11 @@
 
       } catch (error) {
         console.error('Error loading data:', error);
-        attendanceContainer.innerHTML = '<div class="empty-state glass-card">Ralat memuatkan data. (加载失败)</div>';
+        attendanceContainer.innerHTML = '<div class="empty-state glass-card">Ralat memuatkan data. (Error loading data)</div>';
       }
     }
 
-    // 根据筛选条件过滤并渲染卡片
+    // Render Data based on Filters
     function renderFilteredData() {
       const nameQuery = searchNameInput.value.trim().toLowerCase();
       const dateQuery = filterDateInput.value;
@@ -305,23 +324,19 @@
       const statusQuery = filterStatusSelect.value;
 
       const filteredRecords = globalRecords.filter(record => {
-        // 1. 名字搜索
         if (nameQuery) {
           const matchName = record.members && record.members.some(m => m.nama && m.nama.toLowerCase().includes(nameQuery));
           if (!matchName) return false;
         }
 
-        // 2. 日期搜索
         if (dateQuery && record.tarikh !== dateQuery) {
           return false;
         }
 
-        // 3. 时段/班次搜索
         if (sesiQuery && record.sesi !== sesiQuery) {
           return false;
         }
 
-        // 4. 出席状态过滤 (如：只看有缺席人员的记录)
         if (statusQuery) {
           if (!record.members) return false;
           if (statusQuery === 'Tidak Datang') {
@@ -337,7 +352,7 @@
       });
 
       if (filteredRecords.length === 0) {
-        attendanceContainer.innerHTML = '<div class="empty-state glass-card">Tiada rekod padan dengan carian. </div>';
+        attendanceContainer.innerHTML = '<div class="empty-state glass-card">Tiada rekod padan dengan carian. (No records match the search)</div>';
         return;
       }
 
@@ -353,7 +368,6 @@
         if (Array.isArray(record.members)) {
           record.members.forEach((member, index) => {
             const memberId = member.id || (index + 1);
-            
             const isDatang = member.status ? member.status === 'Datang' : true;
             const isTidakDatang = member.status === 'Tidak Datang';
 
@@ -363,11 +377,11 @@
                 <div class="radio-group">
                   <label>
                     <input type="radio" name="status_${recordId}_${memberId}" value="Datang" ${isDatang ? 'checked' : ''}>
-                    <span>Datang </span>
+                    <span>Datang</span>
                   </label>
                   <label>
                     <input type="radio" name="status_${recordId}_${memberId}" value="Tidak Datang" ${isTidakDatang ? 'checked' : ''}>
-                    <span>Tidak Datang </span>
+                    <span>Tidak Datang</span>
                   </label>
                 </div>
               </div>
@@ -384,23 +398,33 @@
           
           <form id="form_${recordId}">
             ${membersHTML}
-            <button type="button" class="save-btn" data-record-id="${recordId}">Simpan Semakan </button>
+            <button type="button" class="save-btn" data-record-id="${recordId}">Simpan Semakan (Save Changes)</button>
+            <!-- NEW: Delete Button Added Here -->
+            <button type="button" class="delete-btn" data-record-id="${recordId}">Padam Rekod (Delete Record)</button>
           </form>
         `;
 
         attendanceContainer.appendChild(card);
       });
 
-      // 重新绑定保存按钮事件
+      // Bind Event for Save Buttons
       document.querySelectorAll('.save-btn').forEach(button => {
         button.addEventListener('click', async (e) => {
           const recId = e.target.getAttribute('data-record-id');
           await handleSaveStatus(recId, e.target);
         });
       });
+
+      // NEW: Bind Event for Delete Buttons
+      document.querySelectorAll('.delete-btn').forEach(button => {
+        button.addEventListener('click', async (e) => {
+          const recId = e.target.getAttribute('data-record-id');
+          await handleDeleteRecord(recId, e.target);
+        });
+      });
     }
 
-    // 保存审核修改
+    // Handle Status Update
     async function handleSaveStatus(recordId, btnElement) {
       const targetRecord = globalRecords.find(r => (r.id || r.docId) === recordId);
       if (!targetRecord || !targetRecord.members) return;
@@ -415,33 +439,59 @@
       });
 
       btnElement.disabled = true;
-      btnElement.textContent = 'Menyimpan...';
+      btnElement.textContent = 'Menyimpan... (Saving...)';
 
       try {
         await updateData('attendance', recordId, {
           members: updatedMembers
         });
         
-        // 更新本地数据
         targetRecord.members = updatedMembers;
-
-        alert('Kehadiran berjaya dikemas kini! ');
+        alert('Kehadiran berjaya dikemas kini! (Attendance successfully updated!)');
       } catch (error) {
         console.error('Save status failed:', error);
-        alert('Ralat semasa menyimpan. Sila cuba lagi. ');
+        alert('Ralat semasa menyimpan. Sila cuba lagi. (Error saving. Please try again.)');
       } finally {
         btnElement.disabled = false;
-        btnElement.textContent = 'Simpan Semakan ';
+        btnElement.textContent = 'Simpan Semakan (Save Changes)';
       }
     }
 
-    // 绑定筛选事件（实时筛选）
+    // NEW: Handle Delete Record Logic
+    async function handleDeleteRecord(recordId, btnElement) {
+      // Prompt user for confirmation before deleting
+      const confirmDelete = confirm('Adakah anda pasti mahu memadam rekod ini secara kekal? (Are you sure you want to permanently delete this record?)');
+      if (!confirmDelete) return;
+
+      btnElement.disabled = true;
+      btnElement.textContent = 'Memadam... (Deleting...)';
+
+      try {
+        // Call the deleteData function to delete from Firebase
+        await deleteData('attendance', recordId);
+        
+        // Remove the deleted record from the local globalRecords array
+        globalRecords = globalRecords.filter(r => (r.id || r.docId) !== recordId);
+
+        alert('Rekod berjaya dipadam! (Record successfully deleted!)');
+        
+        // Re-render the UI without the deleted record
+        renderFilteredData();
+      } catch (error) {
+        console.error('Delete failed:', error);
+        alert('Ralat semasa memadam. Sila cuba lagi. (Error deleting. Please try again.)');
+        btnElement.disabled = false;
+        btnElement.textContent = 'Padam Rekod (Delete Record)';
+      }
+    }
+
+    // Bind Filter Events
     searchNameInput.addEventListener('input', renderFilteredData);
     filterDateInput.addEventListener('change', renderFilteredData);
     filterSesiSelect.addEventListener('change', renderFilteredData);
     filterStatusSelect.addEventListener('change', renderFilteredData);
 
-    // 重置按钮逻辑
+    // Reset Button Logic
     resetFilterBtn.addEventListener('click', () => {
       searchNameInput.value = '';
       filterDateInput.value = '';
