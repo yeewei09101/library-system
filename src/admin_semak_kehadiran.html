@@ -1,593 +1,911 @@
 <!DOCTYPE html>
+
 <html lang="ms">
+
 <head>
+
   <meta charset="UTF-8">
+
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
   <title>Semak Kehadiran - Admin</title>
+
   <style>
+
     * {
+
       margin: 0;
+
       padding: 0;
+
       box-sizing: border-box;
+
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+
     }
+
+
 
     body {
+
       min-height: 100vh;
+
       background: linear-gradient(45deg, #12c2e9, #c471ed, #f64f59);
+
       background-size: 400% 400%;
+
       animation: gradientBG 15s ease infinite;
+
       padding: 20px;
+
       color: #fff;
+
     }
+
+
 
     @keyframes gradientBG {
+
       0% { background-position: 0% 50%; }
+
       50% { background-position: 100% 50%; }
+
       100% { background-position: 0% 50%; }
+
     }
+
+
 
     .container {
+
       max-width: 800px;
+
       margin: 0 auto;
+
     }
+
+
 
     .header {
+
       display: flex;
+
       justify-content: space-between;
+
       align-items: center;
+
       margin-bottom: 25px;
+
     }
+
+
 
     .header h2 {
+
       font-size: 26px;
+
       text-shadow: 0 2px 4px rgba(0,0,0,0.2);
+
     }
+
+
 
     .back-btn {
+
       padding: 10px 20px;
+
       background: rgba(0, 0, 0, 0.2);
+
       border: 1px solid rgba(255, 255, 255, 0.4);
+
       border-radius: 10px;
+
       color: #fff;
+
       font-weight: bold;
+
       cursor: pointer;
+
       text-decoration: none;
+
       transition: all 0.3s ease;
+
     }
+
+
 
     .back-btn:hover {
+
       background: rgba(0, 0, 0, 0.4);
+
     }
 
-<<<<<<< HEAD
-=======
+
+
     /* 新增：搜索与筛选面板玻璃组件 */
->>>>>>> parent of 432166f (Update admin_semak_kehadiran.html)
+
     .filter-card {
+
       background: rgba(255, 255, 255, 0.2);
+
       backdrop-filter: blur(16px);
+
       -webkit-backdrop-filter: blur(16px);
+
       border: 1px solid rgba(255, 255, 255, 0.4);
+
       box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.2);
+
       border-radius: 15px;
+
       padding: 20px;
+
       margin-bottom: 25px;
+
     }
+
+
 
     .filter-title {
+
       font-size: 16px;
+
       font-weight: bold;
+
       margin-bottom: 15px;
+
       display: flex;
+
       align-items: center;
+
       gap: 8px;
+
     }
+
+
 
     .filter-grid {
+
       display: grid;
+
       grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+
       gap: 12px;
+
     }
+
+
 
     .filter-group {
+
       display: flex;
+
       flex-direction: column;
+
       gap: 5px;
+
     }
+
+
 
     .filter-group label {
+
       font-size: 13px;
+
       font-weight: 500;
+
     }
+
+
 
     .filter-control {
+
       width: 100%;
+
       padding: 10px 12px;
+
       background: rgba(255, 255, 255, 0.25);
+
       border: 1px solid rgba(255, 255, 255, 0.4);
+
       border-radius: 8px;
+
       color: #fff;
+
       font-size: 14px;
+
       outline: none;
+
     }
+
+
 
     .filter-control::placeholder {
+
       color: rgba(255, 255, 255, 0.7);
+
     }
+
+
 
     .filter-control option {
+
       background: #4a154b;
+
       color: #fff;
+
     }
+
+
 
     .reset-btn {
+
       padding: 10px 15px;
+
       background: rgba(255, 255, 255, 0.3);
+
       border: 1px solid rgba(255, 255, 255, 0.5);
+
       border-radius: 8px;
+
       color: #fff;
+
       font-weight: bold;
+
       cursor: pointer;
+
       transition: all 0.3s ease;
+
       align-self: flex-end;
+
     }
+
+
 
     .reset-btn:hover {
+
       background: rgba(255, 255, 255, 0.5);
+
     }
+
+
 
     .glass-card {
+
       background: rgba(255, 255, 255, 0.15);
+
       backdrop-filter: blur(16px);
+
       -webkit-backdrop-filter: blur(16px);
+
       border: 1px solid rgba(255, 255, 255, 0.3);
+
       box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.2);
+
       border-radius: 15px;
+
       padding: 25px;
+
       margin-bottom: 20px;
+
     }
+
+
 
     .card-info {
+
       display: flex;
+
       justify-content: space-between;
+
       margin-bottom: 15px;
+
       font-size: 15px;
+
       border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+
       padding-bottom: 10px;
+
     }
+
+
 
     .member-row {
+
       display: flex;
+
       justify-content: space-between;
+
       align-items: center;
+
       padding: 12px 15px;
+
       background: rgba(255, 255, 255, 0.1);
+
       border: 1px solid rgba(255, 255, 255, 0.2);
+
       border-radius: 10px;
+
       margin-bottom: 10px;
+
     }
+
+
 
     .member-name {
+
       font-size: 16px;
+
       font-weight: 500;
+
     }
+
+
 
     .radio-group {
+
       display: flex;
+
       gap: 15px;
+
     }
+
+
 
     .radio-group label {
+
       display: flex;
+
       align-items: center;
+
       gap: 5px;
+
       cursor: pointer;
+
       font-size: 14px;
+
     }
+
+
 
     .radio-group input[type="radio"] {
+
       accent-color: #4a154b;
+
       width: 16px;
+
       height: 16px;
+
       cursor: pointer;
+
     }
+
+
 
     .save-btn {
+
       width: 100%;
+
       padding: 12px;
+
       margin-top: 15px;
+
       background: rgba(255, 255, 255, 0.25);
+
       border: 1px solid rgba(255, 255, 255, 0.5);
+
       border-radius: 10px;
+
       color: #fff;
+
       font-size: 16px;
+
       font-weight: bold;
+
       cursor: pointer;
+
       transition: all 0.3s ease;
+
     }
+
+
 
     .save-btn:hover {
+
       background: rgba(255, 255, 255, 0.4);
+
     }
 
-<<<<<<< HEAD
-    /* Delete Button Styling */
-    .delete-btn {
-      width: 100%;
-      padding: 12px;
-      margin-top: 10px;
-      background: rgba(255, 50, 50, 0.3); /* Reddish background */
-      border: 1px solid rgba(255, 100, 100, 0.5);
-      border-radius: 10px;
-      color: #fff;
-      font-size: 16px;
-      font-weight: bold;
-      cursor: pointer;
-      transition: all 0.3s ease;
-    }
 
-    .delete-btn:hover {
-      background: rgba(255, 50, 50, 0.6);
-    }
 
-=======
->>>>>>> parent of 432166f (Update admin_semak_kehadiran.html)
     .empty-state {
+
       text-align: center;
+
       padding: 40px;
+
       font-size: 18px;
+
     }
+
   </style>
+
 </head>
+
 <body>
 
+
+
   <div class="container">
+
     <div class="header">
+
       <h2>Semak Kehadiran </h2>
-      <a href="javascript:history.back()" class="back-btn">Kembali (Back) </a>
+
+      <a href="javascript:history.back()" class="back-btn">Kembali </a>
+
     </div>
 
-<<<<<<< HEAD
-    <!-- Search and Filter Panel -->
-=======
+
+
     <!-- 管理员快速查询/筛选栏 -->
->>>>>>> parent of 432166f (Update admin_semak_kehadiran.html)
+
     <div class="filter-card">
-      <div class="filter-title">🔍 Carian & Tapis Rekod (Search & Filter) </div>
+
+      <div class="filter-title">🔍 Carian & Tapis Rekod </div>
+
       <div class="filter-grid">
+
         <div class="filter-group">
-          <label for="searchName">Nama Ahli (Name)</label>
-          <input type="text" id="searchName" class="filter-control" placeholder="Cari nama (Search name)...">
+
+          <label for="searchName">Nama Ahli </label>
+
+          <input type="text" id="searchName" class="filter-control" placeholder="Cari nama...">
+
         </div>
-        
+
+       
+
         <div class="filter-group">
-          <label for="filterDate">Tarikh (Date)</label>
+
+          <label for="filterDate">Tarikh </label>
+
           <input type="date" id="filterDate" class="filter-control">
+
         </div>
 
+
+
         <div class="filter-group">
-          <label for="filterSesi">Sesi (Session)</label>
+
+          <label for="filterSesi">Sesi </label>
+
           <select id="filterSesi" class="filter-control">
-            <option value="">Semua Sesi (All)</option>
-            <option value="Sesi Pagi">Sesi Pagi (Morning)</option>
-            <option value="Sesi Petang">Sesi Petang (Afternoon)</option>
+
+            <option value="">Semua Sesi </option>
+
+            <option value="Sesi Pagi">Sesi Pagi </option>
+
+            <option value="Sesi Petang">Sesi Petang </option>
+
           </select>
+
         </div>
+
+
 
         <div class="filter-group">
-          <label for="filterStatus">Status</label>
+
+          <label for="filterStatus">Status </label>
+
           <select id="filterStatus" class="filter-control">
-            <option value="">Semua Status (All)</option>
-            <option value="Tidak Datang">Ada Tidak Datang (Contains Absent)</option>
-            <option value="Datang">Semua Datang (All Present)</option>
+
+            <option value="">Semua Status </option>
+
+            <option value="Tidak Datang">Ada Tidak Datang </option>
+
+            <option value="Datang">Semua Datang </option>
+
           </select>
+
         </div>
 
-        <button type="button" id="resetFilterBtn" class="reset-btn">Reset</button>
+
+
+        <button type="button" id="resetFilterBtn" class="reset-btn">Reset </button>
+
       </div>
+
     </div>
 
-<<<<<<< HEAD
-    <!-- Attendance Record Container -->
-=======
+
+
     <!-- 记录显示区域 -->
->>>>>>> parent of 432166f (Update admin_semak_kehadiran.html)
+
     <div id="attendanceContainer">
-      <div class="empty-state">Memuatkan data... (Loading data...)</div>
+
+      <div class="empty-state">Memuatkan data...</div>
+
     </div>
+
   </div>
 
+
+
   <script type="module">
-<<<<<<< HEAD
-    // Make sure 'deleteData' is exported from your db-helper.js
-    import { readAllData, updateData, deleteData } from './db-helper.js';
-=======
+
     import { readAllData, updateData } from './db-helper.js';
->>>>>>> parent of 432166f (Update admin_semak_kehadiran.html)
+
+
 
     const attendanceContainer = document.getElementById('attendanceContainer');
-    
+
+   
+
     // 筛选元素
+
     const searchNameInput = document.getElementById('searchName');
+
     const filterDateInput = document.getElementById('filterDate');
+
     const filterSesiSelect = document.getElementById('filterSesi');
+
     const filterStatusSelect = document.getElementById('filterStatus');
+
     const resetFilterBtn = document.getElementById('resetFilterBtn');
+
+
 
     let globalRecords = [];
 
-<<<<<<< HEAD
-    // Load Data from Firebase
-=======
+
+
     // 加载数据
->>>>>>> parent of 432166f (Update admin_semak_kehadiran.html)
+
     async function loadAttendanceData() {
+
       try {
+
         globalRecords = await readAllData('attendance');
 
+
+
         if (!globalRecords || globalRecords.length === 0) {
-<<<<<<< HEAD
-          attendanceContainer.innerHTML = '<div class="empty-state glass-card">Tiada rekod kehadiran. (No attendance record found)</div>';
-=======
+
           attendanceContainer.innerHTML = '<div class="empty-state glass-card">Tiada rekod kehadiran. (暂无打卡记录)</div>';
->>>>>>> parent of 432166f (Update admin_semak_kehadiran.html)
+
           return;
+
         }
+
+
 
         renderFilteredData();
 
+
+
       } catch (error) {
+
         console.error('Error loading data:', error);
+
         attendanceContainer.innerHTML = '<div class="empty-state glass-card">Ralat memuatkan data. (加载失败)</div>';
+
       }
+
     }
 
-<<<<<<< HEAD
-    // Render Data based on Filters
-=======
+
+
     // 根据筛选条件过滤并渲染卡片
->>>>>>> parent of 432166f (Update admin_semak_kehadiran.html)
+
     function renderFilteredData() {
+
       const nameQuery = searchNameInput.value.trim().toLowerCase();
+
       const dateQuery = filterDateInput.value;
+
       const sesiQuery = filterSesiSelect.value;
+
       const statusQuery = filterStatusSelect.value;
 
+
+
       const filteredRecords = globalRecords.filter(record => {
-<<<<<<< HEAD
-=======
+
         // 1. 名字搜索
->>>>>>> parent of 432166f (Update admin_semak_kehadiran.html)
+
         if (nameQuery) {
+
           const matchName = record.members && record.members.some(m => m.nama && m.nama.toLowerCase().includes(nameQuery));
+
           if (!matchName) return false;
+
         }
 
-<<<<<<< HEAD
-=======
+
+
         // 2. 日期搜索
->>>>>>> parent of 432166f (Update admin_semak_kehadiran.html)
+
         if (dateQuery && record.tarikh !== dateQuery) {
+
           return false;
+
         }
 
-<<<<<<< HEAD
-=======
+
+
         // 3. 时段/班次搜索
->>>>>>> parent of 432166f (Update admin_semak_kehadiran.html)
+
         if (sesiQuery && record.sesi !== sesiQuery) {
+
           return false;
+
         }
 
-<<<<<<< HEAD
-=======
+
+
         // 4. 出席状态过滤 (如：只看有缺席人员的记录)
->>>>>>> parent of 432166f (Update admin_semak_kehadiran.html)
+
         if (statusQuery) {
+
           if (!record.members) return false;
+
           if (statusQuery === 'Tidak Datang') {
+
             const hasAbsent = record.members.some(m => m.status === 'Tidak Datang');
+
             if (!hasAbsent) return false;
+
           } else if (statusQuery === 'Datang') {
+
             const allPresent = record.members.every(m => m.status === 'Datang' || !m.status);
+
             if (!allPresent) return false;
+
           }
+
         }
+
+
 
         return true;
+
       });
 
+
+
       if (filteredRecords.length === 0) {
-<<<<<<< HEAD
-        attendanceContainer.innerHTML = '<div class="empty-state glass-card">Tiada rekod padan dengan carian. (No records match the search)</div>';
-=======
+
         attendanceContainer.innerHTML = '<div class="empty-state glass-card">Tiada rekod padan dengan carian. </div>';
->>>>>>> parent of 432166f (Update admin_semak_kehadiran.html)
+
         return;
+
       }
+
+
 
       attendanceContainer.innerHTML = '';
 
+
+
       filteredRecords.forEach((record) => {
+
         const recordId = record.id || record.docId;
+
         const card = document.createElement('div');
+
         card.className = 'glass-card';
 
+
+
         let membersHTML = '';
-        
+
+       
+
         if (Array.isArray(record.members)) {
+
           record.members.forEach((member, index) => {
+
             const memberId = member.id || (index + 1);
+
+           
+
             const isDatang = member.status ? member.status === 'Datang' : true;
+
             const isTidakDatang = member.status === 'Tidak Datang';
 
+
+
             membersHTML += `
+
               <div class="member-row">
+
                 <span class="member-name">${memberId}. ${member.nama}</span>
+
                 <div class="radio-group">
+
                   <label>
+
                     <input type="radio" name="status_${recordId}_${memberId}" value="Datang" ${isDatang ? 'checked' : ''}>
-                    <span>Datang</span>
+
+                    <span>Datang </span>
+
                   </label>
+
                   <label>
+
                     <input type="radio" name="status_${recordId}_${memberId}" value="Tidak Datang" ${isTidakDatang ? 'checked' : ''}>
-                    <span>Tidak Datang</span>
+
+                    <span>Tidak Datang </span>
+
                   </label>
+
                 </div>
+
               </div>
+
             `;
+
           });
+
         }
+
+
 
         card.innerHTML = `
+
           <div class="card-info">
+
             <div><strong>Sesi:</strong> ${record.sesi || '-'}</div>
+
             <div><strong>Tarikh:</strong> ${record.tarikh || '-'} ${record.masa || ''}</div>
+
             <div><strong>Jumlah:</strong> ${record.jumlah_ahli || (record.members ? record.members.length : 0)} Ahli</div>
+
           </div>
-          
+
+         
+
           <form id="form_${recordId}">
+
             ${membersHTML}
-<<<<<<< HEAD
-            <button type="button" class="save-btn" data-record-id="${recordId}">Simpan Semakan (Save Changes)</button>
-            <button type="button" class="delete-btn" data-record-id="${recordId}">Padam Rekod (Delete Record)</button>
-=======
+
             <button type="button" class="save-btn" data-record-id="${recordId}">Simpan Semakan </button>
->>>>>>> parent of 432166f (Update admin_semak_kehadiran.html)
+
           </form>
+
         `;
 
+
+
         attendanceContainer.appendChild(card);
+
       });
 
-<<<<<<< HEAD
-      // Bind Event for Save Buttons
-=======
+
+
       // 重新绑定保存按钮事件
->>>>>>> parent of 432166f (Update admin_semak_kehadiran.html)
+
       document.querySelectorAll('.save-btn').forEach(button => {
-        button.addEventListener('click', async () => {
-          const recId = button.getAttribute('data-record-id');
-          await handleSaveStatus(recId, button);
-        });
-      });
-<<<<<<< HEAD
 
-      // Bind Event for Delete Buttons
-      document.querySelectorAll('.delete-btn').forEach(button => {
-        button.addEventListener('click', async () => {
-          const recId = button.getAttribute('data-record-id');
-          await handleDeleteRecord(recId, button);
+        button.addEventListener('click', async (e) => {
+
+          const recId = e.target.getAttribute('data-record-id');
+
+          await handleSaveStatus(recId, e.target);
+
         });
+
       });
+
     }
 
-    // Handle Status Update
-=======
-    }
+
 
     // 保存审核修改
->>>>>>> parent of 432166f (Update admin_semak_kehadiran.html)
+
     async function handleSaveStatus(recordId, btnElement) {
-      // 解决潜在的 ID 数据类型不匹配（转为字符串统一比对）
-      const targetRecord = globalRecords.find(r => String(r.id || r.docId) === String(recordId));
+
+      const targetRecord = globalRecords.find(r => (r.id || r.docId) === recordId);
+
       if (!targetRecord || !targetRecord.members) return;
-      
-      const actualId = targetRecord.id || targetRecord.docId; // 抓取原始的 ID
+
+
 
       const updatedMembers = targetRecord.members.map((member, index) => {
+
         const memberId = member.id || (index + 1);
+
         const selectedRadio = document.querySelector(`input[name="status_${recordId}_${memberId}"]:checked`);
+
         return {
+
           ...member,
+
           status: selectedRadio ? selectedRadio.value : (member.status || 'Datang')
+
         };
+
       });
 
+
+
       btnElement.disabled = true;
-      btnElement.textContent = 'Menyimpan... (Saving...)';
+
+      btnElement.textContent = 'Menyimpan...';
+
+
 
       try {
-        await updateData('attendance', actualId, {
+
+        await updateData('attendance', recordId, {
+
           members: updatedMembers
+
         });
-        
-<<<<<<< HEAD
-=======
+
+       
+
         // 更新本地数据
->>>>>>> parent of 432166f (Update admin_semak_kehadiran.html)
+
         targetRecord.members = updatedMembers;
-        alert('Kehadiran berjaya dikemas kini! (Attendance successfully updated!)');
+
+
+
+        alert('Kehadiran berjaya dikemas kini! ');
+
       } catch (error) {
+
         console.error('Save status failed:', error);
-        alert('Ralat semasa menyimpan. Sila cuba lagi. (Error saving. Please try again.)');
+
+        alert('Ralat semasa menyimpan. Sila cuba lagi. ');
+
       } finally {
+
         btnElement.disabled = false;
-        btnElement.textContent = 'Simpan Semakan (Save Changes)';
+
+        btnElement.textContent = 'Simpan Semakan ';
+
       }
+
     }
 
-<<<<<<< HEAD
-    // Handle Delete Record Logic
-    async function handleDeleteRecord(recordId, btnElement) {
-      const confirmDelete = confirm('Adakah anda pasti mahu memadam rekod ini secara kekal? (Are you sure you want to permanently delete this record?)');
-      if (!confirmDelete) return;
 
-      btnElement.disabled = true;
-      btnElement.textContent = 'Memadam... (Deleting...)';
 
-      try {
-        const targetRecord = globalRecords.find(r => String(r.id || r.docId) === String(recordId));
-        const actualId = targetRecord ? (targetRecord.id || targetRecord.docId) : recordId;
-        
-        // 检查 db-helper.js 是否真的导出了 deleteData
-        if (typeof deleteData !== 'function') {
-           throw new Error('Fungsi deleteData tidak dijumpai di db-helper.js');
-        }
-
-        // 调用 db-helper.js 里的删除方法
-        await deleteData('attendance', actualId);
-        
-        // 从本地数组中移除该条数据并重新渲染
-        globalRecords = globalRecords.filter(r => String(r.id || r.docId) !== String(actualId));
-
-        alert('Rekod berjaya dipadam! (Record successfully deleted!)');
-        
-        renderFilteredData();
-      } catch (error) {
-        console.error('Delete failed:', error);
-        // 显示更详细的报错信息方便排查
-        alert('Ralat semasa memadam: ' + (error.message || 'Sila cuba lagi.'));
-        
-        btnElement.disabled = false;
-        btnElement.textContent = 'Padam Rekod (Delete Record)';
-      }
-    }
-
-    // Bind Filter Events
-=======
     // 绑定筛选事件（实时筛选）
->>>>>>> parent of 432166f (Update admin_semak_kehadiran.html)
+
     searchNameInput.addEventListener('input', renderFilteredData);
+
     filterDateInput.addEventListener('change', renderFilteredData);
+
     filterSesiSelect.addEventListener('change', renderFilteredData);
+
     filterStatusSelect.addEventListener('change', renderFilteredData);
 
-<<<<<<< HEAD
-    // Reset Button Logic
-=======
+
+
     // 重置按钮逻辑
->>>>>>> parent of 432166f (Update admin_semak_kehadiran.html)
+
     resetFilterBtn.addEventListener('click', () => {
+
       searchNameInput.value = '';
+
       filterDateInput.value = '';
+
       filterSesiSelect.value = '';
+
       filterStatusSelect.value = '';
+
       renderFilteredData();
+
     });
 
+
+
     loadAttendanceData();
+
   </script>
+
 </body>
+
 </html>
