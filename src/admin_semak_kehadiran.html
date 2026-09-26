@@ -60,7 +60,7 @@
       background: rgba(0, 0, 0, 0.4);
     }
 
-    /* 新增：搜索与筛选面板玻璃组件 */
+    /* 搜索与筛选面板玻璃组件 */
     .filter-card {
       background: rgba(255, 255, 255, 0.2);
       backdrop-filter: blur(16px);
@@ -190,10 +190,16 @@
       cursor: pointer;
     }
 
-    .save-btn {
-      width: 100%;
-      padding: 12px;
+    /* Kumpulan Butang Tindakan */
+    .action-buttons {
+      display: flex;
+      gap: 10px;
       margin-top: 15px;
+    }
+
+    .save-btn {
+      flex: 1;
+      padding: 12px;
       background: rgba(255, 255, 255, 0.25);
       border: 1px solid rgba(255, 255, 255, 0.5);
       border-radius: 10px;
@@ -208,10 +214,34 @@
       background: rgba(255, 255, 255, 0.4);
     }
 
+    /* Butang Padam Baru */
+    .delete-btn {
+      flex: 1;
+      padding: 12px;
+      background: rgba(255, 77, 77, 0.3); /* Merah sedikit transparent */
+      border: 1px solid rgba(255, 77, 77, 0.6);
+      border-radius: 10px;
+      color: #fff;
+      font-size: 16px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .delete-btn:hover {
+      background: rgba(255, 77, 77, 0.6); /* Merah lebih terang bila di-hover */
+    }
+
     .empty-state {
       text-align: center;
       padding: 40px;
       font-size: 18px;
+    }
+    
+    @media (max-width: 500px) {
+      .action-buttons {
+        flex-direction: column;
+      }
     }
   </style>
 </head>
@@ -223,7 +253,7 @@
       <a href="javascript:history.back()" class="back-btn">Kembali </a>
     </div>
 
-    <!-- 管理员快速查询/筛选栏 -->
+    <!-- Panel Carian/Tapisan Admin -->
     <div class="filter-card">
       <div class="filter-title">🔍 Carian & Tapis Rekod </div>
       <div class="filter-grid">
@@ -259,18 +289,19 @@
       </div>
     </div>
 
-    <!-- 记录显示区域 -->
+    <!-- Ruangan Paparan Rekod -->
     <div id="attendanceContainer">
       <div class="empty-state">Memuatkan data...</div>
     </div>
   </div>
 
   <script type="module">
-    import { readAllData, updateData } from './db-helper.js';
+    // Menambah deleteData pada baris import db-helper.js
+    import { readAllData, updateData, deleteData } from './db-helper.js';
 
     const attendanceContainer = document.getElementById('attendanceContainer');
     
-    // 筛选元素
+    // Elemen tapisan
     const searchNameInput = document.getElementById('searchName');
     const filterDateInput = document.getElementById('filterDate');
     const filterSesiSelect = document.getElementById('filterSesi');
@@ -279,25 +310,25 @@
 
     let globalRecords = [];
 
-    // 加载数据
+    // Memuatkan data
     async function loadAttendanceData() {
       try {
         globalRecords = await readAllData('attendance');
 
         if (!globalRecords || globalRecords.length === 0) {
-          attendanceContainer.innerHTML = '<div class="empty-state glass-card">Tiada rekod kehadiran. (暂无打卡记录)</div>';
+          attendanceContainer.innerHTML = '<div class="empty-state glass-card">Tiada rekod kehadiran buat masa ini.</div>';
           return;
         }
 
         renderFilteredData();
 
       } catch (error) {
-        console.error('Error loading data:', error);
-        attendanceContainer.innerHTML = '<div class="empty-state glass-card">Ralat memuatkan data. (加载失败)</div>';
+        console.error('Ralat memuatkan data:', error);
+        attendanceContainer.innerHTML = '<div class="empty-state glass-card">Ralat memuatkan data. Sila cuba lagi.</div>';
       }
     }
 
-    // 根据筛选条件过滤并渲染卡片
+    // Tapis dan papar kad mengikut kriteria
     function renderFilteredData() {
       const nameQuery = searchNameInput.value.trim().toLowerCase();
       const dateQuery = filterDateInput.value;
@@ -305,23 +336,23 @@
       const statusQuery = filterStatusSelect.value;
 
       const filteredRecords = globalRecords.filter(record => {
-        // 1. 名字搜索
+        // 1. Carian nama
         if (nameQuery) {
           const matchName = record.members && record.members.some(m => m.nama && m.nama.toLowerCase().includes(nameQuery));
           if (!matchName) return false;
         }
 
-        // 2. 日期搜索
+        // 2. Carian tarikh
         if (dateQuery && record.tarikh !== dateQuery) {
           return false;
         }
 
-        // 3. 时段/班次搜索
+        // 3. Carian sesi
         if (sesiQuery && record.sesi !== sesiQuery) {
           return false;
         }
 
-        // 4. 出席状态过滤 (如：只看有缺席人员的记录)
+        // 4. Carian status
         if (statusQuery) {
           if (!record.members) return false;
           if (statusQuery === 'Tidak Datang') {
@@ -384,23 +415,34 @@
           
           <form id="form_${recordId}">
             ${membersHTML}
-            <button type="button" class="save-btn" data-record-id="${recordId}">Simpan Semakan </button>
+            <div class="action-buttons">
+              <button type="button" class="save-btn" data-record-id="${recordId}">Simpan Semakan </button>
+              <button type="button" class="delete-btn" data-record-id="${recordId}">Padam Rekod </button>
+            </div>
           </form>
         `;
 
         attendanceContainer.appendChild(card);
       });
 
-      // 重新绑定保存按钮事件
+      // Bind event butang simpan
       document.querySelectorAll('.save-btn').forEach(button => {
         button.addEventListener('click', async (e) => {
           const recId = e.target.getAttribute('data-record-id');
           await handleSaveStatus(recId, e.target);
         });
       });
+
+      // Bind event butang padam
+      document.querySelectorAll('.delete-btn').forEach(button => {
+        button.addEventListener('click', async (e) => {
+          const recId = e.target.getAttribute('data-record-id');
+          await handleDeleteRecord(recId, e.target);
+        });
+      });
     }
 
-    // 保存审核修改
+    // Fungsi menyimpan semakan
     async function handleSaveStatus(recordId, btnElement) {
       const targetRecord = globalRecords.find(r => (r.id || r.docId) === recordId);
       if (!targetRecord || !targetRecord.members) return;
@@ -422,12 +464,12 @@
           members: updatedMembers
         });
         
-        // 更新本地数据
+        // Kemaskini data setempat (local)
         targetRecord.members = updatedMembers;
 
         alert('Kehadiran berjaya dikemas kini! ');
       } catch (error) {
-        console.error('Save status failed:', error);
+        console.error('Gagal menyimpan:', error);
         alert('Ralat semasa menyimpan. Sila cuba lagi. ');
       } finally {
         btnElement.disabled = false;
@@ -435,13 +477,38 @@
       }
     }
 
-    // 绑定筛选事件（实时筛选）
+    // Fungsi memadam rekod (BARU)
+    async function handleDeleteRecord(recordId, btnElement) {
+      const isConfirmed = confirm('Adakah anda pasti mahu memadam rekod kehadiran ini? Tindakan ini tidak boleh dibatalkan.');
+      if (!isConfirmed) return;
+
+      btnElement.disabled = true;
+      btnElement.textContent = 'Memadam...';
+
+      try {
+        await deleteData('attendance', recordId);
+        
+        // Buang rekod daripada array data setempat
+        globalRecords = globalRecords.filter(r => (r.id || r.docId) !== recordId);
+        
+        alert('Rekod berjaya dipadam! ');
+        renderFilteredData(); // Refresh semula paparan UI
+
+      } catch (error) {
+        console.error('Gagal memadam:', error);
+        alert('Ralat semasa memadam rekod. Sila cuba lagi. ');
+        btnElement.disabled = false;
+        btnElement.textContent = 'Padam Rekod ';
+      }
+    }
+
+    // Bind event tapisan (berlaku secara real-time)
     searchNameInput.addEventListener('input', renderFilteredData);
     filterDateInput.addEventListener('change', renderFilteredData);
     filterSesiSelect.addEventListener('change', renderFilteredData);
     filterStatusSelect.addEventListener('change', renderFilteredData);
 
-    // 重置按钮逻辑
+    // Butang reset tapisan
     resetFilterBtn.addEventListener('click', () => {
       searchNameInput.value = '';
       filterDateInput.value = '';
