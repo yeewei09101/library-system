@@ -158,6 +158,7 @@
         }
 
         // Render UI function separated for caching performance
+        // Render UI function separated for caching performance
         function paparJadual(dataJadual, utamaContainer, standbyContainer) {
             utamaContainer.innerHTML = '';
             standbyContainer.innerHTML = '';
@@ -166,21 +167,34 @@
             dataJadual.forEach(item => {
                 const namaPetugas = item.nama || item.id_pengguna || 'Unknown';
                 const statusVal = item.status || 'Hadir';
+                
+                // 【新增】获取组别数据
+                const kumpVal = item.kump || item.kumpulan || ''; 
+
                 const isTidakHadir = statusVal.toLowerCase().includes('tidak hadir');
                 const isGanti = statusVal.toLowerCase().includes('ganti');
                 const isRecurring = item.is_recurring || item.day_of_week !== undefined; 
                 const jenisTugas = (item.jenis_tugas || 'utama').toLowerCase();
 
+                // 【新增】如果存在组别，生成一个视觉徽章 (Badge)
+                const kumpBadge = kumpVal 
+                    ? `<span class="text-[9px] bg-indigo-500/30 text-indigo-200 border border-indigo-500/40 px-1.5 py-0.5 rounded whitespace-nowrap font-medium">Kump ${kumpVal}</span>` 
+                    : '';
+
                 const cardHTML = `
                     <div class="glass-card rounded-lg p-3 flex justify-between items-center ${isTidakHadir ? 'border-red-500/30 bg-red-900/20' : ''} ${isGanti ? 'border-blue-500/50 bg-blue-900/20 shadow-[0_0_10px_rgba(59,130,246,0.2)]' : ''}">
                         <div class="flex items-center gap-3">
-                            <div class="w-8 h-8 rounded-full ${isGanti ? 'bg-blue-600' : 'bg-gray-600'} flex items-center justify-center font-bold text-white">${namaPetugas.charAt(0).toUpperCase()}</div>
+                            <div class="w-8 h-8 rounded-full ${isGanti ? 'bg-blue-600' : 'bg-gray-600'} flex items-center justify-center font-bold text-white shadow-inner">${namaPetugas.charAt(0).toUpperCase()}</div>
                             <div>
-                                <div class="flex items-center gap-2">
+                                <div class="flex items-center gap-2 flex-wrap mb-1">
                                     <p class="text-sm ${isTidakHadir ? 'text-gray-400 line-through' : 'text-gray-100'}">${namaPetugas}</p>
+                                    
+                                    <!-- 【新增】将组别徽章放在名字旁边 -->
+                                    ${kumpBadge}
+                                    
                                     ${isRecurring ? '<span class="text-[9px] bg-purple-500/30 text-purple-300 border border-purple-500/40 px-1.5 py-0.5 rounded">Mingguan</span>' : ''}
                                 </div>
-                                <p class="text-[10px] ${isTidakHadir ? 'text-red-400' : (isGanti ? 'text-blue-300' : 'text-green-400')}">${statusVal}</p>
+                                <p class="text-[10px] uppercase tracking-wider ${isTidakHadir ? 'text-red-400' : (isGanti ? 'text-blue-300' : 'text-green-400')}">${statusVal}</p>
                             </div>
                         </div>
                     </div>
