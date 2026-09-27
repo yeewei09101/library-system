@@ -101,18 +101,18 @@
     </div>
 
     <script type="module">
-        import { queryData, getData } from './db-helper.js'; // 确保引入了获取所有数据的函数（如all或query）
+        // 【修正】只引入 queryData，不引入不存在的 getData
+        import { queryData } from './db-helper.js';
 
         const JADUAL_COLLECTION = "jadual_tugas";
         let currentSelectedDate = ""; 
         let currentSelectedDayOfWeek = null;
         let dataCache = {}; 
-        let globalJadualData = []; // 用于存放全局拉取回来的排班数据，方便日历卡片直接读取
+        let globalJadualData = []; 
 
         const namaHariBM = ["Ahad", "Isnin", "Selasa", "Rabu", "Khamis", "Jumaat", "Sabtu"];
         const namaBulanBM = ["Jan", "Feb", "Mac", "Apr", "Mei", "Jun", "Jul", "Ogo", "Sep", "Okt", "Nov", "Dis"];
 
-        // 【修改 1】让日历生成支持传入排班数据来显示 Kump
         function janaKalendarBerterusan() {
             const grid = document.getElementById('kalendarGrid');
             grid.innerHTML = ''; 
@@ -134,8 +134,7 @@
                     
                     const isToday = (count === 0);
 
-                    // 【核心】从全局数据中查找这一天对应的组别 (kump)
-                    // 匹配逻辑：匹配 tarikh 等于 isoDate，或者匹配 day_of_week 等于 dayOfWeek 的循环任务
+                    // 匹配这一天对应的组别
                     const matchedItem = globalJadualData.find(item => 
                         item.tarikh === isoDate || Number(item.day_of_week) === dayOfWeek
                     );
@@ -168,7 +167,6 @@
             }
         }
 
-        // Render UI function
         function paparJadual(dataJadual, utamaContainer, standbyContainer) {
             utamaContainer.innerHTML = '';
             standbyContainer.innerHTML = '';
@@ -283,14 +281,12 @@
             }
         };
 
-        // 【修改 2】页面加载时，先获取所有排班数据，再渲染日历，这样日历卡片就能直接显示组别了
+        // 【修正】使用现有的 queryData 来加载所有排班数据（利用字段非空来查出所有）
         window.onload = async () => {
             try {
-                // 假设你的 db-helper.js 有获取整张表所有数据的函数，比如 getData(JADUAL_COLLECTION)
-                // 如果没有，你可以通过 queryData 获取全部，或者用你惯用的方法
-                globalJadualData = await queryData(JADUAL_COLLECTION, 'status', '!=', '__dummy__'); 
+                globalJadualData = await queryData(JADUAL_COLLECTION, 'nama', '!=', '---dummy-not-exist---');
             } catch (e) {
-                console.log("Memuatkan semua data jadual gagal, menggunakan kosong", e);
+                console.log("Memuatkan semua data jadual gagal", e);
                 globalJadualData = [];
             }
 
