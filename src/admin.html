@@ -197,6 +197,7 @@
     }
 
     /* Modal Glassmorphism Style */
+    /* Modal Glassmorphism Style */
     .modal-overlay {
       display: none;
       position: fixed;
@@ -217,12 +218,31 @@
       border-radius: 20px;
       width: 90%;
       max-width: 650px;
-      max-height: 85vh;
+      max-height: 85vh;       /* 限制弹窗最大高度，防止超出屏幕 */
       display: flex;
       flex-direction: column;
       padding: 24px;
       color: #0f172a;
       box-shadow: 0 20px 40px rgba(0, 0, 0, 0.25);
+      
+      /* 【新增】让内容溢出时自动出现垂直滚动条 */
+      overflow-y: auto;       
+    }
+
+    /* 【新增】美化滚动条外观（适配深浅搭配的毛玻璃风格） */
+    .modal-content::-webkit-scrollbar {
+      width: 6px;
+    }
+    .modal-content::-webkit-scrollbar-track {
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 4px;
+    }
+    .modal-content::-webkit-scrollbar-thumb {
+      background: rgba(15, 23, 42, 0.25);
+      border-radius: 4px;
+    }
+    .modal-content::-webkit-scrollbar-thumb:hover {
+      background: rgba(15, 23, 42, 0.45);
     }
 
     .modal-header {
@@ -515,7 +535,7 @@
     // 5. Logout Function
     window.logout = function() {
       sessionStorage.removeItem("user");
-      window.location.href = "logout.html";
+      window.location.href = "index.html";
     }
   </script>
 </body>
