@@ -101,18 +101,18 @@
     </div>
 
     <script type="module">
-        import { queryData } from './db-helper.js';
+        import { queryData, getData } from './db-helper.js'; // 确保引入了获取所有数据的函数（如all或query）
 
         const JADUAL_COLLECTION = "jadual_tugas";
         let currentSelectedDate = ""; 
         let currentSelectedDayOfWeek = null;
-
-        // PERFORMANCE IMPROVEMENT: Client-side cache to load clicked dates instantly
         let dataCache = {}; 
+        let globalJadualData = []; // 用于存放全局拉取回来的排班数据，方便日历卡片直接读取
 
         const namaHariBM = ["Ahad", "Isnin", "Selasa", "Rabu", "Khamis", "Jumaat", "Sabtu"];
         const namaBulanBM = ["Jan", "Feb", "Mac", "Apr", "Mei", "Jun", "Jul", "Ogo", "Sep", "Okt", "Nov", "Dis"];
 
+        // 【修改 1】让日历生成支持传入排班数据来显示 Kump
         function janaKalendarBerterusan() {
             const grid = document.getElementById('kalendarGrid');
             grid.innerHTML = ''; 
@@ -134,10 +134,18 @@
                     
                     const isToday = (count === 0);
 
+                    // 【核心】从全局数据中查找这一天对应的组别 (kump)
+                    // 匹配逻辑：匹配 tarikh 等于 isoDate，或者匹配 day_of_week 等于 dayOfWeek 的循环任务
+                    const matchedItem = globalJadualData.find(item => 
+                        item.tarikh === isoDate || Number(item.day_of_week) === dayOfWeek
+                    );
+                    const kumpVal = matchedItem ? (matchedItem.kump || matchedItem.kumpulan || '') : '';
+                    const kumpDisplay = kumpVal ? `<div class="text-[11px] font-semibold text-indigo-300 mt-1">Kump ${kumpVal}</div>` : '';
+
                     const card = document.createElement('div');
                     card.className = `glass-card rounded-xl p-3 h-28 flex flex-col justify-between cursor-pointer transition hover:bg-white/10 date-card`;
                     card.setAttribute('data-tarikh', isoDate);
-                    card.setAttribute('data-day', dayOfWeek); // Required for weekly query
+                    card.setAttribute('data-day', dayOfWeek);
                     card.onclick = () => pilihTarikh(isoDate, dayOfWeek, card);
 
                     card.innerHTML = `
@@ -145,9 +153,12 @@
                             <div class="text-xl font-bold ${isToday ? 'text-blue-400' : 'text-gray-200'}">${dayNum}</div>
                             <div class="text-[10px] uppercase tracking-wider text-gray-400">${dayName}</div>
                         </div>
-                        <div class="text-xs text-gray-500">${monthName}</div>
-                        <div class="mt-auto text-[10px] text-center rounded-full py-1 ${isToday ? 'bg-blue-500/20 text-blue-300 border border-blue-500/30' : 'bg-white/5 text-gray-400'}">
-                            ${isToday ? 'HARI INI' : 'Klik utk lihat'}
+                        <div>
+                            <div class="text-xs text-gray-500">${monthName}</div>
+                            ${kumpDisplay}
+                        </div>
+                        <div class="mt-auto text-[10px] text-center rounded-full py-0.5 ${isToday ? 'bg-blue-500/20 text-blue-300 border border-blue-500/30' : 'bg-white/5 text-gray-400'}">
+                            ${isToday ? 'HARI INI' : 'Pilih'}
                         </div>
                     `;
                     grid.appendChild(card);
@@ -157,9 +168,7 @@
             }
         }
 
-        // Render UI function separated for caching performance
-        // Render UI function separated for caching performance
-        // Render UI function separated for caching performance
+        // Render UI function
         function paparJadual(dataJadual, utamaContainer, standbyContainer) {
             utamaContainer.innerHTML = '';
             standbyContainer.innerHTML = '';
@@ -168,13 +177,8 @@
             dataJadual.forEach(item => {
                 const namaPetugas = item.nama || item.id_pengguna || 'Unknown';
                 const statusVal = item.status || 'Hadir';
-                
-                // 【提取组别】
                 const kumpVal = item.kump || item.kumpulan || ''; 
-                
-                // 【提取时间/班次】(兼容你数据库中可能使用的命名：masa, waktu, syif)
                 let masaVal = item.masa || item.waktu || item.syif || '';
-                // 如果你的数据库是用 masa_mula 和 masa_tamat 存的，可以加上这行兼容：
                 if (!masaVal && item.masa_mula && item.masa_tamat) {
                     masaVal = `${item.masa_mula} - ${item.masa_tamat}`;
                 }
@@ -184,12 +188,10 @@
                 const isRecurring = item.is_recurring || item.day_of_week !== undefined; 
                 const jenisTugas = (item.jenis_tugas || 'utama').toLowerCase();
 
-                // 组别 Badge
                 const kumpBadge = kumpVal 
                     ? `<span class="text-[9px] bg-indigo-500/30 text-indigo-200 border border-indigo-500/40 px-1.5 py-0.5 rounded whitespace-nowrap font-medium">Kump ${kumpVal}</span>` 
                     : '';
 
-                // 【新增】时间/班次 HTML (如果有时间数据才显示)
                 const masaHTML = masaVal 
                     ? `<p class="text-[11px] text-gray-300 flex items-center gap-1.5 mt-1 mb-0.5"><span class="text-blue-400">🕒</span> ${masaVal}</p>` 
                     : '';
@@ -204,10 +206,7 @@
                                     ${kumpBadge}
                                     ${isRecurring ? '<span class="text-[9px] bg-purple-500/30 text-purple-300 border border-purple-500/40 px-1.5 py-0.5 rounded">Mingguan</span>' : ''}
                                 </div>
-                                
-                                <!-- 【新增】在这里渲染时间 -->
                                 ${masaHTML}
-                                
                                 <p class="text-[10px] uppercase tracking-wider mt-1 ${isTidakHadir ? 'text-red-400' : (isGanti ? 'text-blue-300' : 'text-green-400')}">${statusVal}</p>
                             </div>
                         </div>
@@ -243,27 +242,22 @@
             
             const utamaContainer = document.getElementById('senaraiUtamaContainer');
             const standbyContainer = document.getElementById('senaraiStandbyContainer');
-            
             const cacheKey = `${tarikh}_${dayOfWeek}`;
 
-            // 1. Instantly display data from cache if it exists
             if (dataCache[cacheKey]) {
                 paparJadual(dataCache[cacheKey], utamaContainer, standbyContainer);
             } else {
-                utamaContainer.innerHTML = '<p class="text-xs text-gray-400 animate-pulse">Memuatkan data dari pangkalan data...</p>';
+                utamaContainer.innerHTML = '<p class="text-xs text-gray-400 animate-pulse">Memuatkan data...</p>';
                 standbyContainer.innerHTML = '<p class="text-xs text-gray-400 animate-pulse">Memuatkan data...</p>';
             }
 
-            // 2. Fetch fresh data in the background (Stale-while-revalidate)
             try {
-                // Fetch data from Firebase concurrently
                 const [dataTarikh, dataHariNum, dataHariStr] = await Promise.all([
                     queryData(JADUAL_COLLECTION, 'tarikh', '==', tarikh),
                     queryData(JADUAL_COLLECTION, 'day_of_week', '==', currentSelectedDayOfWeek),
                     queryData(JADUAL_COLLECTION, 'day_of_week', '==', String(currentSelectedDayOfWeek))
                 ]);
 
-                // Merge and remove duplicates using Map
                 const mapJadual = new Map();
                 [...dataHariNum, ...dataHariStr, ...dataTarikh].forEach(item => {
                     if (item && item.id) {
@@ -272,19 +266,11 @@
                 });
 
                 const dataJadual = Array.from(mapJadual.values());
-                
-                // Update the cache with fresh data
                 dataCache[cacheKey] = dataJadual;
-
-                // Re-render the UI quietly with the latest data
                 paparJadual(dataJadual, utamaContainer, standbyContainer);
 
             } catch (error) {
                 console.error("Gagal dapatkan data db:", error);
-                if (!dataCache[cacheKey]) {
-                    utamaContainer.innerHTML = '<p class="text-xs text-red-400">Ralat sambungan database.</p>';
-                    standbyContainer.innerHTML = '<p class="text-xs text-red-400">Ralat sambungan database.</p>';
-                }
             }
         };
 
@@ -297,7 +283,17 @@
             }
         };
 
-        window.onload = () => {
+        // 【修改 2】页面加载时，先获取所有排班数据，再渲染日历，这样日历卡片就能直接显示组别了
+        window.onload = async () => {
+            try {
+                // 假设你的 db-helper.js 有获取整张表所有数据的函数，比如 getData(JADUAL_COLLECTION)
+                // 如果没有，你可以通过 queryData 获取全部，或者用你惯用的方法
+                globalJadualData = await queryData(JADUAL_COLLECTION, 'status', '!=', '__dummy__'); 
+            } catch (e) {
+                console.log("Memuatkan semua data jadual gagal, menggunakan kosong", e);
+                globalJadualData = [];
+            }
+
             janaKalendarBerterusan();
             window.muatTurunJadualHariIni();
         };
