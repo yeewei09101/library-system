@@ -123,9 +123,19 @@
 
             document.getElementById('bulanSemasa').innerText = `Bermula: ${currentDate.getDate()} ${namaBulanBM[currentDate.getMonth()]} ${currentDate.getFullYear()}`;
 
+            // 【核心逻辑】以排班的起始日期（或第一个有效工作日）作为基准周
+            // 假设我们总共有 2 个组交替：['1', '2']
+            const senaraiKumpulan = ['1', '2']; 
+            
+            // 找到基准的第一个星期一作为第 1 周的起点（或者用当前循环的第一天算起）
+            let baseDate = new Date();
+            // 调整到最近的星期一或者直接用当前日期算周数
+            let firstWeekNumber = Math.floor(baseDate.getTime() / (7 * 24 * 60 * 60 * 1000));
+
             while (count < jumlahHariDipapar) {
                 const dayOfWeek = currentDate.getDay(); 
                 
+                // 只显示星期一到星期五 (1 到 5)
                 if (dayOfWeek !== 0 && dayOfWeek !== 6) {
                     const isoDate = currentDate.toLocaleDateString('en-CA'); 
                     const dayName = namaHariBM[dayOfWeek];
@@ -134,27 +144,24 @@
                     
                     const isToday = (count === 0);
 
-                    // 匹配这一天对应的组别
-                    // 【修改这里】查找当天所有匹配的记录，并提取出所有不同的组别 (kump)
-                    const matchedItems = globalJadualData.filter(item => 
-                        item.tarikh === isoDate || Number(item.day_of_week) === dayOfWeek
-                    );
+                    // 【核心计算】根据当前日期的毫秒数计算是第几个星期，从而轮流分配组别
+                    // 每一周切换一次组别
+                    const currentWeekNumber = Math.floor(currentDate.getTime() / (7 * 24 * 60 * 60 * 1000));
+                    const weekDiff = Math.abs(currentWeekNumber - firstWeekNumber);
                     
-                    // 提取所有不重复的组别 (例如 ['1', '2'])
-                    const uniqueKumps = [...new Set(matchedItems.map(item => item.kump || item.kumpulan).filter(Boolean))];
+                    // 用取模运算实现循环轮流：第0周->索引0(Kump 1)，第1周->索引1(Kump 2)，第2周->索引0(Kump 1)...
+                    const kumpIndex = weekDiff % senaraiKumpulan.length;
+                    const kumpVal = senaraiKumpulan[kumpIndex];
                     
-                    // 生成多个组别的 Badge HTML
-                    let kumpDisplay = '';
-                    if (uniqueKumps.length > 0) {
-                        kumpDisplay = `<div class="text-[10px] font-semibold text-indigo-300 mt-1 flex flex-wrap gap-1">` + 
-                            uniqueKumps.map(k => `<span class="bg-indigo-500/30 px-1.5 py-0.2 rounded">Kump ${k}</span>`).join('') + 
-                            `</div>`;
-                    }
+                    const kumpDisplay = `<div class="text-[11px] font-semibold text-indigo-300 mt-1">Kump ${kumpVal}</div>`;
+
                     const card = document.createElement('div');
                     card.className = `glass-card rounded-xl p-3 h-28 flex flex-col justify-between cursor-pointer transition hover:bg-white/10 date-card`;
                     card.setAttribute('data-tarikh', isoDate);
                     card.setAttribute('data-day', dayOfWeek);
-                    card.onclick = () => pilihTarikh(isoDate, dayOfWeek, card);
+                    
+                    // 点击时，我们可以把计算出来的这个礼拜对应的组别或日期传进去查数据库
+                    card.onclick = () => pilihTarikh(isoDate, dayOfWeek, kumpVal, card);
 
                     card.innerHTML = `
                         <div class="flex justify-between items-start">
