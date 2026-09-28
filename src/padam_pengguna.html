@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Padam Pengguna</title>
+    <title>Pengurusan Pengguna</title>
     <style>
         /* 全局背景：雾面玻璃效果的基础 */
         body {
@@ -74,41 +74,81 @@
         }
 
         .container-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
             margin-bottom: 20px;
-            text-align: center;
         }
         
-        .container-header h2 {
-            margin: 0;
-            letter-spacing: 1px;
-            text-shadow: 1px 1px 2px rgba(0,0,0,0.2);
+        .btn-add {
+            background: rgba(76, 175, 80, 0.8);
+            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.4);
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
         }
 
         /* 表格设计 */
         table { width: 100%; border-collapse: collapse; }
         th, td { padding: 12px; text-align: left; border-bottom: 1px solid rgba(255, 255, 255, 0.2); }
-        th { background-color: rgba(255, 255, 255, 0.1); font-weight: 600; }
-        tr:hover { background-color: rgba(255, 255, 255, 0.08); transition: background-color 0.3s; }
+        th { background-color: rgba(255, 255, 255, 0.1); }
+        tr:hover { background-color: rgba(255, 255, 255, 0.08); }
 
         .btn-delete {
             background: rgba(255, 77, 77, 0.85);
             color: white;
-            border: 1px solid rgba(255, 255, 255, 0.3);
-            padding: 6px 16px;
+            border: none;
+            padding: 6px 12px;
             border-radius: 6px;
             cursor: pointer;
-            font-weight: bold;
-            transition: all 0.3s;
         }
-        .btn-delete:hover {
-            background: rgba(255, 50, 50, 1);
-            transform: translateY(-2px);
+
+        /* 弹窗设计 (Modal) */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(5px);
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
         }
-        .btn-delete:disabled {
-            background: rgba(150, 150, 150, 0.5);
-            cursor: not-allowed;
-            transform: none;
+
+        .glass-modal {
+            background: rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(15px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 15px;
+            padding: 30px;
+            width: 400px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.4);
         }
+
+        .glass-modal h3 { margin-top: 0; }
+        
+        .form-group { margin-bottom: 15px; }
+        .form-group label { display: block; margin-bottom: 5px; font-size: 0.9em; }
+        .form-group input, .form-group select {
+            width: 100%;
+            padding: 10px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 6px;
+            color: white;
+            box-sizing: border-box;
+        }
+        .form-group input::placeholder { color: rgba(255,255,255,0.6); }
+        .form-group input:focus, .form-group select:focus { outline: none; border-color: white; }
+        
+        /* 修复 Select 内选项在部分浏览器中字看不见的问题 */
+        .form-group select option { color: black; }
+
+        .modal-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px; }
+        .btn-cancel { background: rgba(150, 150, 150, 0.5); border: none; color: white; padding: 8px 15px; border-radius: 6px; cursor: pointer;}
+        .btn-submit { background: #4CAF50; border: none; color: white; padding: 8px 15px; border-radius: 6px; cursor: pointer;}
     </style>
 </head>
 <body>
@@ -119,13 +159,21 @@
             <div class="welcome">Selamat Datang, <span id="username">Admin</span></div>
             <div class="clock" id="clockDisplay">Memuatkan masa...</div>
         </div>
-        
+        <div class="nav-right">
+            <span>Saiz Teks:</span>
+            <button onclick="window.adjustZoom(1)">A+</button>
+            <button onclick="window.adjustZoom(-1)">A-</button>
+            <button onclick="window.resetZoom()">Reset</button>
+            <button class="btn-logout" onclick="window.logout()">Log Keluar</button>
+        </div>
+    </nav>
 
-    <!-- 主体：列表与删除区域 -->
+    <!-- 主体：列表区域 -->
     <div class="main-content">
         <div class="glass-container">
             <div class="container-header">
-                <h2>Senarai Pengguna (Padam)</h2>
+                <h2>Senarai Pengguna</h2>
+                <button class="btn-add" onclick="window.openAddUserModal()">+ Tambah Pengguna</button>
             </div>
             
             <table>
@@ -138,21 +186,63 @@
                     </tr>
                 </thead>
                 <tbody id="userTableBody">
-                    <tr><td colspan="4" style="text-align:center;">Memuatkan data dari pangkalan data...</td></tr>
+                    <tr><td colspan="4" style="text-align:center;">Memuatkan data...</td></tr>
                 </tbody>
             </table>
         </div>
     </div>
 
+    <!-- 弹窗：添加用户 -->
+    <div id="addUserModal" class="modal-overlay">
+        <div class="glass-modal">
+            <h3>Tambah Pengguna Baru</h3>
+            <form id="addUserForm">
+                <div class="form-group">
+                    <label>ID Pengguna</label>
+                    <input type="text" id="newUserId" required placeholder="Contoh: P001">
+                </div>
+                <div class="form-group">
+                    <label>Nama Penuh</label>
+                    <input type="text" id="newUserFullName" required placeholder="Nama penuh">
+                </div>
+                <div class="form-group">
+                    <label>Kata Laluan</label>
+                    <input type="password" id="newUserPassword" required placeholder="******">
+                </div>
+                <div class="form-group">
+                    <label>Sesi</label>
+                    <input type="text" id="newUserSession" required placeholder="Contoh: 2024/2025">
+                </div>
+                <div class="form-group">
+                    <label>Peranan (Role)</label>
+                    <select id="newUserRole" onchange="window.toggleAhliInput()">
+                        <option value="pengguna">Pengguna</option>
+                        <option value="pengawas">Pengawas</option>
+                        <option value="admin">Admin</option>
+                    </select>
+                </div>
+                <div class="form-group" id="groupJumlahAhli" style="display: none;">
+                    <label>Jumlah Ahli Kumpulan</label>
+                    <input type="number" id="newUserJumlahAhli" min="1" value="1">
+                </div>
+                
+                <div class="modal-actions">
+                    <button type="button" class="btn-cancel" onclick="window.closeAddUserModal()">Batal</button>
+                    <button type="submit" class="btn-submit">Simpan</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <script type="module">
-        // 只引入读取和删除的功能 (确保路径正确，比如 './db_helper.js' 或 './firebase.js')
-        import { readAllData, deleteData } from './db_helper.js';
+        // 导入 db_helper.js 里的功能 (注意路径，这里我统一用 './db_helper.js')
+        import { insertData, readAllData, deleteData } from './db_helper.js';
 
         // ==========================
-        // 1. Session & Navigation UI 
+        // 1. Session & Navigation UI (你的代码)
         // ==========================
         
-        // 获取当前登录用户
+        // 尝试从 sessionStorage 获取登录信息，如果没有则给默认值
         const userStr = sessionStorage.getItem("user");
         const currentUser = userStr ? JSON.parse(userStr) : { id_pengguna: "Admin Temp", nama: "Admin" };
         
@@ -197,16 +287,16 @@
         // 2. Data Table: Load & Delete 
         // ==========================
         const tbody = document.getElementById('userTableBody');
-        const TARGET_COLLECTION = "pengguna"; // 设定你要读取的 Firebase 集合，比如 "users" 或 "pengguna"
         
-        // 读取数据并生成列表
+        // 读取功能：我们默认读取 users 集合（根据你的代码，新增时通常加进 users）
         async function loadUsers() {
             try {
-                const users = await readAllData(TARGET_COLLECTION, 'createdAt', 'desc');
+                // 读取 users 集合
+                const users = await readAllData("users", 'createdAt', 'desc');
                 tbody.innerHTML = ''; 
 
                 if (users.length === 0) {
-                    tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;">Tiada pengguna dijumpai.</td></tr>';
+                    tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;">Tiada pengguna dijumpai dalam koleksi "users".</td></tr>';
                     return;
                 }
 
@@ -227,32 +317,31 @@
                     tbody.appendChild(tr);
                 });
 
-                // 为所有生成的“Padam”按钮绑定点击事件
+                // 绑定删除按钮事件
                 document.querySelectorAll('.btn-delete').forEach(button => {
                     button.addEventListener('click', handleDelete);
                 });
 
             } catch (error) {
                 console.error("Ralat memuatkan pengguna:", error);
-                tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; color:#ffb3b3;">Gagal memuatkan data. Sila semak console.</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; color:#ffb3b3;">Gagal memuatkan data.</td></tr>';
             }
         }
 
-        // 处理删除逻辑
+        // 删除功能
         async function handleDelete(event) {
             const button = event.target;
-            const docId = button.getAttribute('data-docid'); // 获取 Firebase 的 Document ID
+            const docId = button.getAttribute('data-docid'); // Firebase Document ID
             
-            const confirmDelete = confirm("Adakah anda pasti mahu memadam pengguna ini? Tindakan ini tidak boleh dibatalkan.");
+            const confirmDelete = confirm("Adakah anda pasti mahu memadam pengguna ini?");
             if (confirmDelete) {
                 try {
                     button.innerText = "Memadam...";
                     button.disabled = true;
 
-                    // 执行删除
-                    await deleteData(TARGET_COLLECTION, docId);
+                    await deleteData("users", docId);
                     
-                    // 删除成功后自动重新加载表格刷新画面
+                    // 核心配合点：删除成功后自动刷新表格
                     loadUsers();
                 } catch (error) {
                     console.error("Ralat memadam:", error);
@@ -263,7 +352,78 @@
             }
         }
 
-        // 页面加载完毕后自动运行
+        // ==========================
+        // 3. Modal: Add User (你的代码)
+        // ==========================
+        window.openAddUserModal = function() {
+            document.getElementById('addUserModal').style.display = 'flex';
+            window.toggleAhliInput();
+        }
+
+        window.closeAddUserModal = function() {
+            document.getElementById('addUserModal').style.display = 'none';
+            document.getElementById('addUserForm').reset();
+        }
+
+        window.toggleAhliInput = function() {
+            const role = document.getElementById('newUserRole').value;
+            const groupJumlahAhli = document.getElementById('groupJumlahAhli');
+            if (role === "pengawas") {
+                groupJumlahAhli.style.display = "block";
+            } else {
+                groupJumlahAhli.style.display = "none";
+            }
+        }
+
+        document.getElementById('addUserForm').addEventListener('submit', async function(event) {
+            event.preventDefault();
+
+            const submitBtn = document.querySelector('.btn-submit');
+            submitBtn.innerText = "Menyimpan...";
+            submitBtn.disabled = true;
+
+            const id_pengguna = document.getElementById('newUserId').value.trim();
+            const nama = document.getElementById('newUserFullName').value.trim();
+            const password = document.getElementById('newUserPassword').value.trim();
+            const role = document.getElementById('newUserRole').value;
+            const sesi = document.getElementById('newUserSession').value;
+            const jumlah_ahli = role === "pengawas" ? parseInt(document.getElementById('newUserJumlahAhli').value) || 1 : 0;
+            
+            try {
+                // 依据你的代码规则判断集合
+                const targetCollection = (role === "admin") ? "admin" : "users";
+                
+                const dataToSave = {
+                    id_pengguna: id_pengguna,
+                    nama: nama,
+                    password: password,
+                    role: role,
+                    sesi: sesi,
+                    ...(role === "admin" ? { id_admin: id_pengguna } : { jumlah_ahli: jumlah_ahli })
+                };
+
+                await insertData(targetCollection, dataToSave);
+
+                alert(`Berjaya! Pengguna "${nama}" telah ditambah.`);
+                window.closeAddUserModal();
+                
+                // 核心配合点：如果新增的不是 admin 而是 user，自动刷新底部的表格
+                if(targetCollection === "users") {
+                    loadUsers();
+                }
+
+            } catch (error) {
+                console.error("Failed to add user:", error);
+                alert("Gagal menambah pengguna. Sila cuba lagi.");
+            } finally {
+                submitBtn.innerText = "Simpan";
+                submitBtn.disabled = false;
+            }
+        });
+
+        // ==========================
+        // 4. Initialize
+        // ==========================
         window.addEventListener('DOMContentLoaded', loadUsers);
     </script>
 </body>
