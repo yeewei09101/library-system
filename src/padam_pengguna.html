@@ -5,156 +5,230 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Padam Pengguna</title>
     <style>
-        /* 全局背景：使用渐变色彩来突显雾面玻璃效果 */
+        /* 全局背景：雾面玻璃效果的基础 */
         body {
             margin: 0;
             padding: 0;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             min-height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
             color: #ffffff;
+            transition: font-size 0.3s ease;
         }
 
-        /* 雾面玻璃容器 */
+        /* 顶部导航栏 (Header) */
+        .glass-nav {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+            padding: 15px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+
+        .nav-left .welcome {
+            font-size: 1.2em;
+            font-weight: bold;
+        }
+        .nav-left .clock {
+            font-size: 0.9em;
+            color: rgba(255, 255, 255, 0.8);
+            margin-top: 5px;
+        }
+
+        .nav-right button {
+            background: rgba(255, 255, 255, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.4);
+            color: white;
+            padding: 8px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            margin-left: 8px;
+            transition: all 0.3s;
+        }
+        .nav-right button:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+        .btn-logout { background: rgba(255, 77, 77, 0.6) !important; }
+
+        /* 主体内容容器 */
+        .main-content {
+            padding: 40px 20px;
+            display: flex;
+            justify-content: center;
+        }
+
         .glass-container {
             background: rgba(255, 255, 255, 0.15);
             backdrop-filter: blur(12px);
             -webkit-backdrop-filter: blur(12px);
             border-radius: 20px;
             border: 1px solid rgba(255, 255, 255, 0.3);
-            padding: 40px;
-            width: 90%;
-            max-width: 900px;
+            padding: 30px;
+            width: 100%;
+            max-width: 1000px;
             box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
-            overflow-x: auto;
         }
 
-        h2 {
+        .container-header {
+            margin-bottom: 20px;
             text-align: center;
-            margin-top: 0;
-            margin-bottom: 25px;
-            font-weight: 600;
-            letter-spacing: 1.5px;
+        }
+        
+        .container-header h2 {
+            margin: 0;
+            letter-spacing: 1px;
             text-shadow: 1px 1px 2px rgba(0,0,0,0.2);
         }
 
         /* 表格设计 */
-        table {
-            width: 100%;
-            border-collapse: collapse;
-        }
+        table { width: 100%; border-collapse: collapse; }
+        th, td { padding: 12px; text-align: left; border-bottom: 1px solid rgba(255, 255, 255, 0.2); }
+        th { background-color: rgba(255, 255, 255, 0.1); font-weight: 600; }
+        tr:hover { background-color: rgba(255, 255, 255, 0.08); transition: background-color 0.3s; }
 
-        th, td {
-            padding: 15px;
-            text-align: left;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
-        }
-
-        th {
-            background-color: rgba(255, 255, 255, 0.1);
-            font-weight: 600;
-            letter-spacing: 1px;
-        }
-
-        tr:hover {
-            background-color: rgba(255, 255, 255, 0.08);
-            transition: background-color 0.3s;
-        }
-
-        /* 删除按钮设计 */
         .btn-delete {
             background: rgba(255, 77, 77, 0.85);
             color: white;
             border: 1px solid rgba(255, 255, 255, 0.3);
-            padding: 8px 16px;
-            border-radius: 8px;
+            padding: 6px 16px;
+            border-radius: 6px;
             cursor: pointer;
             font-weight: bold;
-            transition: all 0.3s ease;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            transition: all 0.3s;
         }
-
         .btn-delete:hover {
             background: rgba(255, 50, 50, 1);
             transform: translateY(-2px);
-            box-shadow: 0 6px 12px rgba(0,0,0,0.2);
         }
-
         .btn-delete:disabled {
             background: rgba(150, 150, 150, 0.5);
             cursor: not-allowed;
             transform: none;
         }
-
-        .message-row {
-            text-align: center;
-            padding: 20px;
-            font-style: italic;
-            color: rgba(255, 255, 255, 0.8);
-        }
     </style>
 </head>
 <body>
 
-    <div class="glass-container">
-        <h2>Senarai Pengguna (Padam)</h2>
-        
-        <table>
-            <thead>
-                <tr>
-                    <th>Nama</th>
-                    <th>Emel</th>
-                    <th>Peranan (Role)</th>
-                    <th>Tindakan</th>
-                </tr>
-            </thead>
-            <tbody id="userTableBody">
-                <tr>
-                    <td colspan="4" class="message-row">Memuatkan data dari pangkalan data...</td>
-                </tr>
-            </tbody>
-        </table>
+    <!-- 顶部导航栏 -->
+    <nav class="glass-nav">
+        <div class="nav-left">
+            <div class="welcome">Selamat Datang, <span id="username">Admin</span></div>
+            <div class="clock" id="clockDisplay">Memuatkan masa...</div>
+        </div>
+        <div class="nav-right">
+            <span>Saiz Teks:</span>
+            <button onclick="window.adjustZoom(1)">A+</button>
+            <button onclick="window.adjustZoom(-1)">A-</button>
+            <button onclick="window.resetZoom()">Reset</button>
+            <button class="btn-logout" onclick="window.logout()">Log Keluar</button>
+        </div>
+    </nav>
+
+    <!-- 主体：列表与删除区域 -->
+    <div class="main-content">
+        <div class="glass-container">
+            <div class="container-header">
+                <h2>Senarai Pengguna (Padam)</h2>
+            </div>
+            
+            <table>
+                <thead>
+                    <tr>
+                        <th>ID Pengguna</th>
+                        <th>Nama</th>
+                        <th>Peranan (Role)</th>
+                        <th>Tindakan</th>
+                    </tr>
+                </thead>
+                <tbody id="userTableBody">
+                    <tr><td colspan="4" style="text-align:center;">Memuatkan data dari pangkalan data...</td></tr>
+                </tbody>
+            </table>
+        </div>
     </div>
 
-    <!-- 必须使用 type="module" 因为我们使用了 import -->
     <script type="module">
-        // 引入你的 db_helper.js 里的读取和删除功能
+        // 只引入读取和删除的功能 (确保路径正确，比如 './db_helper.js' 或 './firebase.js')
         import { readAllData, deleteData } from './db_helper.js';
 
-        // 设定你要读取/操作的 Firebase Collection 名称 (依据你数据库的设定修改)
-        const COLLECTION_NAME = 'pengguna'; 
-        const tbody = document.getElementById('userTableBody');
+        // ==========================
+        // 1. Session & Navigation UI 
+        // ==========================
+        
+        // 获取当前登录用户
+        const userStr = sessionStorage.getItem("user");
+        const currentUser = userStr ? JSON.parse(userStr) : { id_pengguna: "Admin Temp", nama: "Admin" };
+        
+        document.getElementById('username').textContent = currentUser.id_pengguna || currentUser.nama || "Admin";
 
-        // 1. 获取并显示用户列表的函数
+        // 实时时钟
+        function updateClock() {
+            const now = new Date();
+            const year = now.getFullYear();
+            const month = String(now.getMonth() + 1).padStart(2, '0');
+            const day = String(now.getDate()).padStart(2, '0');
+            const hours = String(now.getHours()).padStart(2, '0');
+            const minutes = String(now.getMinutes()).padStart(2, '0');
+            const seconds = String(now.getSeconds()).padStart(2, '0');
+
+            document.getElementById('clockDisplay').textContent = 
+                `Tarikh: ${year}-${month}-${day} | Masa: ${hours}:${minutes}:${seconds}`;
+        }
+        setInterval(updateClock, 1000);
+        updateClock();
+
+        // 辅助功能：字体缩放
+        let currentFontSize = 100;
+        window.adjustZoom = function(delta) {
+            currentFontSize += delta * 5;
+            if (currentFontSize < 85) currentFontSize = 85;
+            if (currentFontSize > 130) currentFontSize = 130;
+            document.body.style.fontSize = currentFontSize + "%";
+        }
+        window.resetZoom = function() {
+            currentFontSize = 100;
+            document.body.style.fontSize = "100%";
+        }
+
+        // 登出功能
+        window.logout = function() {
+            sessionStorage.removeItem("user");
+            window.location.href = "index.html";
+        }
+
+        // ==========================
+        // 2. Data Table: Load & Delete 
+        // ==========================
+        const tbody = document.getElementById('userTableBody');
+        const TARGET_COLLECTION = "users"; // 设定你要读取的 Firebase 集合，比如 "users" 或 "pengguna"
+        
+        // 读取数据并生成列表
         async function loadUsers() {
             try {
-                // 调用 db_helper 的 readAllData
-                const users = await readAllData(COLLECTION_NAME, 'createdAt', 'desc');
-                tbody.innerHTML = ''; // 清空"加载中"的文字
+                const users = await readAllData(TARGET_COLLECTION, 'createdAt', 'desc');
+                tbody.innerHTML = ''; 
 
                 if (users.length === 0) {
-                    tbody.innerHTML = '<tr><td colspan="4" class="message-row">Tiada pengguna dijumpai.</td></tr>';
+                    tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;">Tiada pengguna dijumpai.</td></tr>';
                     return;
                 }
 
-                // 循环渲染用户数据
                 users.forEach(user => {
                     const tr = document.createElement('tr');
-                    
-                    // 兼容多种常见的栏位命名 (nama/name, emel/email, peranan/role)
+                    const id = user.id_pengguna || '-';
                     const nama = user.nama || user.name || '-';
-                    const emel = user.emel || user.email || '-';
-                    const peranan = user.peranan || user.role || '-';
+                    const peranan = user.role || user.peranan || '-';
 
                     tr.innerHTML = `
+                        <td>${id}</td>
                         <td>${nama}</td>
-                        <td>${emel}</td>
-                        <td>${peranan}</td>
+                        <td style="text-transform: capitalize;">${peranan}</td>
                         <td>
-                            <button class="btn-delete" data-id="${user.id}">Padam</button>
+                            <button class="btn-delete" data-docid="${user.id}">Padam</button>
                         </td>
                     `;
                     tbody.appendChild(tr);
@@ -167,42 +241,36 @@
 
             } catch (error) {
                 console.error("Ralat memuatkan pengguna:", error);
-                tbody.innerHTML = '<tr><td colspan="4" class="message-row" style="color:#ffb3b3;">Gagal memuatkan data. Sila semak console.</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; color:#ffb3b3;">Gagal memuatkan data. Sila semak console.</td></tr>';
             }
         }
 
-        // 2. 处理删除逻辑的函数
+        // 处理删除逻辑
         async function handleDelete(event) {
             const button = event.target;
-            const userId = button.getAttribute('data-id');
+            const docId = button.getAttribute('data-docid'); // 获取 Firebase 的 Document ID
             
-            // 弹出原生的二次确认视窗
             const confirmDelete = confirm("Adakah anda pasti mahu memadam pengguna ini? Tindakan ini tidak boleh dibatalkan.");
-
             if (confirmDelete) {
                 try {
-                    // 改变按钮状态，防止重复点击
                     button.innerText = "Memadam...";
                     button.disabled = true;
 
-                    // 调用 db_helper 的 deleteData
-                    await deleteData(COLLECTION_NAME, userId);
-                    alert("Pengguna berjaya dipadam!");
+                    // 执行删除
+                    await deleteData(TARGET_COLLECTION, docId);
                     
-                    // 删除成功后，重新加载表格刷新画面
+                    // 删除成功后自动重新加载表格刷新画面
                     loadUsers();
                 } catch (error) {
-                    console.error("Ralat memadam pengguna:", error);
+                    console.error("Ralat memadam:", error);
                     alert("Gagal memadam pengguna.");
-                    
-                    // 如果失败，恢复按钮状态
                     button.innerText = "Padam";
                     button.disabled = false;
                 }
             }
         }
 
-        // 3. 页面加载完毕后自动运行
+        // 页面加载完毕后自动运行
         window.addEventListener('DOMContentLoaded', loadUsers);
     </script>
 </body>
