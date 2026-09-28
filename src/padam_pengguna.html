@@ -3,427 +3,206 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pengurusan Pengguna</title>
+    <title>Padam Pengguna</title>
     <style>
-        /* 全局背景：雾面玻璃效果的基础 */
+        /* 全局背景：使用渐变色彩来突显雾面玻璃效果 */
         body {
             margin: 0;
             padding: 0;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             min-height: 100vh;
-            color: #ffffff;
-            transition: font-size 0.3s ease;
-        }
-
-        /* 顶部导航栏 (Header) */
-        .glass-nav {
-            background: rgba(255, 255, 255, 0.1);
-            backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
-            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
-            padding: 15px 30px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-        }
-
-        .nav-left .welcome {
-            font-size: 1.2em;
-            font-weight: bold;
-        }
-        .nav-left .clock {
-            font-size: 0.9em;
-            color: rgba(255, 255, 255, 0.8);
-            margin-top: 5px;
-        }
-
-        .nav-right button {
-            background: rgba(255, 255, 255, 0.2);
-            border: 1px solid rgba(255, 255, 255, 0.4);
-            color: white;
-            padding: 8px 12px;
-            border-radius: 6px;
-            cursor: pointer;
-            margin-left: 8px;
-            transition: all 0.3s;
-        }
-        .nav-right button:hover {
-            background: rgba(255, 255, 255, 0.3);
-        }
-        .btn-logout { background: rgba(255, 77, 77, 0.6) !important; }
-
-        /* 主体内容容器 */
-        .main-content {
-            padding: 40px 20px;
             display: flex;
             justify-content: center;
+            align-items: center;
+            color: #ffffff;
         }
 
+        /* 雾面玻璃容器 */
         .glass-container {
             background: rgba(255, 255, 255, 0.15);
             backdrop-filter: blur(12px);
             -webkit-backdrop-filter: blur(12px);
             border-radius: 20px;
             border: 1px solid rgba(255, 255, 255, 0.3);
-            padding: 30px;
-            width: 100%;
-            max-width: 1000px;
+            padding: 40px;
+            width: 90%;
+            max-width: 900px;
             box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+            overflow-x: auto;
         }
 
-        .container-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 20px;
-        }
-        
-        .btn-add {
-            background: rgba(76, 175, 80, 0.8);
-            color: white;
-            border: 1px solid rgba(255, 255, 255, 0.4);
-            padding: 10px 20px;
-            border-radius: 8px;
-            cursor: pointer;
-            font-weight: bold;
+        h2 {
+            text-align: center;
+            margin-top: 0;
+            margin-bottom: 25px;
+            font-weight: 600;
+            letter-spacing: 1.5px;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.2);
         }
 
         /* 表格设计 */
-        table { width: 100%; border-collapse: collapse; }
-        th, td { padding: 12px; text-align: left; border-bottom: 1px solid rgba(255, 255, 255, 0.2); }
-        th { background-color: rgba(255, 255, 255, 0.1); }
-        tr:hover { background-color: rgba(255, 255, 255, 0.08); }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
 
+        th, td {
+            padding: 15px;
+            text-align: left;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        th {
+            background-color: rgba(255, 255, 255, 0.1);
+            font-weight: 600;
+            letter-spacing: 1px;
+        }
+
+        tr:hover {
+            background-color: rgba(255, 255, 255, 0.08);
+            transition: background-color 0.3s;
+        }
+
+        /* 删除按钮设计 */
         .btn-delete {
             background: rgba(255, 77, 77, 0.85);
             color: white;
-            border: none;
-            padding: 6px 12px;
-            border-radius: 6px;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            padding: 8px 16px;
+            border-radius: 8px;
             cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
         }
 
-        /* 弹窗设计 (Modal) */
-        .modal-overlay {
-            display: none;
-            position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0, 0, 0, 0.5);
-            backdrop-filter: blur(5px);
-            justify-content: center;
-            align-items: center;
-            z-index: 1000;
+        .btn-delete:hover {
+            background: rgba(255, 50, 50, 1);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(0,0,0,0.2);
         }
 
-        .glass-modal {
-            background: rgba(255, 255, 255, 0.2);
-            backdrop-filter: blur(15px);
-            border: 1px solid rgba(255, 255, 255, 0.3);
-            border-radius: 15px;
-            padding: 30px;
-            width: 400px;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.4);
+        .btn-delete:disabled {
+            background: rgba(150, 150, 150, 0.5);
+            cursor: not-allowed;
+            transform: none;
         }
 
-        .glass-modal h3 { margin-top: 0; }
-        
-        .form-group { margin-bottom: 15px; }
-        .form-group label { display: block; margin-bottom: 5px; font-size: 0.9em; }
-        .form-group input, .form-group select {
-            width: 100%;
-            padding: 10px;
-            background: rgba(255, 255, 255, 0.1);
-            border: 1px solid rgba(255, 255, 255, 0.3);
-            border-radius: 6px;
-            color: white;
-            box-sizing: border-box;
+        .message-row {
+            text-align: center;
+            padding: 20px;
+            font-style: italic;
+            color: rgba(255, 255, 255, 0.8);
         }
-        .form-group input::placeholder { color: rgba(255,255,255,0.6); }
-        .form-group input:focus, .form-group select:focus { outline: none; border-color: white; }
-        
-        /* 修复 Select 内选项在部分浏览器中字看不见的问题 */
-        .form-group select option { color: black; }
-
-        .modal-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px; }
-        .btn-cancel { background: rgba(150, 150, 150, 0.5); border: none; color: white; padding: 8px 15px; border-radius: 6px; cursor: pointer;}
-        .btn-submit { background: #4CAF50; border: none; color: white; padding: 8px 15px; border-radius: 6px; cursor: pointer;}
     </style>
 </head>
 <body>
 
-    <!-- 顶部导航栏 -->
-    <nav class="glass-nav">
-        <div class="nav-left">
-            <div class="welcome">Selamat Datang, <span id="username">Admin</span></div>
-            <div class="clock" id="clockDisplay">Memuatkan masa...</div>
-        </div>
-        <div class="nav-right">
-            <span>Saiz Teks:</span>
-            <button onclick="window.adjustZoom(1)">A+</button>
-            <button onclick="window.adjustZoom(-1)">A-</button>
-            <button onclick="window.resetZoom()">Reset</button>
-            <button class="btn-logout" onclick="window.logout()">Log Keluar</button>
-        </div>
-    </nav>
-
-    <!-- 主体：列表区域 -->
-    <div class="main-content">
-        <div class="glass-container">
-            <div class="container-header">
-                <h2>Senarai Pengguna</h2>
-                <button class="btn-add" onclick="window.openAddUserModal()">+ Tambah Pengguna</button>
-            </div>
-            
-            <table>
-                <thead>
-                    <tr>
-                        <th>ID Pengguna</th>
-                        <th>Nama</th>
-                        <th>Peranan (Role)</th>
-                        <th>Tindakan</th>
-                    </tr>
-                </thead>
-                <tbody id="userTableBody">
-                    <tr><td colspan="4" style="text-align:center;">Memuatkan data...</td></tr>
-                </tbody>
-            </table>
-        </div>
+    <div class="glass-container">
+        <h2>Senarai Pengguna (Padam)</h2>
+        
+        <table>
+            <thead>
+                <tr>
+                    <th>Nama</th>
+                    <th>Emel</th>
+                    <th>Peranan (Role)</th>
+                    <th>Tindakan</th>
+                </tr>
+            </thead>
+            <tbody id="userTableBody">
+                <tr>
+                    <td colspan="4" class="message-row">Memuatkan data dari pangkalan data...</td>
+                </tr>
+            </tbody>
+        </table>
     </div>
 
-    <!-- 弹窗：添加用户 -->
-    <div id="addUserModal" class="modal-overlay">
-        <div class="glass-modal">
-            <h3>Tambah Pengguna Baru</h3>
-            <form id="addUserForm">
-                <div class="form-group">
-                    <label>ID Pengguna</label>
-                    <input type="text" id="newUserId" required placeholder="Contoh: P001">
-                </div>
-                <div class="form-group">
-                    <label>Nama Penuh</label>
-                    <input type="text" id="newUserFullName" required placeholder="Nama penuh">
-                </div>
-                <div class="form-group">
-                    <label>Kata Laluan</label>
-                    <input type="password" id="newUserPassword" required placeholder="******">
-                </div>
-                <div class="form-group">
-                    <label>Sesi</label>
-                    <input type="text" id="newUserSession" required placeholder="Contoh: 2024/2025">
-                </div>
-                <div class="form-group">
-                    <label>Peranan (Role)</label>
-                    <select id="newUserRole" onchange="window.toggleAhliInput()">
-                        <option value="pengguna">Pengguna</option>
-                        <option value="pengawas">Pengawas</option>
-                        <option value="admin">Admin</option>
-                    </select>
-                </div>
-                <div class="form-group" id="groupJumlahAhli" style="display: none;">
-                    <label>Jumlah Ahli Kumpulan</label>
-                    <input type="number" id="newUserJumlahAhli" min="1" value="1">
-                </div>
-                
-                <div class="modal-actions">
-                    <button type="button" class="btn-cancel" onclick="window.closeAddUserModal()">Batal</button>
-                    <button type="submit" class="btn-submit">Simpan</button>
-                </div>
-            </form>
-        </div>
-    </div>
-
+    <!-- 必须使用 type="module" 因为我们使用了 import -->
     <script type="module">
-        // 导入 db_helper.js 里的功能 (注意路径，这里我统一用 './db_helper.js')
-        import { insertData, readAllData, deleteData } from './db_helper.js';
+        // 引入你的 db_helper.js 里的读取和删除功能
+        import { readAllData, deleteData } from './db_helper.js';
 
-        // ==========================
-        // 1. Session & Navigation UI (你的代码)
-        // ==========================
-        
-        // 尝试从 sessionStorage 获取登录信息，如果没有则给默认值
-        const userStr = sessionStorage.getItem("user");
-        const currentUser = userStr ? JSON.parse(userStr) : { id_pengguna: "Admin Temp", nama: "Admin" };
-        
-        document.getElementById('username').textContent = currentUser.id_pengguna || currentUser.nama || "Admin";
-
-        // 实时时钟
-        function updateClock() {
-            const now = new Date();
-            const year = now.getFullYear();
-            const month = String(now.getMonth() + 1).padStart(2, '0');
-            const day = String(now.getDate()).padStart(2, '0');
-            const hours = String(now.getHours()).padStart(2, '0');
-            const minutes = String(now.getMinutes()).padStart(2, '0');
-            const seconds = String(now.getSeconds()).padStart(2, '0');
-
-            document.getElementById('clockDisplay').textContent = 
-                `Tarikh: ${year}-${month}-${day} | Masa: ${hours}:${minutes}:${seconds}`;
-        }
-        setInterval(updateClock, 1000);
-        updateClock();
-
-        // 辅助功能：字体缩放
-        let currentFontSize = 100;
-        window.adjustZoom = function(delta) {
-            currentFontSize += delta * 5;
-            if (currentFontSize < 85) currentFontSize = 85;
-            if (currentFontSize > 130) currentFontSize = 130;
-            document.body.style.fontSize = currentFontSize + "%";
-        }
-        window.resetZoom = function() {
-            currentFontSize = 100;
-            document.body.style.fontSize = "100%";
-        }
-
-        // 登出功能
-        window.logout = function() {
-            sessionStorage.removeItem("user");
-            window.location.href = "index.html";
-        }
-
-        // ==========================
-        // 2. Data Table: Load & Delete 
-        // ==========================
+        // 设定你要读取/操作的 Firebase Collection 名称 (依据你数据库的设定修改)
+        const COLLECTION_NAME = 'pengguna'; 
         const tbody = document.getElementById('userTableBody');
-        
-        // 读取功能：我们默认读取 users 集合（根据你的代码，新增时通常加进 users）
+
+        // 1. 获取并显示用户列表的函数
         async function loadUsers() {
             try {
-                // 读取 users 集合
-                const users = await readAllData("users", 'createdAt', 'desc');
-                tbody.innerHTML = ''; 
+                // 调用 db_helper 的 readAllData
+                const users = await readAllData(COLLECTION_NAME, 'createdAt', 'desc');
+                tbody.innerHTML = ''; // 清空"加载中"的文字
 
                 if (users.length === 0) {
-                    tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;">Tiada pengguna dijumpai dalam koleksi "users".</td></tr>';
+                    tbody.innerHTML = '<tr><td colspan="4" class="message-row">Tiada pengguna dijumpai.</td></tr>';
                     return;
                 }
 
+                // 循环渲染用户数据
                 users.forEach(user => {
                     const tr = document.createElement('tr');
-                    const id = user.id_pengguna || '-';
+                    
+                    // 兼容多种常见的栏位命名 (nama/name, emel/email, peranan/role)
                     const nama = user.nama || user.name || '-';
-                    const peranan = user.role || user.peranan || '-';
+                    const emel = user.emel || user.email || '-';
+                    const peranan = user.peranan || user.role || '-';
 
                     tr.innerHTML = `
-                        <td>${id}</td>
                         <td>${nama}</td>
-                        <td style="text-transform: capitalize;">${peranan}</td>
+                        <td>${emel}</td>
+                        <td>${peranan}</td>
                         <td>
-                            <button class="btn-delete" data-docid="${user.id}">Padam</button>
+                            <button class="btn-delete" data-id="${user.id}">Padam</button>
                         </td>
                     `;
                     tbody.appendChild(tr);
                 });
 
-                // 绑定删除按钮事件
+                // 为所有生成的“Padam”按钮绑定点击事件
                 document.querySelectorAll('.btn-delete').forEach(button => {
                     button.addEventListener('click', handleDelete);
                 });
 
             } catch (error) {
                 console.error("Ralat memuatkan pengguna:", error);
-                tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; color:#ffb3b3;">Gagal memuatkan data.</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="4" class="message-row" style="color:#ffb3b3;">Gagal memuatkan data. Sila semak console.</td></tr>';
             }
         }
 
-        // 删除功能
+        // 2. 处理删除逻辑的函数
         async function handleDelete(event) {
             const button = event.target;
-            const docId = button.getAttribute('data-docid'); // Firebase Document ID
+            const userId = button.getAttribute('data-id');
             
-            const confirmDelete = confirm("Adakah anda pasti mahu memadam pengguna ini?");
+            // 弹出原生的二次确认视窗
+            const confirmDelete = confirm("Adakah anda pasti mahu memadam pengguna ini? Tindakan ini tidak boleh dibatalkan.");
+
             if (confirmDelete) {
                 try {
+                    // 改变按钮状态，防止重复点击
                     button.innerText = "Memadam...";
                     button.disabled = true;
 
-                    await deleteData("users", docId);
+                    // 调用 db_helper 的 deleteData
+                    await deleteData(COLLECTION_NAME, userId);
+                    alert("Pengguna berjaya dipadam!");
                     
-                    // 核心配合点：删除成功后自动刷新表格
+                    // 删除成功后，重新加载表格刷新画面
                     loadUsers();
                 } catch (error) {
-                    console.error("Ralat memadam:", error);
+                    console.error("Ralat memadam pengguna:", error);
                     alert("Gagal memadam pengguna.");
+                    
+                    // 如果失败，恢复按钮状态
                     button.innerText = "Padam";
                     button.disabled = false;
                 }
             }
         }
 
-        // ==========================
-        // 3. Modal: Add User (你的代码)
-        // ==========================
-        window.openAddUserModal = function() {
-            document.getElementById('addUserModal').style.display = 'flex';
-            window.toggleAhliInput();
-        }
-
-        window.closeAddUserModal = function() {
-            document.getElementById('addUserModal').style.display = 'none';
-            document.getElementById('addUserForm').reset();
-        }
-
-        window.toggleAhliInput = function() {
-            const role = document.getElementById('newUserRole').value;
-            const groupJumlahAhli = document.getElementById('groupJumlahAhli');
-            if (role === "pengawas") {
-                groupJumlahAhli.style.display = "block";
-            } else {
-                groupJumlahAhli.style.display = "none";
-            }
-        }
-
-        document.getElementById('addUserForm').addEventListener('submit', async function(event) {
-            event.preventDefault();
-
-            const submitBtn = document.querySelector('.btn-submit');
-            submitBtn.innerText = "Menyimpan...";
-            submitBtn.disabled = true;
-
-            const id_pengguna = document.getElementById('newUserId').value.trim();
-            const nama = document.getElementById('newUserFullName').value.trim();
-            const password = document.getElementById('newUserPassword').value.trim();
-            const role = document.getElementById('newUserRole').value;
-            const sesi = document.getElementById('newUserSession').value;
-            const jumlah_ahli = role === "pengawas" ? parseInt(document.getElementById('newUserJumlahAhli').value) || 1 : 0;
-            
-            try {
-                // 依据你的代码规则判断集合
-                const targetCollection = (role === "admin") ? "admin" : "users";
-                
-                const dataToSave = {
-                    id_pengguna: id_pengguna,
-                    nama: nama,
-                    password: password,
-                    role: role,
-                    sesi: sesi,
-                    ...(role === "admin" ? { id_admin: id_pengguna } : { jumlah_ahli: jumlah_ahli })
-                };
-
-                await insertData(targetCollection, dataToSave);
-
-                alert(`Berjaya! Pengguna "${nama}" telah ditambah.`);
-                window.closeAddUserModal();
-                
-                // 核心配合点：如果新增的不是 admin 而是 user，自动刷新底部的表格
-                if(targetCollection === "users") {
-                    loadUsers();
-                }
-
-            } catch (error) {
-                console.error("Failed to add user:", error);
-                alert("Gagal menambah pengguna. Sila cuba lagi.");
-            } finally {
-                submitBtn.innerText = "Simpan";
-                submitBtn.disabled = false;
-            }
-        });
-
-        // ==========================
-        // 4. Initialize
-        // ==========================
+        // 3. 页面加载完毕后自动运行
         window.addEventListener('DOMContentLoaded', loadUsers);
     </script>
 </body>
