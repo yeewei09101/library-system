@@ -101,7 +101,6 @@
     </div>
 
     <script type="module">
-        // 【修正】只引入 queryData，不引入不存在的 getData
         import { queryData } from './db-helper.js';
 
         const JADUAL_COLLECTION = "jadual_tugas";
@@ -113,55 +112,64 @@
         const namaHariBM = ["Ahad", "Isnin", "Selasa", "Rabu", "Khamis", "Jumaat", "Sabtu"];
         const namaBulanBM = ["Jan", "Feb", "Mac", "Apr", "Mei", "Jun", "Jul", "Ogo", "Sep", "Okt", "Nov", "Dis"];
 
+        // Sync rules with Admin: Jump to NEXT Monday if today is Saturday/Sunday
+        function getStartMonday(d) {
+            const date = new Date(d);
+            const day = date.getDay();
+            let diff = date.getDate();
+            if (day === 0) { // Sunday
+                diff += 1;
+            } else if (day === 6) { // Saturday
+                diff += 2;
+            } else { // Monday to Friday
+                diff += (1 - day); 
+            }
+            return new Date(date.setDate(diff));
+        }
+
+        // Sync rules with Admin: Use Standard ISO Week Number
+        function getWeekNumber(d) {
+            const date = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+            date.setUTCDate(date.getUTCDate() + 4 - (date.getUTCDay() || 7));
+            const yearStart = new Date(Date.UTC(date.getUTCFullYear(), 0, 1));
+            return Math.ceil((((date - yearStart) / 86400000) + 1) / 7);
+        }
+
         function janaKalendarBerterusan() {
             const grid = document.getElementById('kalendarGrid');
             grid.innerHTML = ''; 
 
-            let currentDate = new Date();
+            let currentDate = getStartMonday(new Date());
             let count = 0;
-            const jumlahHariDipapar = 20; 
+            const jumlahHariDipapar = 20; // Papar 4 minggu bekerja
 
             document.getElementById('bulanSemasa').innerText = `Bermula: ${currentDate.getDate()} ${namaBulanBM[currentDate.getMonth()]} ${currentDate.getFullYear()}`;
-
-            // 【核心逻辑】以排班的起始日期（或第一个有效工作日）作为基准周
-            // 假设我们总共有 2 个组交替：['1', '2']
-            const senaraiKumpulan = ['1', '2']; 
-            
-            // 找到基准的第一个星期一作为第 1 周的起点（或者用当前循环的第一天算起）
-            let baseDate = new Date();
-            // 调整到最近的星期一或者直接用当前日期算周数
-            let firstWeekNumber = Math.floor(baseDate.getTime() / (7 * 24 * 60 * 60 * 1000));
+            const actualTodayStr = new Date().toLocaleDateString('en-CA');
 
             while (count < jumlahHariDipapar) {
                 const dayOfWeek = currentDate.getDay(); 
                 
-                // 只显示星期一到星期五 (1 到 5)
-                if (dayOfWeek !== 0 && dayOfWeek !== 6) {
+                if (dayOfWeek !== 0 && dayOfWeek !== 6) { // Skip weekends
                     const isoDate = currentDate.toLocaleDateString('en-CA'); 
                     const dayName = namaHariBM[dayOfWeek];
                     const dayNum = currentDate.getDate();
                     const monthName = namaBulanBM[currentDate.getMonth()];
                     
-                    const isToday = (count === 0);
+                    const isToday = (isoDate === actualTodayStr);
 
-                    // 【核心计算】根据当前日期的毫秒数计算是第几个星期，从而轮流分配组别
-                    // 每一周切换一次组别
-                    const currentWeekNumber = Math.floor(currentDate.getTime() / (7 * 24 * 60 * 60 * 1000));
-                    const weekDiff = Math.abs(currentWeekNumber - firstWeekNumber);
+                    // Sync formula: weekNum % 2 !== 0 ? 1 : 2
+                    const weekNum = getWeekNumber(currentDate);
+                    const kumpulanTurn = (weekNum % 2 !== 0) ? 1 : 2;
                     
-                    // 用取模运算实现循环轮流：第0周->索引0(Kump 1)，第1周->索引1(Kump 2)，第2周->索引0(Kump 1)...
-                    const kumpIndex = weekDiff % senaraiKumpulan.length;
-                    const kumpVal = senaraiKumpulan[kumpIndex];
-                    
-                    const kumpDisplay = `<div class="text-[11px] font-semibold text-indigo-300 mt-1">Kump ${kumpVal}</div>`;
+                    const kumpDisplay = `<div class="text-[11px] font-semibold ${kumpulanTurn === 1 ? 'text-purple-400' : 'text-orange-400'} mt-1">Kump ${kumpulanTurn}</div>`;
 
                     const card = document.createElement('div');
                     card.className = `glass-card rounded-xl p-3 h-28 flex flex-col justify-between cursor-pointer transition hover:bg-white/10 date-card`;
                     card.setAttribute('data-tarikh', isoDate);
                     card.setAttribute('data-day', dayOfWeek);
+                    card.setAttribute('data-kumpulan', kumpulanTurn);
                     
-                    // 点击时，我们可以把计算出来的这个礼拜对应的组别或日期传进去查数据库
-                    card.onclick = () => pilihTarikh(isoDate, dayOfWeek, kumpVal, card);
+                    card.onclick = () => pilihTarikh(isoDate, dayOfWeek, card);
 
                     card.innerHTML = `
                         <div class="flex justify-between items-start">
@@ -193,9 +201,7 @@
                 const statusVal = item.status || 'Hadir';
                 const kumpVal = item.kump || item.kumpulan || ''; 
                 let masaVal = item.masa || item.waktu || item.syif || '';
-                if (!masaVal && item.masa_mula && item.masa_tamat) {
-                    masaVal = `${item.masa_mula} - ${item.masa_tamat}`;
-                }
+                if (!masaVal && item.masa_mula && item.masa_tamat) masaVal = `${item.masa_mula} - ${item.masa_tamat}`;
 
                 const isTidakHadir = statusVal.toLowerCase().includes('tidak hadir');
                 const isGanti = statusVal.toLowerCase().includes('ganti');
@@ -244,7 +250,11 @@
             currentSelectedDate = tarikh;
             currentSelectedDayOfWeek = Number(dayOfWeek);
 
-            document.getElementById('tarikhPilihanLabel').innerText = `Tarikh: ${tarikh}`;
+            // Fetch active Kumpulan based on ISO Week
+            const weekNum = getWeekNumber(new Date(tarikh));
+            const kumpulanSemasa = (weekNum % 2 !== 0) ? 1 : 2;
+
+            document.getElementById('tarikhPilihanLabel').innerHTML = `Tarikh: ${tarikh} <span class="ml-2 px-2 py-0.5 rounded border text-[10px] ${kumpulanSemasa === 1 ? 'bg-purple-500/30 text-purple-200 border-purple-500/50' : 'bg-orange-500/30 text-orange-200 border-orange-500/50'}">Kumpulan ${kumpulanSemasa}</span>`;
             
             document.querySelectorAll('.date-card').forEach(c => c.classList.remove('glass-card-active'));
             if(cardElement) {
@@ -256,7 +266,7 @@
             
             const utamaContainer = document.getElementById('senaraiUtamaContainer');
             const standbyContainer = document.getElementById('senaraiStandbyContainer');
-            const cacheKey = `${tarikh}_${dayOfWeek}`;
+            const cacheKey = `${tarikh}_${dayOfWeek}_${kumpulanSemasa}`;
 
             if (dataCache[cacheKey]) {
                 paparJadual(dataCache[cacheKey], utamaContainer, standbyContainer);
@@ -273,7 +283,17 @@
                 ]);
 
                 const mapJadual = new Map();
-                [...dataHariNum, ...dataHariStr, ...dataTarikh].forEach(item => {
+                
+                // Sync data filtering logic with Admin
+                [...dataHariNum, ...dataHariStr].forEach(item => {
+                    if (item && item.id) {
+                        if (!item.kumpulan || Number(item.kumpulan) === kumpulanSemasa) {
+                            mapJadual.set(item.id, item);
+                        }
+                    }
+                });
+
+                dataTarikh.forEach(item => {
                     if (item && item.id) {
                         mapJadual.set(item.id, item);
                     }
@@ -289,23 +309,16 @@
         };
 
         window.muatTurunJadualHariIni = function() {
-            const firstCard = document.querySelector('.date-card');
-            if(firstCard) {
-                const firstDate = firstCard.getAttribute('data-tarikh');
-                const dayOfWeek = parseInt(firstCard.getAttribute('data-day'), 10);
-                window.pilihTarikh(firstDate, dayOfWeek, firstCard);
+            const actualTodayStr = new Date().toLocaleDateString('en-CA');
+            let targetCard = document.querySelector(`.date-card[data-tarikh="${actualTodayStr}"]`) || document.querySelector('.date-card');
+            if(targetCard) {
+                const firstDate = targetCard.getAttribute('data-tarikh');
+                const dayOfWeek = parseInt(targetCard.getAttribute('data-day'), 10);
+                window.pilihTarikh(firstDate, dayOfWeek, targetCard);
             }
         };
 
-        // 【修正】使用现有的 queryData 来加载所有排班数据（利用字段非空来查出所有）
         window.onload = async () => {
-            try {
-                globalJadualData = await queryData(JADUAL_COLLECTION, 'nama', '!=', '---dummy-not-exist---');
-            } catch (e) {
-                console.log("Memuatkan semua data jadual gagal", e);
-                globalJadualData = [];
-            }
-
             janaKalendarBerterusan();
             window.muatTurunJadualHariIni();
         };
