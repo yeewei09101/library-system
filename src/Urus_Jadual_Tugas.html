@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sistem Pengurusan Jadual Tugas</title>
-    <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         .glass-card {
@@ -38,8 +37,8 @@
                 <p id="bulanSemasa" class="text-xs text-gray-400 mt-1">Memuatkan tarikh...</p>
             </div>
             <button onclick="window.location.href='admin.html'" class="glass-card glass-btn px-4 py-2 rounded-lg text-sm font-semibold cursor-pointer flex items-center gap-2">
-                        <span>⬅</span> Kembali
-                    </button>
+                <span>⬅</span> Kembali
+            </button>
             <div id="tarikhPilihanLabel" class="text-sm font-medium bg-blue-500/20 text-blue-300 px-4 py-2 rounded-lg border border-blue-500/30 flex items-center">
                 Tarikh: Belum dipilih
             </div>
@@ -95,22 +94,27 @@
     <script type="module">
         import { insertData, queryData, updateData, deleteData } from './db-helper.js';
 
-        // Standardize Firebase collection name
         const JADUAL_COLLECTION = "jadual_tugas";
         let currentSelectedDate = ""; 
         let currentSelectedDayOfWeek = null; 
         
-        // Client-side cache to load clicked dates instantly
         let dataCache = {}; 
 
         const namaHariBM = ["Ahad", "Isnin", "Selasa", "Rabu", "Khamis", "Jumaat", "Sabtu"];
         const namaBulanBM = ["Jan", "Feb", "Mac", "Apr", "Mei", "Jun", "Jul", "Ogo", "Sep", "Okt", "Nov", "Dis"];
 
-        // Helper: Get the Monday of the current week to fix layout from Monday-Friday
-        function getMonday(d) {
+        // Helper: Get Monday. If weekend (Saturday/Sunday), jump to NEXT Monday.
+        function getStartMonday(d) {
             const date = new Date(d);
             const day = date.getDay();
-            const diff = date.getDate() - day + (day === 0 ? -6 : 1); // Adjust when day is Sunday
+            let diff = date.getDate();
+            if (day === 0) { // Sunday
+                diff += 1;
+            } else if (day === 6) { // Saturday
+                diff += 2;
+            } else { // Monday to Friday
+                diff += (1 - day); 
+            }
             return new Date(date.setDate(diff));
         }
 
@@ -127,10 +131,9 @@
             if (!grid) return;
             grid.innerHTML = ''; 
 
-            // Always start generating calendar from Monday of the current week
-            let currentDate = getMonday(new Date());
+            let currentDate = getStartMonday(new Date());
             let count = 0;
-            const jumlahHariDipapar = 20; // Generate 4 weeks (20 working days)
+            const jumlahHariDipapar = 20; // 4 minggu bekerja (Isnin-Jumaat)
 
             const bulanLabel = document.getElementById('bulanSemasa');
             if (bulanLabel) {
@@ -142,7 +145,7 @@
             while (count < jumlahHariDipapar) {
                 const dayOfWeek = currentDate.getDay(); 
                 
-                // Only show weekdays (Isnin - Jumaat)
+                // Hanya Isnin(1) hingga Jumaat(5)
                 if (dayOfWeek !== 0 && dayOfWeek !== 6) { 
                     const isoDate = currentDate.toLocaleDateString('en-CA'); 
                     const dayName = namaHariBM[dayOfWeek];
@@ -151,7 +154,6 @@
                     
                     const isToday = (isoDate === actualTodayStr);
 
-                    // Determine alternating Kumpulan based on week number
                     const weekNum = getWeekNumber(currentDate);
                     const kumpulanTurn = (weekNum % 2 !== 0) ? 1 : 2;
 
@@ -187,8 +189,7 @@
         function paparJadual(dataJadual, utamaContainer, standbyContainer) {
             utamaContainer.innerHTML = '';
             standbyContainer.innerHTML = '';
-            let countUtama = 0; 
-            let countStandby = 0;
+            let countUtama = 0; let countStandby = 0;
 
             dataJadual.forEach(item => {
                 const namaPetugas = item.nama || item.id_pengguna || 'Unknown';
@@ -199,7 +200,6 @@
                 const docId = item.id;
                 const jenisTugas = (item.jenis_tugas || 'utama').toLowerCase();
                 
-                // Show label if it's recurring by Kumpulan
                 const recurringLabel = item.kumpulan ? `Kump ${item.kumpulan}` : 'Mingguan';
 
                 const cardHTML = `
@@ -230,19 +230,14 @@
                 }
             });
 
-            if (countUtama === 0) {
-                utamaContainer.innerHTML = '<p class="text-xs text-gray-500 italic">Tiada petugas utama.</p>';
-            }
-            if (countStandby === 0) {
-                standbyContainer.innerHTML = '<p class="text-xs text-gray-500 italic">Tiada petugas standby.</p>';
-            }
+            if (countUtama === 0) utamaContainer.innerHTML = '<p class="text-xs text-gray-500 italic">Tiada petugas utama.</p>';
+            if (countStandby === 0) standbyContainer.innerHTML = '<p class="text-xs text-gray-500 italic">Tiada petugas standby.</p>';
         }
 
         window.pilihTarikh = async function(tarikh, dayOfWeek, cardElement = null) {
             currentSelectedDate = tarikh;
             currentSelectedDayOfWeek = Number(dayOfWeek); 
             
-            // Calculate active Kumpulan for the clicked date
             const weekNum = getWeekNumber(new Date(tarikh));
             const kumpulanSemasa = (weekNum % 2 !== 0) ? 1 : 2;
 
@@ -253,7 +248,6 @@
                 tarikhLabel.innerHTML = `Tarikh: ${tarikh} (${dayName}) <span class="ml-3 px-2 py-0.5 rounded border text-[11px] ${badgeColor}">Kumpulan ${kumpulanSemasa}</span>`;
             }
             
-            // Highlight selected card
             document.querySelectorAll('.date-card').forEach(c => c.classList.remove('glass-card-active'));
             if (cardElement) {
                 cardElement.classList.add('glass-card-active');
@@ -264,21 +258,16 @@
             
             const utamaContainer = document.getElementById('senaraiUtamaContainer');
             const standbyContainer = document.getElementById('senaraiStandbyContainer');
-
-            if (!utamaContainer || !standbyContainer) return;
-            
             const cacheKey = `${tarikh}_${dayOfWeek}_${kumpulanSemasa}`;
 
-            // Use cache if available
             if (dataCache[cacheKey]) {
                 paparJadual(dataCache[cacheKey], utamaContainer, standbyContainer);
             } else {
-                utamaContainer.innerHTML = '<p class="text-xs text-gray-400 animate-pulse">Memuatkan data dari Firebase...</p>';
-                standbyContainer.innerHTML = '<p class="text-xs text-gray-400 animate-pulse">Memuatkan data dari Firebase...</p>';
+                utamaContainer.innerHTML = '<p class="text-xs text-gray-400 animate-pulse">Memuatkan data...</p>';
+                standbyContainer.innerHTML = '<p class="text-xs text-gray-400 animate-pulse">Memuatkan data...</p>';
             }
 
             try {
-                // Fetch data concurrently
                 const [dataTarikh, dataHariNum, dataHariStr] = await Promise.all([
                     queryData(JADUAL_COLLECTION, 'tarikh', '==', tarikh),
                     queryData(JADUAL_COLLECTION, 'day_of_week', '==', currentSelectedDayOfWeek),
@@ -287,17 +276,14 @@
 
                 const mapJadual = new Map();
                 
-                // Filter recurring schedules based on Kumpulan matching the current week
                 [...dataHariNum, ...dataHariStr].forEach(item => {
                     if (item && item.id) {
-                        // Allow if legacy data (no kumpulan) OR matches current selected date's kumpulan
                         if (!item.kumpulan || Number(item.kumpulan) === kumpulanSemasa) {
                             mapJadual.set(item.id, item);
                         }
                     }
                 });
 
-                // Add single-date schedules (overrides recurring if ID matches, though usually unique)
                 dataTarikh.forEach(item => {
                     if (item && item.id) {
                         mapJadual.set(item.id, item);
@@ -305,22 +291,17 @@
                 });
 
                 const dataJadual = Array.from(mapJadual.values());
-                
-                // Save to local cache
                 dataCache[cacheKey] = dataJadual;
                 paparJadual(dataJadual, utamaContainer, standbyContainer);
 
             } catch (error) {
                 console.error("Gagal dapatkan data Firebase:", error);
-                utamaContainer.innerHTML = `<p class="text-xs text-red-400">Ralat Firebase: ${error.message}</p>`;
-                standbyContainer.innerHTML = `<p class="text-xs text-red-400">Ralat Firebase: ${error.message}</p>`;
             }
         };
 
         window.tambahPetugas = async function(isStandby) {
             if (!currentSelectedDate) return alert('Sila pilih tarikh pada kalendar terlebih dahulu!');
             
-            // Determine Kumpulan for the current date being added
             const weekNum = getWeekNumber(new Date(currentSelectedDate));
             const kumpulanSemasa = (weekNum % 2 !== 0) ? 1 : 2;
 
@@ -333,7 +314,6 @@
             const tetapkanSetiapMinggu = confirm(`Adakah anda mahu ${namaPetugas.trim()} bertugas secara berulang?\n\n[OK] = Setiap 2 Minggu (Ikut Kumpulan ${kumpulanSemasa})\n[Cancel] = Sekali Sahaja (${currentSelectedDate})`);
 
             try {
-                // Prepare Firebase payload
                 const newData = {
                     nama: namaPetugas.trim(),
                     status: isStandby ? "Sedia" : "Hadir", 
@@ -344,22 +324,20 @@
                 if (tetapkanSetiapMinggu) {
                     newData.day_of_week = currentSelectedDayOfWeek;
                     newData.is_recurring = true;
-                    newData.kumpulan = kumpulanSemasa; // Bind to specific alternate week
+                    newData.kumpulan = kumpulanSemasa;
                 } else {
                     newData.tarikh = currentSelectedDate;
                     newData.is_recurring = false;
                 }
 
                 await insertData(JADUAL_COLLECTION, newData);
-                alert("Berjaya disimpan ke pangkalan data Firebase!");
+                alert("Berjaya disimpan!");
                 
-                // Clear cache and refresh
                 delete dataCache[`${currentSelectedDate}_${currentSelectedDayOfWeek}_${kumpulanSemasa}`];
                 window.pilihTarikh(currentSelectedDate, currentSelectedDayOfWeek);
                 
             } catch (error) {
-                console.error("Ralat simpan Firebase:", error);
-                alert("Gagal menyimpan ke Firebase: " + error.message);
+                alert("Gagal menyimpan: " + error.message);
             }
         };
 
@@ -369,59 +347,42 @@
 
             try {
                 await deleteData(JADUAL_COLLECTION, docId);
-                
                 const weekNum = getWeekNumber(new Date(currentSelectedDate));
                 const kumpulanSemasa = (weekNum % 2 !== 0) ? 1 : 2;
 
-                // Clear cache and refresh
                 delete dataCache[`${currentSelectedDate}_${currentSelectedDayOfWeek}_${kumpulanSemasa}`];
                 window.pilihTarikh(currentSelectedDate, currentSelectedDayOfWeek);
             } catch (error) {
-                console.error("Ralat padam Firebase:", error);
-                alert("Gagal memadam data dari Firebase: " + error.message);
+                alert("Gagal memadam: " + error.message);
             }
         };
 
         window.kemaskiniPetugas = async function(docId, namaSemasa, statusSemasa) {
             const namaBaru = prompt("Kemaskini NAMA petugas:", namaSemasa);
             if (namaBaru === null) return;
-
             const statusBaru = prompt("Kemaskini STATUS petugas:\n(Contoh: 'Hadir', 'Tidak Hadir', 'Ganti Ali')", statusSemasa);
             if (statusBaru === null) return;
 
             const updateObj = {};
-            if (namaBaru.trim() !== "" && namaBaru.trim() !== namaSemasa) {
-                updateObj.nama = namaBaru.trim();
-            }
-            if (statusBaru.trim() !== "" && statusBaru.trim() !== statusSemasa) {
-                updateObj.status = statusBaru.trim();
-            }
+            if (namaBaru.trim() !== "" && namaBaru.trim() !== namaSemasa) updateObj.nama = namaBaru.trim();
+            if (statusBaru.trim() !== "" && statusBaru.trim() !== statusSemasa) updateObj.status = statusBaru.trim();
 
             if (Object.keys(updateObj).length === 0) return;
 
             try {
                 await updateData(JADUAL_COLLECTION, docId, updateObj);
-                
                 const weekNum = getWeekNumber(new Date(currentSelectedDate));
                 const kumpulanSemasa = (weekNum % 2 !== 0) ? 1 : 2;
 
-                // Clear cache and refresh
                 delete dataCache[`${currentSelectedDate}_${currentSelectedDayOfWeek}_${kumpulanSemasa}`];
                 window.pilihTarikh(currentSelectedDate, currentSelectedDayOfWeek);
             } catch (error) {
-                console.error("Ralat kemaskini Firebase:", error);
-                alert("Gagal kemaskini maklumat petugas di Firebase: " + error.message);
+                alert("Gagal kemaskini: " + error.message);
             }
         };
 
         window.muatTurunJadualHariIni = function() {
-            // Find today's date if within view, otherwise select first card
-            let targetCard = document.querySelector('.date-card:has(div:contains("HARI INI"))');
-            
-            if (!targetCard) {
-                targetCard = document.querySelector('.date-card');
-            }
-            
+            let targetCard = document.querySelector('.date-card:has(div:contains("HARI INI"))') || document.querySelector('.date-card');
             if (targetCard) {
                 const dateVal = targetCard.getAttribute('data-tarikh');
                 const dayOfWeek = parseInt(targetCard.getAttribute('data-day'), 10);
@@ -429,7 +390,6 @@
             }
         };
 
-        // Standard JS snippet to mimic jQuery :contains if used
         jQueryLikeContainsSetup();
         function jQueryLikeContainsSetup() {
             if (!HTMLElement.prototype.containsText) {
@@ -441,20 +401,10 @@
 
         window.onload = () => {
             janaKalendarBerterusan();
-            
-            // Default select today
             const actualTodayStr = new Date().toLocaleDateString('en-CA');
-            const targetCard = document.querySelector(`.date-card[data-tarikh="${actualTodayStr}"]`);
+            const targetCard = document.querySelector(`.date-card[data-tarikh="${actualTodayStr}"]`) || document.querySelector('.date-card');
             if (targetCard) {
-                const dayOfWeek = parseInt(targetCard.getAttribute('data-day'), 10);
-                window.pilihTarikh(actualTodayStr, dayOfWeek, targetCard);
-            } else {
-                const firstCard = document.querySelector('.date-card');
-                if (firstCard) {
-                    const firstDate = firstCard.getAttribute('data-tarikh');
-                    const dayOfWeek = parseInt(firstCard.getAttribute('data-day'), 10);
-                    window.pilihTarikh(firstDate, dayOfWeek, firstCard);
-                }
+                window.pilihTarikh(targetCard.getAttribute('data-tarikh'), parseInt(targetCard.getAttribute('data-day'), 10), targetCard);
             }
         };
     </script>
