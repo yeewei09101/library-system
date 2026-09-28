@@ -105,56 +105,68 @@
         <table>
             <thead>
                 <tr>
+                    <!-- 配合你 Firebase 的栏位 -->
+                    <th>ID Pengguna</th>
                     <th>Nama</th>
-                    <th>Emel</th>
                     <th>Peranan (Role)</th>
+                    <th>Sesi</th>
                     <th>Tindakan</th>
                 </tr>
             </thead>
             <tbody id="userTableBody">
                 <tr>
-                    <td colspan="4" class="message-row">Memuatkan data dari pangkalan data...</td>
+                    <td colspan="5" class="message-row">Memuatkan data dari pangkalan data...</td>
                 </tr>
             </tbody>
         </table>
     </div>
 
-    <!-- 必须使用 type="module" 因为我们使用了 import -->
+    <!-- 注意: 确保路径是 db_helper.js 还是 db-helper.js -->
     <script type="module">
-        // 引入你的 db_helper.js 里的读取和删除功能
         import { readAllData, deleteData } from './db_helper.js';
 
-        // 设定你要读取/操作的 Firebase Collection 名称 (依据你数据库的设定修改)
-        const COLLECTION_NAME = 'pengguna'; 
         const tbody = document.getElementById('userTableBody');
 
         // 1. 获取并显示用户列表的函数
         async function loadUsers() {
             try {
-                // 调用 db_helper 的 readAllData
-                const users = await readAllData(COLLECTION_NAME, 'createdAt', 'desc');
-                tbody.innerHTML = ''; // 清空"加载中"的文字
+                tbody.innerHTML = '<tr><td colspan="5" class="message-row">Memuatkan data dari pangkalan data...</td></tr>';
+                
+                // 【核心修改】：同时从 "users" 和 "admin" 两个集合读取数据，因为你添加时是分开存的
+                const usersData = await readAllData('users', 'createdAt', 'desc');
+                const adminData = await readAllData('admin', 'createdAt', 'desc');
 
-                if (users.length === 0) {
-                    tbody.innerHTML = '<tr><td colspan="4" class="message-row">Tiada pengguna dijumpai.</td></tr>';
+                // 将两边的数据合并，并加上 _collection 标签，方便删除时知道去哪个集合删
+                const allData = [
+                    ...usersData.map(u => ({ ...u, _collection: 'users' })),
+                    ...adminData.map(a => ({ ...a, _collection: 'admin' }))
+                ];
+
+                tbody.innerHTML = ''; 
+
+                if (allData.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="5" class="message-row">Tiada pengguna dijumpai.</td></tr>';
                     return;
                 }
 
                 // 循环渲染用户数据
-                users.forEach(user => {
+                allData.forEach(user => {
                     const tr = document.createElement('tr');
                     
-                    // 兼容多种常见的栏位命名 (nama/name, emel/email, peranan/role)
-                    const nama = user.nama || user.name || '-';
-                    const emel = user.emel || user.email || '-';
-                    const peranan = user.peranan || user.role || '-';
+                    // 对应 tambah pengguna 表单里的变量名
+                    const id = user.id_pengguna || user.id_admin || '-';
+                    const nama = user.nama || '-';
+                    const peranan = user.role || '-';
+                    const sesi = user.sesi || '-';
 
                     tr.innerHTML = `
+                        <td>${id}</td>
                         <td>${nama}</td>
-                        <td>${emel}</td>
-                        <td>${peranan}</td>
+                        <td style="text-transform: capitalize;">${peranan}</td>
+                        <td style="text-transform: capitalize;">${sesi}</td>
                         <td>
-                            <button class="btn-delete" data-id="${user.id}">Padam</button>
+                            <!-- 绑定 Firebase ID 和 所在的 Collection -->
+                            <button class="btn-delete" data-id="${user.id}" data-collection="${user._collection}">Padam</button>
                         </td>
                     `;
                     tbody.appendChild(tr);
@@ -167,35 +179,33 @@
 
             } catch (error) {
                 console.error("Ralat memuatkan pengguna:", error);
-                tbody.innerHTML = '<tr><td colspan="4" class="message-row" style="color:#ffb3b3;">Gagal memuatkan data. Sila semak console.</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="5" class="message-row" style="color:#ffb3b3;">Gagal memuatkan data. Sila semak console.</td></tr>';
             }
         }
 
         // 2. 处理删除逻辑的函数
         async function handleDelete(event) {
             const button = event.target;
-            const userId = button.getAttribute('data-id');
+            const docId = button.getAttribute('data-id'); // Firebase Document ID
+            const collectionName = button.getAttribute('data-collection'); // 'users' 或 'admin'
             
-            // 弹出原生的二次确认视窗
             const confirmDelete = confirm("Adakah anda pasti mahu memadam pengguna ini? Tindakan ini tidak boleh dibatalkan.");
 
             if (confirmDelete) {
                 try {
-                    // 改变按钮状态，防止重复点击
                     button.innerText = "Memadam...";
                     button.disabled = true;
 
-                    // 调用 db_helper 的 deleteData
-                    await deleteData(COLLECTION_NAME, userId);
-                    alert("Pengguna berjaya dipadam!");
+                    // 根据该用户所在的集合进行删除
+                    await deleteData(collectionName, docId);
+                    alert(`Pengguna berjaya dipadam dari koleksi [${collectionName}]!`);
                     
-                    // 删除成功后，重新加载表格刷新画面
+                    // 重新加载表格
                     loadUsers();
                 } catch (error) {
                     console.error("Ralat memadam pengguna:", error);
                     alert("Gagal memadam pengguna.");
                     
-                    // 如果失败，恢复按钮状态
                     button.innerText = "Padam";
                     button.disabled = false;
                 }
