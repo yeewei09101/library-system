@@ -95,13 +95,37 @@
             font-style: italic;
             color: rgba(255, 255, 255, 0.8);
         }
+        /* 返回按钮 - 雾面玻璃效果 */
+.back-btn {
+    display: inline-block;
+    padding: 10px 20px;
+    color: #ffffff;
+    text-decoration: none;
+    font-weight: bold;
+    background: rgba(255, 255, 255, 0.15); /* 半透明白色背景 */
+    backdrop-filter: blur(12px); /* 玻璃模糊效果 */
+    -webkit-backdrop-filter: blur(12px); /* 兼容 Safari */
+    border: 1px solid rgba(255, 255, 255, 0.3); /* 半透明边框 */
+    border-radius: 8px; /* 圆角 */
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* 淡淡的阴影 */
+    transition: all 0.3s ease; /* 悬停动画过渡 */
+    letter-spacing: 1px;
+    margin-bottom: 20px; /* 和下面的内容保持一点距离 */
+}
+
+/* 鼠标悬停时的动画效果 */
+.back-btn:hover {
+    background: rgba(255, 255, 255, 0.25); /* 悬停时背景稍微亮一点 */
+    transform: translateY(-2px); /* 悬停时按钮微微上浮 */
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2); /* 悬停时阴影加深 */
+}
     </style>
 </head>
 <body>
 
     <div class="glass-container">
         <h2>Senarai Pengguna (Padam)</h2>
-        <a href="javascript:history.back()" class="back-btn">Kembali </a>
+        <a href="javascript:history.back()" class="back-btn">⬅️ Kembali</a>
         <table>
             <thead>
                 <tr>
