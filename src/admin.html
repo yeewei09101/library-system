@@ -197,7 +197,6 @@
     }
 
     /* Modal Glassmorphism Style */
-    /* Modal Glassmorphism Style */
     .modal-overlay {
       display: none;
       position: fixed;
@@ -218,18 +217,15 @@
       border-radius: 20px;
       width: 90%;
       max-width: 650px;
-      max-height: 85vh;       /* 限制弹窗最大高度，防止超出屏幕 */
+      max-height: 85vh;
       display: flex;
       flex-direction: column;
       padding: 24px;
       color: #0f172a;
       box-shadow: 0 20px 40px rgba(0, 0, 0, 0.25);
-      
-      /* 【新增】让内容溢出时自动出现垂直滚动条 */
       overflow-y: auto;       
     }
 
-    /* 【新增】美化滚动条外观（适配深浅搭配的毛玻璃风格） */
     .modal-content::-webkit-scrollbar {
       width: 6px;
     }
@@ -265,7 +261,6 @@
 
     .close-btn:hover { color: #000; }
 
-    /* Form Styles dalam Modal */
     .form-group {
       margin-bottom: 15px;
     }
@@ -377,16 +372,16 @@
         <div class="card-title">Tambah Pengguna</div>
         <div class="card-desc">Daftarkan akaun pengawas atau admin baru ke dalam sistem.</div>
       </div>
-    </div>
-  </div>
-  <!--padam pengguna card-->
-  <div class="glass-card frosted-glass" onclick="window.location.href='padam_pengguna.html'"></div>
-        <div class="card-icon">👤</div>
-        <div class="card-title">padam Pengguna</div>
-        <div class="card-desc">padam akaun pengawas ke dalam sistem.</div>
+      
+      <!-- Padam Pengguna Card (DIPINDAHKAN KE SINI) -->
+      <div class="glass-card frosted-glass" onclick="window.location.href='padam_pengguna.html'">
+        <div class="card-icon">🗑️👤</div>
+        <div class="card-title">Padam Pengguna</div>
+        <div class="card-desc">Padam akaun pengawas dari dalam sistem.</div>
       </div>
-    </div>
-  </div>
+
+    </div> <!-- Penutup switchboard-grid -->
+  </div> <!-- Penutup container -->
 
   <!-- Modal Tambah Pengguna -->
   <div id="addUserModal" class="modal-overlay">
