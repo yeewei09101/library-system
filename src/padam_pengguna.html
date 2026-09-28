@@ -133,9 +133,8 @@
                 tbody.innerHTML = '<tr><td colspan="5" class="message-row">Memuatkan data dari pangkalan data...</td></tr>';
                 
                 // 【核心修改】：同时从 "users" 和 "admin" 两个集合读取数据，因为你添加时是分开存的
-                const usersData = await readAllData('users', 'createdAt', 'desc');
-                const adminData = await readAllData('admin', 'createdAt', 'desc');
-
+                const usersData = await readAllData('users');
+                const adminData = await readAllData('admin');
                 // 将两边的数据合并，并加上 _collection 标签，方便删除时知道去哪个集合删
                 const allData = [
                     ...usersData.map(u => ({ ...u, _collection: 'users' })),
